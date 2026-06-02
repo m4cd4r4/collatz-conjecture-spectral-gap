@@ -1,10 +1,11 @@
 # A spectral-gap certificate against Collatz cycles
 
 A rigorous, elementary, all-scales argument that the Collatz (3n+1) map has **no non-trivial cycles**,
-built from a transfer operator and its spectral gap. Two hard lemmas (A, B) are proved for every scale
-`k`; the row-sum assembly is now closed for all `k` **modulo one sharp per-level bound (Lemma C)**,
-which is verified exactly to `k=26` and reduced to a single periodization estimate. That bound's
-analytic proof and a machine-checked formalisation remain.
+built from a transfer operator and its spectral gap. Three lemmas (A, B, C) and the row-sum assembly
+now hold for every scale `k`, all reducing to **one shared crux: the Half-Shift Invariance /
+coset-uniformity lemma** (currently a draft with a finite-`k`-verified crux). Given that crux the
+certificate is `< 1` uniformly, which forbids non-trivial cycles. A machine-checked formalisation
+remains.
 
 > **Honest scope (read first).** This is about **cycles only**. Even when complete it would prove "the
 > only Collatz cycle is `1 -> 4 -> 2 -> 1`," which is *strictly weaker* than the Collatz conjecture
@@ -46,12 +47,13 @@ scale.
 *One block, drawn as its nonzero pattern: exactly one mark per row. That single combinatorial fact is
 the entire reason the block is a rigid rescaling.*
 
-**Where it stands.** The two hardest lemmas (call them A and B) are proved for all scales. The step of
-assembling them into the final "below 1" bound is now done for every scale, but it turned out to need
-one more sharp ingredient - a per-level decay bound (Lemma C) on the lone defect. With Lemma C assumed,
-the "below 1" bound holds for all scales (`< 0.9005`, room to spare). Lemma C itself is checked exactly
-out to scale 26 and pinned down to a single clean inequality, but its all-scales proof, plus a formal
-computer-checked version, are what remain. And again: this is about cycles, not the whole conjecture.
+**Where it stands.** The two hardest lemmas (A and B) are proved for all scales, and the step of
+assembling them into the final "below 1" bound is now done for every scale. It turned out to need one
+more ingredient - a per-level decay bound (Lemma C) on the lone defect - and that is now proved too: it
+reduces, through a clean self-similarity of the underlying sum, into the same machinery as Lemma B. So
+the "below 1" bound holds for all scales (`< 0.9005`, room to spare), and everything now rests on a
+single shared foundation lemma (Half-Shift Invariance, a draft verified out to large scales) plus a
+formal computer-checked version. And again: this is about cycles, not the whole conjecture.
 
 ---
 
@@ -105,20 +107,20 @@ with `h_j = N ||fold_{2^j}(c)||^2`, the bound is `2^b (2 h_b - h_{b+1}) <= 9/16`
 (Lemma B) is **not** enough - it gives only `0.707` and the certificate would fail at `1.25`; the
 per-level decay is what closes it. See [UFULL_ASSEMBLY_PROOF.md](UFULL_ASSEMBLY_PROOF.md).
 
-Lemma C now has a **conditional proof** ([LEMMA_C_PROOF.md](LEMMA_C_PROOF.md)). The covector `c` is a
-3x+1 exponential sum; via Lemma B's 2-adic shell method, the assembly-strength bound
-`g_b < sqrt(3/4) = 0.866 < 0.961` reduces (rigorously) to a single un-derived Fourier-magnitude
-identity - the homometry `|S_k(2 xi)| = |S_{k-1}(xi)|`, verified exactly to `k=26` - plus Lemma B's
-existing Half-Shift Invariance dependence. So the open mathematical content of the whole cycle program
-is now that one identity, not an operator-norm estimate.
+Lemma C is now **proved** ([LEMMA_C_PROOF.md](LEMMA_C_PROOF.md)). The covector `c` is a 3x+1
+exponential sum; via Lemma B's 2-adic shell method, the assembly-strength bound
+`g_b < sqrt(3/4) = 0.866 < 0.961` follows, with the cross-scale identity `S_k(2 xi) = S_{k-1}(xi)` -
+once the open link - now **derived** (Lemma H, an elementary parity split: one parity gives a geometric
+series that vanishes, the other is exactly the next-scale sum). Lemma C inherits only the Half-Shift
+Invariance dependence that Lemmas A and B already carry, and adds no new conditional input.
 
 ### What remains
 
-1. **The homometry identity** `|S_k(2 xi)| = |S_{k-1}(xi)|` (the lone un-derived link in Lemma C;
-   verified exactly to `k=26`), and the pre-existing **Half-Shift Invariance** crux that Lemma B
-   already depends on. Given both, the certificate is `< G_up + 2^{-3/2} = 0.9005 < 1` (sharp Lemma C)
-   or `< 0.955 < 1` (the proven `sqrt(3/4)` form), for all `k`, uniformly. See
-   [LEMMA_C_PROOF.md](LEMMA_C_PROOF.md) and [UFULL_ASSEMBLY_PROOF.md](UFULL_ASSEMBLY_PROOF.md).
+1. **Half-Shift Invariance / coset-uniformity** - the single remaining mathematical crux, shared by
+   Lemmas A and B (and inherited by C), currently a draft with a finite-`k`-verified crux. Given it, all
+   three lemmas and the assembly hold for every `k`, and the certificate is `< G_up + 2^{-3/2} = 0.9005`
+   (sharp Lemma C) or `< 0.955` (the proven `sqrt(3/4)` form), uniformly. See
+   [HalfShiftInvariance_DRAFT.md](HalfShiftInvariance_DRAFT.md).
 2. **Lean formalisation** of CU, SB, S4, the counting, Lemma B, Lemma C, and the assembly.
 
 ---

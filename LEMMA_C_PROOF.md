@@ -17,11 +17,13 @@ i.e. any uniform bound
 
 > **Lemma C (assembly form).** `g_b <= 0.961` for all `k, b`.
 
-We prove `g_b < sqrt(3/4) = 0.8660 < 0.961` for all `k, b` (Theorem C below), **conditional on the two
-inputs flagged in the status section** (the scale-`k`-to-`p` homometry, verified exactly to `k=26`, and
-Lemma B's shell facts, which inherit the Half-Shift Invariance conditionality). The sharp `g_b <= 3/4`
-is verified exactly to `k=26` but not needed. This document does not claim an unconditional proof; it
-claims a rigorous reduction of Lemma C to those two inputs.
+We prove `g_b < sqrt(3/4) = 0.8660 < 0.961` for all `k, b` (Theorem C below), **unconditionally**: the
+bound on `g_b` (a function of the defect count alone) uses only Lemma H (now proved, an elementary
+parity split), Parseval, and FACT 1 + the shell sizes (Lemma B's unconditional combinatorial core). The
+cross-scale homometry earlier sessions left un-derived is the content of Lemma H. The sharp `g_b <= 3/4`
+is verified exactly to `k=26` but not needed. The Half-Shift Invariance crux enters only where the
+*assembly* uses the bound (the rank-1 defect factorisation R2), exactly as for Lemmas A and B; Lemma C
+introduces **no new conditionality**.
 
 ## Step 1 - the defect covector is a 3x+1 exponential sum, and `g_b` is single-index
 
@@ -35,31 +37,54 @@ measure on `[0,2^k)` under `m -> OddCore(3m+a) mod 2^k`, and `c = cf_k / 2^k`. I
 the 3x+1 exponential sum `S_k(xi) = sum_t cf_k[t] w^{xi t}`, `w = e^{-2 pi i/2^k}`, with
 `v_b^2 = sum_{xi: v2(xi)=b, 1<=xi<2^{k-1}} |S_k(xi)|^2 / (2^{2k} 2^{k-1})`.
 
-**Two routes to a single-index reduction (both give the same identity, verified exactly):**
+### Lemma H (the frequency-doubling recursion) - PROVED
 
-- **(Scale-`k` Parseval - the identity is rigorous, but completing the proof this way still needs
-  Step 3 redone at reduced resolution.)** Let `fcoll_j := sum_t (fold_{2^j} cf_k[t])^2` be the collision
-  count of `cf_k` folded to resolution `2^{k-j}`. Then by Parseval on `Z/2^{k-1}` and the band identity
-  `B_b = M_b - M_{b+1}` (see [UFULL_ASSEMBLY_PROOF.md](UFULL_ASSEMBLY_PROOF.md)),
-  ```
-      g_b^2 = 2^{b-1-k} ( 2 fcoll_b - fcoll_{b+1} ).                              (1)
-  ```
-  Identity (1) is exact and unconditional (`probe` confirms it for every `b`, `k`). It avoids the
-  homometry, but Step 3's shell bound would then have to be re-run for the *folded scale-`k`* counts
-  `fcoll_b` at reduced resolution `2^{k-b}` (the same argument at a different resolution). That
-  reduced-resolution shell bound is set up below in spirit but **not written out in full**, so this
-  route is not, by itself, a completed proof either.
+> **Lemma H.** For every `k >= 2` and every integer `xi` with `2 xi not= 0 (mod 2^k)`,
+> `S_k(2 xi) = S_{k-1}(xi)` exactly (as complex numbers).
 
-- **(Self-similarity, verified exactly.)** The exponential sum is homometric under frequency-doubling:
-  `|S_k(2 xi)| = |S_{k-1}(xi)|` for all `xi` (verified exactly, `probe_selfsimilar.py`). Iterating,
-  level-`b` energy at scale `k` equals level-`0` (odd-frequency) energy at scale `p := k-b`, so
-  ```
-      g_b^2 = E_p / 4^p,    E_p := sum_{xi odd, 1<=xi<2^p} |S_p(xi)|^2,    p = k-b.   (2)
-  ```
-  `g_b^2` depends only on `p`, which is why the top-level profile is `k`-independent.
+**Proof.** Split the sum `S_k(eta) = sum_{m=0}^{2^k-1} w_k^{eta O_k(m)}`, `O_k(m)=OddCore(3m+a_k) mod 2^k`,
+by the parity of `m`, with `m = 2m'` or `m = 2m'+1`, `m' in [0,2^{k-1})`.
 
-Routes (1) and (2) agree numerically to machine precision for all tested `k` (the homometry identity
-`|S_k(2xi)|=|S_{k-1}(xi)|` is the bridge; it is verified exactly, see the status section).
+One parity gives `3m + a_k` **odd** (a number of 2-adic valuation 0), so `O_k = 3m + a_k` is linear in
+`m'`; call this the *geometric part*. (For `k` even, `a_k=1`: even `m` gives `6m'+1`, odd. For `k` odd,
+`a_k=2`: odd `m` gives `6m'+5`, odd.) The geometric part of `S_k(eta)` is
+```
+  sum_{m'=0}^{2^{k-1}-1} w_k^{eta (6m' + c)} = w_k^{eta c} sum_{m'} (w_k^{6 eta})^{m'},   c in {1,5}.
+```
+Its ratio `r = w_k^{6 eta}` satisfies `r^{2^{k-1}} = w_k^{3 eta 2^k} = e^{-2 pi i 3 eta} = 1`, so the
+geometric sum is `0` whenever `r not= 1`, i.e. whenever `6 eta not= 0 (mod 2^k)`, i.e. (as `3` is odd)
+`eta not= 0 (mod 2^{k-1})`. Taking `eta = 2 xi`, the geometric part **vanishes** unless
+`2 xi in {0, 2^{k-1}}`, i.e. unless `xi in {0, 2^{k-2}}`.
+
+The other parity gives `3m + a_k` **even**: for `k` even, odd `m` gives `6m'+4 = 2(3m'+2)`, so
+`O_k = OddCore(3m'+2)`; for `k` odd, even `m` gives `6m'+2 = 2(3m'+1)`, so `O_k = OddCore(3m'+1)`. In
+both cases the residual map is `OddCore(3m' + a_{k-1})` - the parity flip of `m` swaps `+1 <-> +2`,
+matching `a_{k-1}` exactly. This *structural part* of `S_k(2 xi)` is
+```
+  sum_{m'=0}^{2^{k-1}-1} w_k^{2 xi (OddCore(3m'+a_{k-1}) mod 2^k)}
+   = sum_{m'} w_{k-1}^{xi (OddCore(3m'+a_{k-1}) mod 2^{k-1})}  =  S_{k-1}(xi),
+```
+since `w_k^{2 xi X} = w_{k-1}^{xi X}` depends only on `X mod 2^{k-1}`, and the last sum is by definition
+`S_{k-1}(xi)`. Hence for `2 xi not= 2^{k-1}` (and `xi not= 0`), `S_k(2 xi) = 0 + S_{k-1}(xi)`. QED.
+
+Verified exactly to `k=14` complex-valued and to `k=26` in magnitude (`probe_homometry_proof.py`,
+`probe_selfsimilar.py`): the geometric part is `0` for every `xi` except `xi = 2^{k-2}`, and the
+structural part equals `S_{k-1}(xi)` with no exception.
+
+### The single-index reduction `g_b^2 = E_p/4^p` (now rigorous)
+
+Iterate Lemma H. The level-`b` frequencies are `xi = 2^b m`, `m` odd, `1 <= m < 2^{k-1-b}`. Peeling one
+factor of `2` at a time, `S_k(2^b m) = S_{k-1}(2^{b-1} m) = ... = S_{k-b}(m)`; each peel is legitimate
+because the intermediate argument equals the step's Nyquist `2^{(k-i)-1}` only if `m = 2^{k-1-b}`, which
+is excluded by `m < 2^{k-1-b}`. With `|S_k(xi)| = |FFT_{2^{k-1}}(c)[xi]| 2^k` giving
+`v_b^2 = (2^{2k} 2^{k-1})^{-1} sum_{v2(xi)=b} |S_k(xi)|^2`, and `sum_{m odd < 2^{k-1-b}} |S_{k-b}(m)|^2
+= (1/2) E_p` by the conjugate symmetry `|S_p(m)| = |S_p(2^p - m)|` (no odd fixed point), we get
+```
+      g_b^2 = 2^k 4^b v_b^2 = E_p / 4^p,    E_p := sum_{xi odd, 1<=xi<2^p} |S_p(xi)|^2,   p = k-b.   (2)
+```
+This is now derived, not merely verified. (A second, fully independent route - the scale-`k` Parseval
+identity `g_b^2 = 2^{b-1-k}(2 fcoll_b - fcoll_{b+1})`, `fcoll_j = ||fold_{2^j} cf_k||^2` - agrees with
+(2) to machine precision and needs no homometry, but the homometry route above is the clean one.)
 
 ## Step 2 - `E_p` is a half-shift autocorrelation (fully rigorous)
 
@@ -127,13 +152,18 @@ and by (4),
 
 ## Theorem C and the conclusion
 
-> **Theorem C (conditional).** Assume (i) the scale-`k`-to-`p` homometry `|S_k(2xi)| = |S_{k-1}(xi)|`
-> (so that `g_b^2 = (coll(p)-A_p)/2^{p+1}`, p=k-b; verified exactly to `k=26`, not derived) and (ii)
-> Lemma B's shell facts (FACT 1 and `|R_j| = 2^{p-1-j}`, themselves conditional on Half-Shift
-> Invariance). Then `g_b < sqrt(3/4) = 0.8660 < 0.961` for all `k` and `0 <= b <= k-2`, so Lemma C
-> (assembly form) holds and the certificate is `< 1` uniformly. The chain from (i),(ii) to the bound is
-> the fully rigorous Steps 2-3 above; this is a reduction of Lemma C to (i),(ii), not an unconditional
-> proof.
+> **Theorem C.** `g_b < sqrt(3/4) = 0.8660 < 0.961` for all `k` and `0 <= b <= k-2`, **unconditionally**.
+> Hence `v_b = ||P_b c|| < (3/4) 2^{-b} 2^{-k/2}`, and the certificate is `< 1` uniformly.
+
+`g_b = v_b 2^b 2^{k/2}` is a function of the defect count `cf` alone (`c = cf/2^k`), and the bound on it
+uses only unconditional ingredients: **Lemma H** (parity split), the Parseval identities (2)-(5), and
+**FACT 1 + the shell sizes** `|R_j| = 2^{p-1-j}` (Lemma B's combinatorial core, proved there
+unconditionally for all `p`, both parities). So Theorem C is unconditional.
+
+The Half-Shift Invariance dependence enters only when this bound is *used in the assembly*: that the
+lower-triangle block norms factor as `Q_D[a,b] = u_a v_b` is foundation fact R2 (rank-1 defect
+`D = e_{r*} c^*`), which rests on Half-Shift Invariance - the same dependence Lemmas A and B already
+carry. Lemma C itself adds **no new conditional input** to the program.
 
 The bound (8) is `g_b^2 <= 3/4`, well inside the `0.924` ceiling the assembly needs. (A sharper
 accounting of the top-atom partners gives `g_b^2 <= 3/4 + (p-1)/2^p`, which still respects the ceiling
@@ -146,34 +176,33 @@ lower row-sum at the top is `<= 2^{-3/2} sqrt(3/4)(4/3) = 0.408`, and
   cert(k) < G_up + 0.408 = 0.547 + 0.408 = 0.955 < 1,   uniform in k.
 ```
 
-## Status: what is rigorous, what is conditional
+## Status: what is rigorous, what is inherited
 
-**Rigorous and self-contained (no homometry, no Half-Shift Invariance):**
-- Step 1 identity (1): the scale-`k` Parseval identity `g_b^2 = 2^{b-1-k}(2 fcoll_b - fcoll_{b+1})`.
+**Unconditional (no Half-Shift Invariance, no operator input - all about the count `cf` and the AP):**
+- **Lemma H** (the homometry `S_k(2 xi) = S_{k-1}(xi)`): proved by the elementary parity split.
+- The single-index reduction (2) `g_b^2 = E_p/4^p` (Lemma H iterated + conjugate symmetry); cross-checked
+  by the scale-`k` Parseval identity `g_b^2 = 2^{b-1-k}(2 fcoll_b - fcoll_{b+1})`.
 - Step 2: identities (3), (4), (5) (Parseval + the `coll-A = (1/2) sum (cf[t]-cf[t+h])^2` algebra).
+- Step 3: the `j=0` cancellation (6), the shell drop, the finite bound (7), and `g_b^2 < 3/4` (8) -
+  using FACT 1 and the shell sizes `|R_j| = 2^{p-1-j}`, which are Lemma B's combinatorial core, **proved
+  there unconditionally** (the mod-3 + range injectivity, all `p`, both parities).
 
-**Rigorous given Lemma B's shell facts (which inherit Half-Shift Invariance conditionality):**
-- Step 3: the `j=0` cancellation (6), the shell drop, and the finite bound (7), **given** FACT 1 and the
-  shell sizes `|R_j| = 2^{p-1-j}`. The *combinatorial core* of these is Lemma B's and unconditional;
-  but their relevance to the operator (R1/R2) rests in the foundation on the Half-Shift Invariance /
-  coset-uniformity lemma, a draft with a finite-`k`-verified crux. So Step 3 inherits exactly the
-  conditionality Lemma B has - it is not unconditional.
+So **Theorem C - the bound `v_b < (3/4) 2^{-b} 2^{-k/2}` - is unconditional.**
 
-**Verified exactly to `k=26` but not derived (the one genuinely new gap):**
-- The scale-`k`-to-scale-`p` **homometry** `|S_k(2xi)| = |S_{k-1}(xi)|` (equivalently:
-  `fold_{2^j} cf_k` and `cf_{k-j}` have equal Fourier magnitudes), which is what turns Step 3's
-  scale-`p` bound `coll(p)-A_p <= 3*2^{p-1}-2` into the scale-`k` statement `g_b^2 < 3/4` via (4).
+**Inherited (the same dependence Lemmas A and B already carry):**
+- The bound's *use in the assembly* needs the lower-triangle factorisation `Q_D[a,b] = u_a v_b`,
+  foundation fact R2 (rank-1 defect `D = e_{r*} c^*`), which rests on the Half-Shift Invariance /
+  coset-uniformity lemma (a draft with a finite-`k`-verified crux). This is not new to Lemma C.
 
-**Neither route is a finished unconditional proof.** Route (2) [homometry] is complete except for that
-identity. Route (1) [scale-`k` Parseval] has the exact identity (1) but still needs Step 3 re-run for
-the folded counts at reduced resolution, which is not written out. So the honest statement is:
+So the precise status:
 
-> **Lemma C (assembly form) is reduced, by the rigorous Steps 2-3, to (i) the scale-`k`-to-`p` homometry
-> and (ii) Lemma B's shell facts.** Given (i) and (ii), `g_b < sqrt(3/4) < 0.961` and the certificate is
-> `< 1` uniformly. (ii) is the same dependence Lemma B already carries; (i) is genuinely new and is the
-> single un-derived Fourier-magnitude identity. This is a large advance - the open mathematical content
-> of the cycle program is now that one identity plus the pre-existing Half-Shift Invariance crux, not an
-> operator-norm estimate - but it is a reduction, not a closed proof.
+> **Lemma C (the per-level bound) is proved unconditionally.** The homometry that earlier sessions left
+> open is now derived (Lemma H, elementary). Combined with Lemma A (proved) and the assembly (proved),
+> the certificate is `cert(k) < 1` for every `k`, with the only program-level dependence being the
+> Half-Shift Invariance / coset-uniformity crux already shared by Lemmas A and B (it supplies R1/R2, the
+> strict-upper + rank-1 block structure the assembly runs on). The remaining open obligations for the
+> whole cycle program are therefore exactly (a) that Half-Shift Invariance crux and (b) the Lean
+> formalisation. Lemma C adds nothing new to that list.
 
 ## Verification
 
@@ -181,7 +210,8 @@ the folded counts at reduced resolution, which is not written out. So the honest
 python probe_gb_collision.py     # g_b^2 = E_p/4^p (single index); sum|S|^2 = 2^p coll(p)
 python probe_autocorr.py         # E_p = 2^{p-1}(coll-A); coll-A = (1/2)sum(cf[t]-cf[t+h])^2
 python probe_shell_halfshift.py  # shell decomposition: diag=2^{p-1}, j=0 cancels, the (3/2)2^p bound
-python probe_selfsimilar.py      # the homometry |S_k(2 xi)| = |S_{k-1}(xi)| (the one un-derived link)
+python probe_homometry_proof.py  # Lemma H: parity split, geometric part vanishes, nongeo = S_{k-1}
+python probe_selfsimilar.py      # the homometry S_k(2 xi) = S_{k-1}(xi) (now proved, Lemma H)
 # closed forms (one-liners):
 #   sum_{j=2}^{p-1}(j-1)2^{p-1-j} + (p-1) == 2^{p-1}-1     (cross-sum bound, p=2..24: True)
 #   coll(p) - A_p <= 3*2^{p-1} - 2                          (eq 7, p=2..16: True)

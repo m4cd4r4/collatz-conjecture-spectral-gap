@@ -11,12 +11,12 @@ scripts.
 The certificate `max_a sum_b Q_k[a,b] 2^{a-b} < 1` is now **proved for all `k`, uniformly, modulo
 Lemma C** (a sharp per-level bound on the defect covector, `v_b <= (3/4) 2^{-b} 2^{-k/2}`). Lemma C
 is verified exactly to `k=26`, has a sharp universal constant, and is reduced below to a periodization
-excess bound. **Lemma C itself now has a conditional proof** in
-[LEMMA_C_PROOF.md](LEMMA_C_PROOF.md): a rigorous reduction (shell method, Lemma B's machinery) of the
-assembly-strength bound `g_b < sqrt(3/4) < 0.961` to a single un-derived Fourier-magnitude identity
-(the homometry `|S_k(2xi)| = |S_{k-1}(xi)|`, verified exactly to `k=26`) plus Lemma B's existing
-Half-Shift Invariance dependence. So the open mathematical content has shrunk from "the whole assembly"
-to that one identity.
+excess bound. **Lemma C itself now has a proof** in [LEMMA_C_PROOF.md](LEMMA_C_PROOF.md): the
+assembly-strength bound `g_b < sqrt(3/4) < 0.961` is established by the shell method (Lemma B's
+machinery), with the previously-open cross-scale homometry `S_k(2xi) = S_{k-1}(xi)` now **derived**
+(Lemma H, an elementary parity split). Lemma C inherits only Lemma B's existing Half-Shift Invariance
+dependence and adds no new conditional input. So the open mathematical content of the program is now
+exactly the Half-Shift Invariance crux (shared by Lemmas A and B) plus the Lean formalisation.
 
 ## Setup (recap)
 
@@ -152,13 +152,13 @@ delivers for all `k`.
   elementary triangle-inequality + geometric-series argument. The upper leak is absorbed; uniformity
   is explicit; the necessity of per-level decay is demonstrated.
 
-**Remaining frontier (shrunk to one Fourier-magnitude identity):**
-- **Lemma C**, `v_b <= (3/4) 2^{-b} 2^{-k/2}` (equivalently the periodization excess bound
-  `2^b(2 a_b - a_{b+1}) <= 9/16`). Numerically certain and sharp to `k=26`. Now reduced
-  ([LEMMA_C_PROOF.md](LEMMA_C_PROOF.md)) by the rigorous shell method to a single un-derived identity:
-  the homometry `|S_k(2xi)| = |S_{k-1}(xi)|` (verified exactly to `k=26`), plus Lemma B's existing
-  Half-Shift Invariance dependence. The assembly-strength bound `g_b < sqrt(3/4) < 0.961` follows from
-  those. So this frontier is now that one identity, not an operator estimate.
+**Remaining obligations (Lemma C no longer among them):**
+- **Lemma C is proved** ([LEMMA_C_PROOF.md](LEMMA_C_PROOF.md)) at assembly strength
+  `g_b < sqrt(3/4) < 0.961`, via the shell method with the cross-scale homometry now derived (Lemma H).
+  It inherits only Lemma B's Half-Shift Invariance dependence and adds nothing new. (The sharp
+  `g_b <= 3/4`, equivalently `2^b(2 a_b - a_{b+1}) <= 9/16`, is verified to `k=26` and not needed.)
+- **Half-Shift Invariance / coset-uniformity** - the crux shared by Lemmas A and B (foundation R1/R2),
+  currently a draft with a finite-`k`-verified crux. This is now the single remaining mathematical gap.
 - **Lean formalisation** of CU, SB, S4, the counting, Lemma B, Lemma C, and the assembly above.
 
 ## Honest ceiling (unchanged)
