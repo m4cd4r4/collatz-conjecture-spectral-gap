@@ -198,11 +198,13 @@ So the precise status:
 
 > **Lemma C (the per-level bound) is proved unconditionally.** The homometry that earlier sessions left
 > open is now derived (Lemma H, elementary). Combined with Lemma A (proved) and the assembly (proved),
-> the certificate is `cert(k) < 1` for every `k`, with the only program-level dependence being the
-> Half-Shift Invariance / coset-uniformity crux already shared by Lemmas A and B (it supplies R1/R2, the
-> strict-upper + rank-1 block structure the assembly runs on). The remaining open obligations for the
-> whole cycle program are therefore exactly (a) that Half-Shift Invariance crux and (b) the Lean
-> formalisation. Lemma C adds nothing new to that list.
+> the certificate is `cert(k) < 1` for every `k`. The shared foundation (Coset-Uniformity, giving R1/R2)
+> is itself now proved unconditionally ([HALFSHIFT_S4_LEMMA_A_PROOF.md](HALFSHIFT_S4_LEMMA_A_PROOF.md)
+> Sections 1-2), so the whole chain is all-`k`. (Lemma C uses only `rank(D) <= 1` / the `D = e_{r*} c^*`
+> form; the defect *nonvanishing* is not needed - `v_b = 0` would satisfy the bound trivially.) The
+> remaining open obligations for the cycle program are therefore (a) the explicit write-up of the
+> standard spectral reduction `cert(k) < 1 => |lambda_2(U_k)| < 1` (cited in the foundation, not yet
+> written in full) and (b) the Lean formalisation - not any finite-`k` crux.
 
 ## Verification
 

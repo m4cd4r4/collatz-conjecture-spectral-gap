@@ -7,13 +7,14 @@ for the Syracuse transfer operator (see
 **Honest scope.** This document closes the *combinatorial core* of Lemma B - the bound
 `coll(k) <= 3*2^k` - **unconditionally for all k**, replacing the previous finite-k verification.
 The reduction from Lemma B to that bound uses three foundation facts R1, R2, R3: R3
-(`||u||^2 = 1 - 2^{1-k}`) is unconditional; **R1 and R2 (strict-upper `U_clean`, rank-1 defect `D`)
-are proved in the foundation only conditional on the Half-Shift Invariance / coset-uniformity
-lemma**, which is itself a draft with numerical (finite-k) verification of its crux step (see
-[HalfShiftInvariance_DRAFT.md](HalfShiftInvariance_DRAFT.md)).
-So the precise status is: *Lemma B reduces, by an unconditional combinatorial argument, to R1/R2,
-which hold modulo Half-Shift Invariance.* The new, fully unconditional contribution is the
-collision bound below.
+(`||u||^2 = 1 - 2^{1-k}`) is unconditional; R1 (strict-upper `U_clean`) and R2 (defect `D` confined to
+row `r*`, `rank(D) <= 1`) are also now **proved unconditionally for all k** - they reduce by elementary
+algebra to the Coset-Uniformity lemma CU, proved by finite-group theory in
+[HALFSHIFT_S4_LEMMA_A_PROOF.md](HALFSHIFT_S4_LEMMA_A_PROOF.md) Sections 1-2. (Earlier drafts marked
+Half-Shift Invariance as "finite-k verified"; that is superseded - CU is the analytic proof. The only
+fact that remains finite-k-verified is the defect *nonvanishing* / "rank exactly 1", which is not used:
+every bound here is an upper bound that `D = 0` would satisfy trivially.) So Lemma B and its foundation
+are unconditional; the collision bound below is its combinatorial heart.
 
 The one load-bearing combinatorial gap (per-shell injectivity, "FACT 1") had a loose justification
 in [attack3_provable_bound.py](attack3_provable_bound.py)
@@ -162,14 +163,22 @@ parity-correct shell decomposition: FACT 1 (per-shell injectivity, the mod-3 + r
 bound, this gives `||u|| ||c|| <= sqrt(3) 2^{-k/2}`.
 
 The remaining step to `||tril(Q_k)||_2 <= sqrt(3) 2^{-k/2}` is the identity `tril(Q_k) = tril(Q_D)`
-and `Q_D[a,b] = u_a v_b`, i.e. R1 (strict-upper `U_clean`) and R2 (rank-1 defect `D`). These are
-proved in the foundation modulo the Half-Shift Invariance lemma. So `||tril(Q_k)||_2 -> 0` at rate
-`2^{-k/2}` holds for all k **conditional on Half-Shift Invariance**, with no other finite-k input.
+and `Q_D[a,b] = u_a v_b`, i.e. R1 (strict-upper `U_clean`) and R2 (defect `D` confined to the row
+`r*`, hence `rank(D) <= 1`). **Update (2026-06-02): R1 and R2 are now proved unconditionally for all
+k** - they reduce by elementary algebra to the Coset-Uniformity lemma CU, which is proved (finite-group
+theory, no finite-k input) in [HALFSHIFT_S4_LEMMA_A_PROOF.md](HALFSHIFT_S4_LEMMA_A_PROOF.md) Sections
+1-2. (The Frobenius bound uses only `rank(D) <= 1` / the `D = e_{r*} c^*` *form*, an upper bound; the
+separate "rank exactly 1" / defect-nonvanishing fact is verified but not analytically settled for even
+k, and is NOT used - a zero defect would only make `||tril Q_k|| = 0`.) So `||tril(Q_k)||_2 -> 0` at
+rate `2^{-k/2}` holds for all k unconditionally.
 
-The uniform spectral gap still depends on **Lemma A** (the upper cascade `||P_a U_k P_b|| <=
-2^{-(b-a)/2}` via the within-level isometry `B*B = 2^{-(b-a)} I`), which is still VERIFIED to
-finite k only and is the remaining all-k obligation. With both lemmas the certificate row-sum is
-`<= 0.547 + o(1) < 1`, eliminating non-trivial Syracuse cycles.
+**Lemma A** (the upper cascade `||P_a U_k P_b|| = 2^{-(b-a)/2}` via the within-level isometry
+`B*B = 2^{-(b-a)} I`) is likewise now proved for all k (CU + Shell-Bijection + S4, same document,
+Section 4). With Lemmas A, B and the per-level Lemma C ([LEMMA_C_PROOF.md](LEMMA_C_PROOF.md)), the
+certificate row-sum is `< G_up + 2^{-3/2} = 0.9005 < 1` for all k ([UFULL_ASSEMBLY_PROOF.md](UFULL_ASSEMBLY_PROOF.md)),
+eliminating non-trivial Syracuse cycles. The remaining program-level obligations are the explicit
+write-up of the standard spectral reduction (`cert < 1 => |lambda_2(U_k)| < 1`) and the Lean
+formalisation - not any finite-k crux.
 
 ## Verification
 

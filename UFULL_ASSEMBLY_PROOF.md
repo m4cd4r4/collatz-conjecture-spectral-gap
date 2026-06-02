@@ -152,13 +152,18 @@ delivers for all `k`.
   elementary triangle-inequality + geometric-series argument. The upper leak is absorbed; uniformity
   is explicit; the necessity of per-level decay is demonstrated.
 
-**Remaining obligations (Lemma C no longer among them):**
+**Remaining obligations (no finite-`k` crux left):**
 - **Lemma C is proved** ([LEMMA_C_PROOF.md](LEMMA_C_PROOF.md)) at assembly strength
   `g_b < sqrt(3/4) < 0.961`, via the shell method with the cross-scale homometry now derived (Lemma H).
-  It inherits only Lemma B's Half-Shift Invariance dependence and adds nothing new. (The sharp
-  `g_b <= 3/4`, equivalently `2^b(2 a_b - a_{b+1}) <= 9/16`, is verified to `k=26` and not needed.)
-- **Half-Shift Invariance / coset-uniformity** - the crux shared by Lemmas A and B (foundation R1/R2),
-  currently a draft with a finite-`k`-verified crux. This is now the single remaining mathematical gap.
+  (The sharp `g_b <= 3/4`, equivalently `2^b(2 a_b - a_{b+1}) <= 9/16`, is verified to `k=26`, not needed.)
+- **Half-Shift Invariance / coset-uniformity is also proved** ([HALFSHIFT_S4_LEMMA_A_PROOF.md](HALFSHIFT_S4_LEMMA_A_PROOF.md)
+  Sections 1-2): R1/R2 reduce to the Coset-Uniformity lemma CU, proved by elementary finite-group
+  theory. The assembly uses only `rank(D) <= 1` (the `D = e_{r*} c^*` form), which CU gives; the defect
+  *nonvanishing* is verified but not used. So there is no remaining finite-`k` mathematical gap.
+- **Spectral reduction write-up.** `cert(k) < 1 => |lambda_2(U_k)| < 1 => no non-trivial cycles` is the
+  standard chain `|lambda_2| <= rho(Q_k) <= cert(k)` (Perron/non-Perron split + weighted-row-sum bound),
+  stated in [STEP4_BLOCK_FORMULA_FOUNDATION.md](STEP4_BLOCK_FORMULA_FOUNDATION.md) but cited rather than
+  derived here; writing it out in full is an open item.
 - **Lean formalisation** of CU, SB, S4, the counting, Lemma B, Lemma C, and the assembly above.
 
 ## Honest ceiling (unchanged)

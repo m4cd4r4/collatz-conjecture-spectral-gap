@@ -1,11 +1,12 @@
 # A spectral-gap certificate against Collatz cycles
 
 A rigorous, elementary, all-scales argument that the Collatz (3n+1) map has **no non-trivial cycles**,
-built from a transfer operator and its spectral gap. Three lemmas (A, B, C) and the row-sum assembly
-now hold for every scale `k`, all reducing to **one shared crux: the Half-Shift Invariance /
-coset-uniformity lemma** (currently a draft with a finite-`k`-verified crux). Given that crux the
-certificate is `< 1` uniformly, which forbids non-trivial cycles. A machine-checked formalisation
-remains.
+built from a transfer operator and its spectral gap. The three lemmas (A, B, C), their shared
+foundation (Coset-Uniformity, which gives the strict-upper + confined-defect structure), and the
+row-sum assembly are now **proved for every scale `k`**, all by elementary 2-adic / finite-group
+arguments. The certificate is `< 1` uniformly, which forbids non-trivial cycles. The remaining
+obligations are not new mathematical cruxes: an explicit write-up of the standard spectral reduction
+(`certificate < 1` => spectral gap) and a machine-checked (Lean) formalisation.
 
 > **Honest scope (read first).** This is about **cycles only**. Even when complete it would prove "the
 > only Collatz cycle is `1 -> 4 -> 2 -> 1`," which is *strictly weaker* than the Collatz conjecture
@@ -116,12 +117,20 @@ Invariance dependence that Lemmas A and B already carry, and adds no new conditi
 
 ### What remains
 
-1. **Half-Shift Invariance / coset-uniformity** - the single remaining mathematical crux, shared by
-   Lemmas A and B (and inherited by C), currently a draft with a finite-`k`-verified crux. Given it, all
-   three lemmas and the assembly hold for every `k`, and the certificate is `< G_up + 2^{-3/2} = 0.9005`
-   (sharp Lemma C) or `< 0.955` (the proven `sqrt(3/4)` form), uniformly. See
-   [HalfShiftInvariance_DRAFT.md](HalfShiftInvariance_DRAFT.md).
+The mathematics is now all-`k` (Coset-Uniformity, the shared foundation crux, is proved by
+finite-group theory in [HALFSHIFT_S4_LEMMA_A_PROOF.md](HALFSHIFT_S4_LEMMA_A_PROOF.md); the certificate
+is `< G_up + 2^{-3/2} = 0.9005 < 1`, uniform). The open items are not new cruxes:
+
+1. **Explicit write-up of the spectral reduction** `certificate(k) < 1` => `|lambda_2(U_k)| < 1` =>
+   no non-trivial cycles. The chain `|lambda_2(U_k)| <= rho(Q_k) <= cert(k)` (Perron/non-Perron split
+   plus the weighted-row-sum bound) is standard and stated in
+   [STEP4_BLOCK_FORMULA_FOUNDATION.md](STEP4_BLOCK_FORMULA_FOUNDATION.md), but is currently cited rather
+   than written out in full.
 2. **Lean formalisation** of CU, SB, S4, the counting, Lemma B, Lemma C, and the assembly.
+
+(The defect "rank exactly 1" / nonvanishing is verified but not analytically settled for even `k`; it
+is **not used** - every bound is an upper bound that a zero defect satisfies trivially, so it does not
+affect the `< 1` conclusion.)
 
 ---
 

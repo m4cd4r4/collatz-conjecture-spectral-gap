@@ -51,7 +51,16 @@ the same engine, varying the base point `r` across a valuation shell. State it o
 
 **Proof.** Well-defined: `v2(3r+1) = j` makes `(3r+1)/2^j` odd. Injective: `psi(r) = psi(r')` gives
 `2^j q ≡ 2^j q' (mod 2^k)`, i.e. `3r+1 ≡ 3r'+1 (mod 2^k)`, so `r ≡ r' (mod 2^k)` (3 a unit), hence
-`r = r'` (both in `[HalfShiftInvariance_DRAFT.md](HalfShiftInvariance_DRAFT.md),
+`r = r'` (both in `[0, 2^k)`). Surjective by counting: the shell `S_j` has
+`|S_j| = 2^{k-1-j}` elements (the odd `r` with `v2(3r+1) = j`; the AP `3r+1` is equidistributed mod
+`2^{j+1}` since 3 is a unit), and the target (odd residues mod `2^{k-j}`) also has `2^{k-1-j}` elements;
+an injection between equal finite sets is a bijection. QED
+
+## 2. Half-Shift Invariance and the rank-1 S_odd theorem (from CU)
+
+Lemma 1 (`half_shift_invariance`) of [HalfShiftInvariance_DRAFT.md](HalfShiftInvariance_DRAFT.md) needs
+five steps; steps 1, 2, 4, 5 (factor, frozen valuation, `2^k` lies in the coset subgroup since
+`v >= 1`, translation invariance of a uniform measure on a coset) are elementary,
 and CU is its step 3 (`coset_uniform`), the only step the draft flagged as nontrivial. The rank-1
 S_odd theorem follows as in the draft: every non-`r*` column vanishes by half-shift invariance, and
 `r*` is the unique residue with `v2(3r*+1) >= k` (a unique `-3^{-1}` solution), so exactly one column
