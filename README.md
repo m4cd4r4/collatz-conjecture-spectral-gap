@@ -101,17 +101,24 @@ proved unconditionally for all `k` by a 2-adic shell decomposition (per-shell in
 `v_b := ||P_b c||_2 <= (3/4) * 2^{-b} * 2^{-k/2}` for all `0 <= b <= k-2`, all `k`. The constant `3/4`
 is sharp (equality at `b = k-4`), verified exactly to `k=26`, with a `k`-independent boundary profile.
 It reduces to a periodization-excess bound on the defect covector `c` (the partial Gauss sum at `r*`):
-with `h_j = N ||fold_{2^j}(c)||^2`, the bound is `2^b (2 h_b - h_{b+1}) <= 9/16`. This is the genuine
-remaining analytic step. The `L^2` mass alone (Lemma B) is **not** enough - it gives only `0.707` and
-the certificate would fail at `1.25`; the per-level decay is what closes it. See
-[UFULL_ASSEMBLY_PROOF.md](UFULL_ASSEMBLY_PROOF.md).
+with `h_j = N ||fold_{2^j}(c)||^2`, the bound is `2^b (2 h_b - h_{b+1}) <= 9/16`. The `L^2` mass alone
+(Lemma B) is **not** enough - it gives only `0.707` and the certificate would fail at `1.25`; the
+per-level decay is what closes it. See [UFULL_ASSEMBLY_PROOF.md](UFULL_ASSEMBLY_PROOF.md).
+
+Lemma C now has a **conditional proof** ([LEMMA_C_PROOF.md](LEMMA_C_PROOF.md)). The covector `c` is a
+3x+1 exponential sum; via Lemma B's 2-adic shell method, the assembly-strength bound
+`g_b < sqrt(3/4) = 0.866 < 0.961` reduces (rigorously) to a single un-derived Fourier-magnitude
+identity - the homometry `|S_k(2 xi)| = |S_{k-1}(xi)|`, verified exactly to `k=26` - plus Lemma B's
+existing Half-Shift Invariance dependence. So the open mathematical content of the whole cycle program
+is now that one identity, not an operator-norm estimate.
 
 ### What remains
 
-1. **Lemma C's analytic proof** - the per-level bound above. The `U_clean -> U_full` row-sum assembly
-   itself is done: given Lemma A (exact upper, `0.5469`) and Lemma C, the certificate is
-   `< G_up + 2^{-3/2} = 0.9005 < 1` for all `k`, uniformly. Full argument and the Lemma C reduction in
-   [UFULL_ASSEMBLY_PROOF.md](UFULL_ASSEMBLY_PROOF.md).
+1. **The homometry identity** `|S_k(2 xi)| = |S_{k-1}(xi)|` (the lone un-derived link in Lemma C;
+   verified exactly to `k=26`), and the pre-existing **Half-Shift Invariance** crux that Lemma B
+   already depends on. Given both, the certificate is `< G_up + 2^{-3/2} = 0.9005 < 1` (sharp Lemma C)
+   or `< 0.955 < 1` (the proven `sqrt(3/4)` form), for all `k`, uniformly. See
+   [LEMMA_C_PROOF.md](LEMMA_C_PROOF.md) and [UFULL_ASSEMBLY_PROOF.md](UFULL_ASSEMBLY_PROOF.md).
 2. **Lean formalisation** of CU, SB, S4, the counting, Lemma B, Lemma C, and the assembly.
 
 ---
@@ -128,6 +135,10 @@ python adv_tril_sep_correct.py      # ||tril(Q_D)|| matches the dense operator (
 python verify_assembly.py           # the assembly: cert < 0.9005 < 1 (Lemma A+C); matches build_T to 6 digits
 python explore_vb_profile.py        # the v_b profile and per-row S_a (Lemma C ground truth)
 python probe_periodization.py       # g_b^2 = 2^b(2 h_b - h_{b+1}); sup = 9/16 (the Lemma C reduction)
+python probe_gb_collision.py        # g_b^2 = E_p/4^p (single index, p=k-b); sum|S|^2 = 2^p coll(p)
+python probe_autocorr.py            # E_p = 2^{p-1}(coll-A); Lemma C <=> coll(p)-A_p <= (9/8)2^p
+python probe_shell_halfshift.py     # shell proof: j=0 cancels, diag=2^{p-1}, coll-A <= (3/2)2^p
+python probe_selfsimilar.py         # the homometry |S_k(2 xi)| = |S_{k-1}(xi)| (the one un-derived link)
 ```
 
 ## Repository map
@@ -139,6 +150,7 @@ python probe_periodization.py       # g_b^2 = 2^b(2 h_b - h_{b+1}); sup = 9/16 (
 | `STEP4_BLOCK_FORMULA_FOUNDATION.md` | the operator split `U = U_clean + D` and block formula |
 | `HalfShiftInvariance_DRAFT.md` | Half-Shift Invariance / rank-1 `S_odd` (Lean draft) |
 | `UFULL_ASSEMBLY_PROOF.md` | the assembly proved modulo Lemma C + the sharp per-level bound (Lemma C) |
+| `LEMMA_C_PROOF.md` | Lemma C reduced (shell method) to the homometry identity; assembly-strength proof |
 | `UFULL_ASSEMBLY_PLAN.md` | the prior cold-start brief for the assembly (now actioned) |
 | `verify_assembly.py`, `explore_vb_profile.py`, `probe_*.py` | assembly + Lemma C verification |
 | `analytic_proofs.py` | `build_T(k)`: the transfer operator (the numerical oracle) |
