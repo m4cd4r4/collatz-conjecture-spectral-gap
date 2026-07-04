@@ -10,11 +10,15 @@
 > dense periodic points). Full account: [CYCLE_CLAIM_REFUTED.md](CYCLE_CLAIM_REFUTED.md).
 
 What remains correct and proved is a **uniform spectral gap for the Syracuse (3n+1) mod-`2^k` transfer
-operator** `T_k`: the three lemmas (A, B, C), their shared Coset-Uniformity foundation, and the row-sum
-assembly are proved for every scale `k` by elementary 2-adic / finite-group arguments, giving
-`cert(k) < 0.9005 < 1` and hence `|lambda_2(T_k)| < 1` uniformly. This is a real result about the
-operator. It simply does **not** carry the cycle-elimination corollary that was claimed, and it is not
-a proof of (any part of) the Collatz conjecture.
+operator** `T_k`: the lemmas (A, B, and the sharpening C), their shared Coset-Uniformity foundation,
+and the row-sum assembly are proved for every scale `k` by elementary 2-adic / finite-group arguments,
+giving `cert(k) <= 0.8536 < 1` and hence `|lambda_2(T_k)| < 1` uniformly. The consolidated statement
+and full proof chain - the spectral reduction written out end-to-end (with a 2026-07-05 correction:
+`T_k` is not doubly stochastic, so the chain runs through `V = ker(1^T)` and the compression
+`P_V U P_V`), plus a simplification showing Lemmas A + B alone suffice (Lemma C sharpens the constant
+to `0.656`) - is **[THEOREM.md](THEOREM.md)**. This is a real result about the operator. It simply
+does **not** carry the cycle-elimination corollary that was claimed, and it is not a proof of (any
+part of) the Collatz conjecture.
 
 > **Honest scope.** Cycle elimination is what was *attempted* and is now retracted. The divergent-
 > trajectory half of Collatz was never addressed. The surviving content is the operator spectral gap.
@@ -65,7 +69,7 @@ shared foundation (coset-uniformity), and the final "below 1" assembly are all p
 the entire reason the block is a rigid rescaling.*
 
 **Where it stands.** A correct, elementary, all-scales proof of a uniform spectral gap for the Syracuse
-transfer operator (`< 0.9005`, room to spare). The cycle-elimination conclusion that motivated it is
+transfer operator (`<= 0.8536`, room to spare). The cycle-elimination conclusion that motivated it is
 withdrawn. This is **not** a proof of any part of Collatz.
 
 ---
@@ -118,9 +122,11 @@ proved unconditionally for all `k` by a 2-adic shell decomposition (per-shell in
 `v_b := ||P_b c||_2 <= (3/4) * 2^{-b} * 2^{-k/2}` for all `0 <= b <= k-2`, all `k`. The constant `3/4`
 is sharp (equality at `b = k-4`), verified exactly to `k=26`, with a `k`-independent boundary profile.
 It reduces to a periodization-excess bound on the defect covector `c` (the partial Gauss sum at `r*`):
-with `h_j = N ||fold_{2^j}(c)||^2`, the bound is `2^b (2 h_b - h_{b+1}) <= 9/16`. The `L^2` mass alone
-(Lemma B) is **not** enough - it gives only `0.707` and the certificate would fail at `1.25`; the
-per-level decay is what closes it. See [UFULL_ASSEMBLY_PROOF.md](UFULL_ASSEMBLY_PROOF.md).
+with `h_j = N ||fold_{2^j}(c)||^2`, the bound is `2^b (2 h_b - h_{b+1}) <= 9/16`. (Correction
+2026-07-05: the earlier claim here that the `L^2` mass alone fails at `1.25` was wrong - it ignored
+the truncation of the upper cascade at the top rows. Lemmas A + B alone give `cert(k) <= 0.8536`;
+Lemma C sharpens the constant to `0.656`. See [THEOREM.md](THEOREM.md) and the correction note in
+[UFULL_ASSEMBLY_PROOF.md](UFULL_ASSEMBLY_PROOF.md).)
 
 Lemma C is now **proved** ([LEMMA_C_PROOF.md](LEMMA_C_PROOF.md)). The covector `c` is a 3x+1
 exponential sum; via Lemma B's 2-adic shell method, the assembly-strength bound
@@ -132,7 +138,8 @@ Invariance dependence that Lemmas A and B already carry, and adds no new conditi
 ### What remains
 
 The spectral-gap mathematics is complete and all-`k` (Coset-Uniformity proved in
-[HALFSHIFT_S4_LEMMA_A_PROOF.md](HALFSHIFT_S4_LEMMA_A_PROOF.md); `cert(k) < 0.9005 < 1`, uniform). What
+[HALFSHIFT_S4_LEMMA_A_PROOF.md](HALFSHIFT_S4_LEMMA_A_PROOF.md); `cert(k) <= 0.8536 < 1`, uniform,
+consolidated with the full spectral reduction in [THEOREM.md](THEOREM.md)). What
 does **not** follow, and is **withdrawn**, is cycle elimination: the gap `=> no cycles` inference is
 false ([CYCLE_CLAIM_REFUTED.md](CYCLE_CLAIM_REFUTED.md)). Ruling out non-trivial Collatz cycles would
 require an instrument sensitive to the deterministic orbit (e.g. linear-forms-in-logs / height bounds,
@@ -151,7 +158,8 @@ python audit_halfshift_s4.py        # coset-uniformity, S4, isometry parity-spli
 python attack1_lemmaA_proof.py      # closed-form B*B = 2^-d I, all (a,b), to k=14
 python lemmaB_fact1_rigorous.py     # collision bound coll <= 3*2^k, both parities, vs the true Syracuse fibre
 python adv_tril_sep_correct.py      # ||tril(Q_D)|| matches the dense operator (<1e-10); chain to k=24
-python verify_assembly.py           # the assembly: cert < 0.9005 < 1 (Lemma A+C); matches build_T to 6 digits
+python verify_assembly.py           # the assembly: cert < 0.9005 (Lemma A+C route); matches build_T to 6 digits
+python fable_assembly_check.py      # THEOREM.md envelope: R_a <= f(k-a), cert <= 0.8536, k=3..13 vs build_T
 python explore_vb_profile.py        # the v_b profile and per-row S_a (Lemma C ground truth)
 python probe_periodization.py       # g_b^2 = 2^b(2 h_b - h_{b+1}); sup = 9/16 (the Lemma C reduction)
 python probe_gb_collision.py        # g_b^2 = E_p/4^p (single index, p=k-b); sum|S|^2 = 2^p coll(p)
@@ -174,7 +182,8 @@ python probe_cycle_recovery.py      # cycle-detector tests: spectrum/traces are 
 | `CYCLE_CLAIM_REFUTED.md` | **the retraction**: why the spectral gap does not eliminate cycles (3x-1 control) |
 | `CYCLE_STRUCTURE_RECOVERY.md` | follow-up: no cycle structure is recoverable from the spectral side; where it lives |
 | `probe_cycle_link.py`, `probe_cycle_recovery.py` | the 3x+1 vs 3x-1 control + cycle-detector tests |
-| `UFULL_ASSEMBLY_PROOF.md` | the row-sum assembly: `cert(k) < 0.9005 < 1` from Lemma A + Lemma C |
+| `THEOREM.md` | **the consolidated theorem**: full spectral reduction + assembly, `cert(k) <= 0.8536` from A + B alone |
+| `UFULL_ASSEMBLY_PROOF.md` | the earlier row-sum assembly: `cert(k) < 0.9005` from Lemma A + Lemma C (Remark 2 corrected) |
 | `LEMMA_C_PROOF.md` | Lemma C proved (shell method + Lemma H homometry); assembly-strength bound |
 | `UFULL_ASSEMBLY_PLAN.md` | the prior cold-start brief for the assembly (now actioned) |
 | `verify_assembly.py`, `explore_vb_profile.py`, `verify_lemma_h.py`, `probe_*.py` | assembly + Lemma C / H verification |
