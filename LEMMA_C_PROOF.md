@@ -44,8 +44,12 @@ the 3x+1 exponential sum `S_k(xi) = sum_t cf_k[t] w^{xi t}`, `w = e^{-2 pi i/2^k
 
 ### Lemma H (the frequency-doubling recursion) - PROVED
 
-> **Lemma H.** For every `k >= 2` and every integer `xi` with `2 xi not= 0 (mod 2^k)`,
-> `S_k(2 xi) = S_{k-1}(xi)` exactly (as complex numbers).
+> **Lemma H.** For every `k >= 2` and every integer `xi` with `2 xi not in {0, 2^{k-1}} (mod 2^k)`
+> (i.e. `xi not in {0, 2^{k-2}} mod 2^{k-1}`), `S_k(2 xi) = S_{k-1}(xi)` exactly (as complex
+> numbers). (Statement side-condition corrected 2026-07-05: the earlier form `2 xi not= 0` omitted
+> the Nyquist case `2 xi = 2^{k-1}`, where the geometric part survives - exactly as the proof below
+> derives and the numerics confirm. The iteration in the next subsection always stays clear of both
+> excluded points, so nothing downstream changes.)
 
 **Proof.** Split the sum `S_k(eta) = sum_{m=0}^{2^k-1} w_k^{eta O_k(m)}`, `O_k(m)=OddCore(3m+a_k) mod 2^k`,
 by the parity of `m`, with `m = 2m'` or `m = 2m'+1`, `m' in [0,2^{k-1})`.
@@ -170,10 +174,12 @@ lower-triangle block norms factor as `Q_D[a,b] = u_a v_b` is foundation fact R2 
 `D = e_{r*} c^*`), which rests on Half-Shift Invariance - the same dependence Lemmas A and B already
 carry. Lemma C itself adds **no new conditional input** to the program.
 
-The bound (8) is `g_b^2 <= 3/4`, well inside the `0.924` ceiling the assembly needs. (A sharper
-accounting of the top-atom partners gives `g_b^2 <= 3/4 + (p-1)/2^p`, which still respects the ceiling
-for `p>=5`; for the finitely many top levels `p = k-b in {2,3,4}` the values are the exact, `k`-independent
-dyadic rationals `g_b^2 in {1/2, 1/8, 9/16}`, all `<= 9/16`. Either way `g_b < 0.961`.)
+The bound (8) is `g_b^2 <= 3/4`, well inside the `0.924` ceiling the assembly needs. (Parenthetical
+corrected 2026-07-05: an earlier draft line here quoted `3/4 + (p-1)/2^p`, contradicting (8); the
+chain (7)-(8) already includes the top atom's cross terms - the `(p-1)` partner count is inside the
+closed form `2^{p-1}-1` - so `g_b^2 <= 3/4 - 2^{-p}` holds outright, with equality-tightness at
+`p=2`. The exact top-level values are the `k`-independent dyadic rationals
+`g_b^2 in {1/2, 1/8, 9/16}` at `p = 2, 3, 4`. Either way `g_b < 0.961`.)
 
 Feeding `g_b <= sqrt(3/4)` into the assembly: `sum_b v_b 2^{-b} <= sqrt(3/4) 2^{-k/2} (4/3)`, so the
 lower row-sum at the top is `<= 2^{-3/2} sqrt(3/4)(4/3) = 0.408`, and

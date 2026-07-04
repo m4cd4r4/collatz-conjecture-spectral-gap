@@ -134,6 +134,15 @@ Two remarks on why the proof is not a wrap-up:
    `v_b ~ 2^{-b}` (Lemma C), not merely the total `L^2` mass, is what closes the bound. This is the
    precise sense in which the assembly is "a third lemma, not a wrap-up."
 
+   > **CORRECTION (2026-07-05, Fable review): Remark 2 is wrong, and Lemma C is NOT necessary.**
+   > The evaluation `G_up + 0.707` adds the FULL upper series to the top row's defect bound, but at
+   > the top row the upper cascade is EMPTY (`b <= k-2` leaves no `b > a` at `a = k-2`). Row-wise,
+   > the upper part is the truncated series `sum_{d <= (k-a)-2}`, and the correct envelope
+   > `f(e) = sum_{d=1}^{e-2} 2^{-3d/2} + 2^{-(e-1)/2}` peaks at `f(3) = 0.85355 < 1`. So Lemmas
+   > A + B alone give `cert(k) <= 0.8536` for all `k` - a better constant than this document's
+   > `0.9005` - and Lemma C is a genuine sharpening (to `0.656` through the same truncated
+   > envelope), not a necessity. Full statement and proof: [THEOREM.md](THEOREM.md).
+
 ## Numerical certificate (ground truth, for comparison)
 
 `verify_assembly.py` reports the true row-sum certificate from the measured `v_b` and from the dense
