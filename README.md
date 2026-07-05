@@ -143,9 +143,12 @@ consolidated with the full spectral reduction in [THEOREM.md](THEOREM.md)). What
 does **not** follow, and is **withdrawn**, is cycle elimination: the gap `=> no cycles` inference is
 false ([CYCLE_CLAIM_REFUTED.md](CYCLE_CLAIM_REFUTED.md)). Ruling out non-trivial Collatz cycles would
 require an instrument sensitive to the deterministic orbit (e.g. linear-forms-in-logs / height bounds,
-as in classical cycle-length results), not this transfer-operator spectral gap. The only thing the
-spectral-gap result still admits as future work is a Lean formalisation of the gap itself, which would
-formalise a correct-but-not-cycle-eliminating statement.
+as in classical cycle-length results), not this transfer-operator spectral gap. The remaining future
+work on the gap itself is completing its Lean formalisation: the elementary core (FACT 1, SB
+injectivity, Coset-Uniformity affine step, the envelope, and the Cauchy-Schwarz assembly) is
+machine-checked, sorry-free, in [lean/GapCertificate.lean](lean/GapCertificate.lean) (2026-07-05);
+the operator chain of THEOREM.md Part I (Perron split, majorisation, Gelfand) and the counting
+lemmas are still paper-only. Either way it formalises a correct-but-not-cycle-eliminating statement.
 
 ---
 
@@ -183,6 +186,7 @@ python probe_cycle_recovery.py      # cycle-detector tests: spectrum/traces are 
 | `CYCLE_STRUCTURE_RECOVERY.md` | follow-up: no cycle structure is recoverable from the spectral side; where it lives |
 | `probe_cycle_link.py`, `probe_cycle_recovery.py` | the 3x+1 vs 3x-1 control + cycle-detector tests |
 | `THEOREM.md` | **the consolidated theorem**: full spectral reduction + assembly, `cert(k) <= 0.8536` from A + B alone |
+| `lean/GapCertificate.lean` | **Lean 4 formalisation** of the elementary core (FACT 1, SB, CU, envelope, Cauchy-Schwarz assembly) - sorry-free, Mathlib v4.27.0 |
 | `UFULL_ASSEMBLY_PROOF.md` | the earlier row-sum assembly: `cert(k) < 0.9005` from Lemma A + Lemma C (Remark 2 corrected) |
 | `LEMMA_C_PROOF.md` | Lemma C proved (shell method + Lemma H homometry); assembly-strength bound |
 | `UFULL_ASSEMBLY_PLAN.md` | the prior cold-start brief for the assembly (now actioned) |

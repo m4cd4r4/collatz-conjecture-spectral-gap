@@ -168,6 +168,20 @@ python verify_assembly.py         # the Lemma C route numbers (cert ~0.6345, rho
 python audit_halfshift_s4.py      # CU, S4, and the Lemma A isometry to machine precision
 ```
 
+## Lean formalisation (elementary core)
+
+[lean/GapCertificate.lean](lean/GapCertificate.lean) - sorry-free, Mathlib v4.27.0
+(`cd lean && lake exe cache get && lake build`). Machine-checked (2026-07-05):
+
+- the shared divisibility engine, FACT 1 (Lemma B) and SB injectivity (Lemma A's S1);
+- the Coset-Uniformity affine step (`cu_valuation_frozen`, `cu_syracuse_affine`);
+- the envelope `f(e) <= f(3) = 2^{-3/2} + 1/2 < 1` (`envelope_max`, `envelope_lt_one`);
+- the Cauchy-Schwarz defect bound (`defect_sum_bound`) and the abstract row-sum
+  assembly of Part III (`assembly_row_bound`, `certificate_lt_one`).
+
+Not yet formalised: the operator chain of Part I (Perron split, majorisation,
+Gelfand), the CU fiber COUNT, SB surjectivity/cardinality, Lemma B's shell counting.
+
 ## Honest scope (restated)
 
 The theorem is about mixing of the mod-`2^k` Markov model. The averaging over `2^k` lifts that
