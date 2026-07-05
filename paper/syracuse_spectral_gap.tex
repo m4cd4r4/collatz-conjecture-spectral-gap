@@ -1,0 +1,538 @@
+\documentclass[12pt,a4paper]{article}
+
+\usepackage{amsmath,amsthm,amssymb,amsfonts}
+\usepackage{mathtools}
+\usepackage{hyperref}
+\usepackage{booktabs}
+\usepackage[margin=1in]{geometry}
+
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{remark}[theorem]{Remark}
+
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\C}{\mathbb{C}}
+\newcommand{\Syr}{\mathrm{Syr}}
+\newcommand{\vtwo}{v_2}
+\newcommand{\cert}{\mathrm{cert}}
+\newcommand{\tril}{\mathrm{tril}}
+\newcommand{\Sodd}{S^{\mathrm{odd}}}
+
+\title{An Elementary Uniform Spectral Gap\\for the Syracuse Transfer Operator}
+
+\author{Macdara (m4cd4r4)\thanks{With Claude (Anthropic): Opus~4.8 research sessions and a
+Fable~5 adversarial review, refereeing, and consolidation pass. All proofs are elementary and
+every numerical claim is reproducible from the repository.}\\
+\small \url{https://github.com/m4cd4r4/collatz-cycle-certificate}}
+
+\date{July 2026}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Let $T_k$ be the transfer operator of the Syracuse map $\Syr(n) = (3n+1)/2^{\vtwo(3n+1)}$ on the
+$N = 2^{k-1}$ odd residues modulo $2^k$, averaging over the $2^k$ lifts of a residue. We prove a
+uniform spectral gap: for every $k \geq 3$,
+\[
+  |\lambda_2(T_k)| \;\leq\; \cert(k) \;\leq\; 2^{-3/2} + 2^{-1} \;=\; 0.8535\ldots \;<\; 1,
+\]
+where $\cert(k)$ is an explicit weighted row-sum certificate over a 2-adic frequency grading.
+The proof is entirely elementary: finite cyclic 2-group arithmetic (three uniform-fiber lemmas
+sharing one engine, ``3 is a unit modulo $2^k$''), a finite geometric series, an integer collision
+count, and a single application of the Cauchy--Schwarz inequality. A sharper per-level bound on
+the defect covector improves the constant to $0.656$; the measured values are
+$\cert(k) \approx 0.6345$ and $|\lambda_2| \approx 0.27$. The elementary core of the proof is
+machine-checked in Lean~4 (Mathlib, sorry-free).
+
+\textbf{Scope.} This is a theorem about the Markov model, not about Collatz orbits. In
+particular it does \emph{not} rule out Collatz cycles: the analogous $3x{-}1$ operator passes the
+identical certificate even more strongly, yet $3x-1$ has non-trivial cycles. An earlier version
+of this project claimed a cycle-elimination corollary; that claim was withdrawn (Section~\ref{sec:scope}).
+\end{abstract}
+
+\noindent\textbf{Keywords:} Syracuse map, transfer operator, spectral gap, 2-adic analysis.
+
+%==============================================================================
+\section{Introduction}
+%==============================================================================
+
+For odd $n$, the Syracuse map is $\Syr(n) = (3n+1)/2^{\vtwo(3n+1)}$, where $\vtwo$ is the 2-adic
+valuation. Reducing modulo $2^k$ gives a natural Markov chain on the $N = 2^{k-1}$ odd residues:
+from a residue $r$, move to $\Syr(r + m 2^k) \bmod 2^k$ with $m$ uniform on $[0, 2^k)$. Its
+transition matrix $T_k$ (column-stochastic) is the finite-scale transfer operator of the map;
+the mixing of this family is the standard probabilistic model for the equidistribution of
+Syracuse trajectories modulo powers of two, going back to the heuristics surveyed in
+\cite{Lagarias2010} and quantified in Tao's almost-all result \cite{Tao2019}.
+
+Our main result is a uniform, explicit, and elementarily proved spectral gap for this family.
+
+\begin{theorem}[Uniform spectral gap]\label{thm:main}
+For every $k \geq 3$,
+\[
+  |\lambda_2(T_k)| \;\leq\; \cert(k) \;:=\; \max_{0 \le a \le k-2} \sum_{b=0}^{k-2} Q_k[a,b]\, 2^{a-b}
+  \;\leq\; 2^{-3/2} + 2^{-1} \;<\; 1,
+\]
+where $\lambda_2$ is the second-largest eigenvalue in modulus and
+$Q_k[a,b] = \|P_a U_k P_b\|_2$ is the matrix of block operator norms of the Koopman adjoint
+$U_k = T_k^{\!\top}$ over the 2-adic frequency grading of Section~\ref{sec:setup}.
+\end{theorem}
+
+The interest of the theorem is threefold. First, uniformity: the bound is independent of $k$,
+while the state space grows as $2^{k-1}$. Second, the constant is explicit and the true values
+sit far below it ($|\lambda_2| \approx 0.27$ for all tested $k$), so the certificate has a large
+margin. Third, and mainly, the proof is elementary from end to end. What looks like it should
+require Gauss-sum estimates reduces to three instances of one fact (multiplication by a unit has
+uniform fibers on a cyclic 2-group), one finite geometric series, one integer collision count
+with a two-line injectivity argument, and one Cauchy--Schwarz application. No analytic number
+theory, no perturbation theory, and no computer-assisted spectral certification enters the proof;
+numerics appear only as consistency checks.
+
+We are explicit about history because this project previously overclaimed twice, and both
+corrections shaped the final form. (i) A March 2026 draft asserted the gap via an eigenvalue
+perturbation telescope with a ``bounded condition number''; an adversarial audit (Session 39)
+refuted this: the eigenvector condition number grows like $10^k$, and the published inductive
+inequality fails numerically at every odd $k \geq 7$. The present proof replaces eigenvalue
+perturbation with norm inequalities that are condition-number-free. (ii) The certificate was
+then presented as eliminating non-trivial Collatz cycles. That inference is false and was
+withdrawn; Section~\ref{sec:scope} records the decisive control experiment. What survives is the
+operator theorem itself.
+
+\subsection*{Proof architecture}
+
+\begin{enumerate}
+\item \textbf{Spectral reduction} (Section~\ref{sec:reduction}): $|\lambda_2(T_k)| \le \rho(Q_k)
+  \le \cert(k)$, by a one-sided Perron split, a level-energy majorisation applied to a
+  compression, and Gelfand's formula. A subtlety repaired late in the project: $T_k$ is
+  \emph{not} doubly stochastic and its stationary distribution is \emph{not} exactly uniform,
+  so the argument must (and does) avoid both.
+\item \textbf{Block structure} (Section~\ref{sec:blocks}): $U_k = U_{\mathrm{clean}} + D$ where
+  $U_{\mathrm{clean}}$ is strictly upper-triangular in the level grading with exactly computable
+  block norms $\|P_a U_{\mathrm{clean}} P_b\| = 2^{-(b-a)/2}$ (Lemma A), and $D$ is a rank-1
+  defect supported at the single residue $r^\ast = -3^{-1} \bmod 2^k$.
+\item \textbf{Defect mass} (Section~\ref{sec:lemmaB}): the defect covector $c$ satisfies
+  $\|c\|_2 \le \sqrt{3}\,2^{-k/2}$, by an integer collision count (Lemma B).
+\item \textbf{Assembly} (Section~\ref{sec:assembly}): each weighted row sum is bounded by the
+  envelope $f(e) = \sum_{d=1}^{e-2} 2^{-3d/2} + 2^{-(e-1)/2}$ with $e = k - a$, whose maximum is
+  $f(3) = 2^{-3/2} + 2^{-1}$. The only analytic input is Cauchy--Schwarz; crucially, the upper
+  cascade \emph{truncates} at the top rows, which is what makes the $L^2$ bound sufficient.
+\end{enumerate}
+
+Section~\ref{sec:lemmaC} records the sharper per-level defect bound (Lemma C, via an elementary
+frequency-doubling identity), which improves the constant to $0.656$ but is not needed for
+Theorem~\ref{thm:main}. Section~\ref{sec:lean} describes the Lean~4 formalisation of the
+elementary core. Section~\ref{sec:scope} delimits scope.
+
+%==============================================================================
+\section{The operator and the frequency grading}\label{sec:setup}
+%==============================================================================
+
+\begin{definition}\label{def:T}
+Fix $k \ge 3$ and let $N = 2^{k-1}$. The state space is the set of odd residues modulo $2^k$.
+The chain moves from $r$ to $\Syr(r + m 2^k) \bmod 2^k$ with $m$ uniform on $\{0, \dots, 2^k-1\}$;
+$T_k[s', s]$ is this transition probability, and $U = U_k := T_k^{\!\top}$ is the Koopman
+(expectation) operator, $(Ug)(r) = \mathbb{E}_m\, g\!\left(\Syr(r + m 2^k)\right)$.
+\end{definition}
+
+$T_k$ is column-stochastic by construction, so $\mathbf{1}^{\!\top} T_k = \mathbf{1}^{\!\top}$
+and $\rho(T_k) = 1$.
+
+\begin{remark}[$T_k$ is not doubly stochastic]\label{rem:notds}
+The row sums of $T_k$ are \emph{not} identically 1: numerically
+$\|T_k \mathbf{1} - \mathbf{1}\|_2 \approx 0.764 \cdot 2^{-k/2}$, another face of the $r^\ast$
+defect of Section~\ref{sec:blocks}. Consequently the stationary distribution is only
+approximately uniform, $U$ does not preserve the mean-zero subspace, and identities such as
+$T_r^p = T_k^p - N^{-1} J$ (used in an earlier write-up) are false. Nothing below uses
+uniformity of the stationary distribution; the reduction in Section~\ref{sec:reduction} is
+deliberately one-sided.
+\end{remark}
+
+\begin{definition}[Characters and levels]\label{def:levels}
+Let $\omega = e^{2\pi i / 2^k}$ and, for $\xi \in [0, 2^{k-1})$, let
+$\chi_\xi(r) = \omega^{\xi r}/\sqrt{N}$ on odd $r$. On odd arguments
+$\chi_{\xi + 2^{k-1}} = -\chi_\xi$, so this range selects one representative per proportionality
+class, and the $\chi_\xi$ form an orthonormal basis of $\C^N$ (orthogonality is the $m = k$ case
+of Lemma~\ref{lem:S4} below). $\chi_0$ is the constant (Perron) vector. The \emph{level} of
+$\xi \neq 0$ is $\vtwo(\xi) \in \{0, \dots, k-2\}$; $P_a$ denotes the orthogonal projection onto
+$W_a = \mathrm{span}\{\chi_\xi : \vtwo(\xi) = a\}$, of dimension $d_a = 2^{k-2-a}$. The mean-zero
+space is $V = W_0 \oplus \cdots \oplus W_{k-2}$, an orthogonal decomposition.
+\end{definition}
+
+%==============================================================================
+\section{The spectral reduction}\label{sec:reduction}
+%==============================================================================
+
+\begin{proposition}\label{prop:reduction}
+Let $Q = Q_k$ with $Q[a,b] = \|P_a U P_b\|_2$. Then
+$|\lambda_2(T_k)| \le \rho(Q) \le \cert(k)$.
+\end{proposition}
+
+\begin{proof}
+\emph{(i) Perron split.} Since $\mathbf{1}^{\!\top} T = \mathbf{1}^{\!\top}$, the mean-zero space
+$V = \ker \mathbf{1}^{\!\top} = \mathbf{1}^\perp$ is $T$-invariant. In a basis adapted to
+$\C^N = \mathrm{span}(\mathbf{1}) \oplus V$, $T$ is block-triangular
+$\bigl(\begin{smallmatrix} 1 & 0 \\ d & A \end{smallmatrix}\bigr)$ with $A = T|_V$ (the vector
+$d$, the $V$-component of $T\mathbf{1}$, is nonzero by Remark~\ref{rem:notds} but harmless). The
+characteristic polynomial factors, so $\mathrm{spec}(T) = \{1\} \uplus \mathrm{spec}(A)$ and
+$|\lambda_2(T)| \le \rho(A)$.
+
+\emph{(ii) Adjoint and Gelfand.} $A^\ast = (P_V T P_V)^\ast|_V = P_V U P_V =: U_V$, the
+compression of $U$ to $V$ ($V$ need not be $U$-invariant; only the compression is used), and
+$\rho(A) = \rho(U_V)$. Gelfand's formula $\rho(U_V) \le \|U_V^p\|_2^{1/p}$ holds for every matrix
+and every $p$; no normality or diagonalisability enters. This is the step that makes the argument
+immune to the $10^k$ eigenvector condition numbers that invalidated the earlier perturbative
+route.
+
+\emph{(iii) Level majorisation.} For $g \in V$ let $\alpha(g)_a := \|P_a g\|_2$. Since
+$P_a P_V = P_a$, the triangle inequality gives, for each level $a'$,
+\[
+  \|P_{a'} U_V g\| = \Bigl\| \sum_b P_{a'} U P_b g \Bigr\|
+  \le \sum_b Q[a', b]\, \alpha(g)_b = (Q\, \alpha(g))_{a'},
+\]
+i.e.\ $\alpha(U_V g) \le Q\,\alpha(g)$ entrywise. As $Q \ge 0$ this iterates:
+$\alpha(U_V^p g) \le Q^p \alpha(g)$. The levels are orthogonal and exhaust $V$, so
+$\|U_V^p g\|_2 = \|\alpha(U_V^p g)\|_2 \le \|Q^p\|_2 \|g\|_2$, whence
+$\rho(U_V) \le \lim_p \|Q^p\|^{1/p} = \rho(Q)$.
+
+\emph{(iv) Weighted row sum.} For the diagonal similarity $S = \mathrm{diag}(2^0, \dots, 2^{k-2})$
+and the nonnegative matrix $Q$,
+$\rho(Q) = \rho(S Q S^{-1}) \le \|S Q S^{-1}\|_\infty = \max_a \sum_b Q[a,b]\, 2^{a-b} = \cert(k)$.
+\end{proof}
+
+%==============================================================================
+\section{Block structure: three instances of one engine}\label{sec:blocks}
+%==============================================================================
+
+Throughout, $x$ is odd, $v(r) := \vtwo(3r+1) \ge 1$, and $3^{-1}$ denotes the inverse of 3 in the
+relevant $\Z/2^m$.
+
+\subsection{Coset uniformity and the splitting \texorpdfstring{$U = U_{\mathrm{clean}} + D$}{U = Uclean + D}}
+
+\begin{lemma}[CU]\label{lem:CU}
+Let $x$ be odd with $v := \vtwo(3x+1) < K$, and $q_0 := (3x+1)/2^v$ (odd). Then for every $m$,
+\[
+  \vtwo\bigl(3(x + m 2^K) + 1\bigr) = v, \qquad
+  \Syr(x + m 2^K) = q_0 + 3m\,2^{K-v},
+\]
+and as $m$ ranges over $\Z/2^K$ the residue $\Syr(x + m 2^K) \bmod 2^K$ is uniform on the coset
+$q_0 + 2^{K-v}(\Z/2^K)$ of size $2^v$, each value attained exactly $2^{K-v}$ times.
+\end{lemma}
+
+\begin{proof}
+$3(x + m2^K) + 1 = 2^v q_0 + 3m 2^K = 2^v (q_0 + 3m\,2^{K-v})$, and the bracket is odd because
+$q_0$ is odd and $K - v \ge 1$; this freezes the valuation and gives the affine formula. For the
+count: $m \mapsto 3 \cdot 2^{K-v} m$ is an endomorphism of $\Z/2^K$ whose image is the subgroup
+$2^{K-v}(\Z/2^K)$ of order $2^v$ (3 is a unit) and whose kernel has order $2^{K-v}$; every image
+point has exactly $2^{K-v}$ preimages, and adding $q_0$ translates the image to the coset.
+\end{proof}
+
+Apply Lemma~\ref{lem:CU} with $K = k$. For every row $r$ with $v(r) < k$, averaging
+$\chi_\eta$ over the uniform coset collapses to a geometric sum which is $2^v$ or $0$ according
+to whether $2^v \mid \eta$, yielding the masked-phase formula
+\begin{equation}\label{eq:masked}
+  (U \chi_\eta)(r) = \mathbf{1}[\,v(r) \le \vtwo(\eta)\,]\; \omega^{\eta\, q(r)}, \qquad
+  q(r) := (3r+1)/2^{v(r)}, \qquad (v(r) < k).
+\end{equation}
+Exactly one odd residue fails the hypothesis: $2^k \mid 3r+1$ has the unique odd solution
+$r^\ast = -3^{-1} \bmod 2^k = (4^{\lceil k/2 \rceil} - 1)/3$, where $3r^\ast + 1 =
+2^{2\lceil k/2 \rceil}$ exactly. Define $U_{\mathrm{clean}}$ by \eqref{eq:masked} with the
+$r^\ast$-row set to zero, and $D := U - U_{\mathrm{clean}}$. Then:
+
+\begin{itemize}
+\item[\textbf{(R1)}] $P_a U_{\mathrm{clean}} P_b = 0$ for $a \ge b$ (strict upper-triangularity;
+  a by-product of the survivor analysis below);
+\item[\textbf{(R2)}] $D = e_{r^\ast} c^{\ast}$ is rank~1, where $c$ is the probability vector
+  $c[t] = 2^{-k} \#\{m : \Syr(r^\ast + m2^k) \equiv t \bmod 2^k\}$; hence
+  $\|P_a D P_b\| = u_a v_b$ with $u_a := \|P_a e_{r^\ast}\|$, $v_b := \|P_b c\|$;
+\item[\textbf{(R3)}] $u_a = 2^{-(a+1)/2}$ exactly: any state unit vector has flat character
+  energy $1/N$ per frequency, so $u_a^2 = d_a / N = 2^{-1-a}$.
+\end{itemize}
+
+By the triangle inequality, for all $a, b$:
+\begin{equation}\label{eq:triangle}
+  Q[a,b] \;\le\; \|P_a U_{\mathrm{clean}} P_b\| + u_a v_b.
+\end{equation}
+
+\subsection{The two remaining elementary inputs for Lemma A}
+
+\begin{lemma}[SB: shell bijection]\label{lem:SB}
+Fix $1 \le j \le k-2$. The map $\psi(r) := (3r+1)/2^j \bmod 2^{k-j}$ is a bijection from the
+shell $S_j := \{ r \text{ odd}, 0 < r < 2^k,\ v(r) = j \}$ onto the odd residues modulo
+$2^{k-j}$.
+\end{lemma}
+
+\begin{proof}
+Injectivity: $\psi(r) = \psi(r')$ gives $3r + 1 \equiv 3r' + 1 \pmod{2^k}$, so $r = r'$ (3 a
+unit, both in $[0, 2^k)$). Cardinality: $v(r) = j$ pins $r$ to a single (odd) residue class
+modulo $2^{j+1}$, so $|S_j| = 2^{k-j-1}$, which equals the number of odd residues modulo
+$2^{k-j}$; injective plus equal finite cardinality gives bijective, with multiplicity exactly
+one.
+\end{proof}
+
+\begin{lemma}[S4: odd geometric sum]\label{lem:S4}
+For $m \ge 1$ and $\Sodd(\alpha, m) := \sum_{q \text{ odd},\, 0 \le q < 2^m} \omega^{\alpha q}$:
+if $2^{k-1} \mid \alpha$ then $|\Sodd| = 2^{m-1}$ (full); otherwise $\Sodd = 0$ if and only if
+$k - m \le \vtwo(\alpha) \le k - 2$ (the dead band); below the band it is a nonzero partial sum.
+\end{lemma}
+
+\begin{proof}
+Substitute $q = 2\ell + 1$ and sum the geometric series with ratio $\omega^{2\alpha}$.
+\end{proof}
+
+\subsection{Lemma A: the clean upper cascade is a scaled isometry}
+
+\begin{theorem}[Lemma A]\label{thm:lemmaA}
+For all $k$ and all $0 \le a < b \le k-2$, with $d := b - a$, the block
+$B = P_a U_{\mathrm{clean}} P_b$ satisfies $B^\ast B = 2^{-d} I$; in particular
+$\|P_a U_{\mathrm{clean}} P_b\|_2 = 2^{-d/2}$ exactly. Moreover $P_a U_{\mathrm{clean}} P_b = 0$
+for $a \ge b$ (R1).
+\end{theorem}
+
+\begin{proof}[Proof (survivor analysis)]
+The matrix entry of $U_{\mathrm{clean}}$ between source $\chi_\eta$ ($\vtwo(\eta) = b$) and
+target $\chi_\xi$ ($\vtwo(\xi) = a$) is, up to the $1/N$ normalisation,
+$\hat{U}(\eta, \xi) = \sum_{r,\, 1 \le v(r) \le b} \omega^{\eta q(r) - \xi r}$. Group by the
+shell $j = v(r)$. On shell $j$, $r = 3^{-1}(2^j q - 1)$ with $q = q(r)$, so the phase is
+$q\,\alpha_j + \xi 3^{-1}$ with $\alpha_j := \eta - \xi\, 2^j 3^{-1}$. The valuations are
+\[
+  \vtwo(\alpha_j) = a + j \ (j < d), \qquad \vtwo(\alpha_j) = b \ (j > d), \qquad
+  \vtwo(\alpha_j) \ge b \ (j = d),
+\]
+and in every case $\vtwo(\alpha_j) \ge j$, so $\omega^{q \alpha_j}$ depends only on
+$q \bmod 2^{k-j}$. By Lemma~\ref{lem:SB} the shell sum is exactly
+$\omega^{\xi 3^{-1}} \Sodd(\alpha_j, k-j)$, and by Lemma~\ref{lem:S4} every shell lands in the
+dead band $[j, k-2]$ \emph{except} possibly $j = d$, which survives if and only if
+$\alpha_d \in \{0, 2^{k-1}\}$, with full modulus $2^{k-d-1}$. Counting: each $\eta$ has exactly
+$2^d$ owners $\xi$ (two residue classes modulo $2^{k-d}$, each contributing $2^{d-1}$ values of
+valuation $a$ in $[0, 2^{k-1})$), giving the diagonal
+$(B^\ast B)[\eta, \eta] = N^{-2} \cdot 2^d \cdot (2^{k-d-1})^2 = 2^{-d}$; and for fixed $\xi$
+exactly one of the two candidate sources lies in the index range $[0, 2^{k-1})$, so distinct
+columns have disjoint row support and the off-diagonal entries vanish. For $a \ge b$ the same
+computation gives $\vtwo(\alpha_j) = b \in [j, k-2]$ for every shell $j \le b$, so every shell
+is annihilated: this is (R1).
+\end{proof}
+
+%==============================================================================
+\section{Lemma B: the defect mass, by an integer collision count}\label{sec:lemmaB}
+%==============================================================================
+
+\begin{theorem}[Lemma B]\label{thm:lemmaB}
+$\displaystyle \sum_{b=0}^{k-2} v_b^2 \;\le\; \|c\|_2^2 \;=\; \frac{\mathrm{coll}(k)}{4^k}
+\;\le\; \frac{3 \cdot 2^k}{4^k}, \qquad\text{i.e.}\qquad \|v\|_2 \le \sqrt{3}\, 2^{-k/2},$
+where $\mathrm{coll}(k) = \sum_t \mathrm{cf}[t]^2$ and
+$\mathrm{cf}[t] = \#\{m \in [0,2^k) : \Syr(r^\ast + m 2^k) \equiv t \bmod 2^k\}$.
+\end{theorem}
+
+\begin{proof}[Proof sketch (full details in the repository)]
+Since $3r^\ast + 1 = 2^{2\lceil k/2\rceil}$, the fiber is
+$\Syr(r^\ast + m2^k) = \mathrm{oddpart}(a + 3m) \bmod 2^k$ with
+$a = 2^{2\lceil k/2\rceil - k} \in \{1, 2\}$, an arithmetic progression of length $2^k$ in the
+integers. Decompose it by 2-adic shells $A_j = \{x = a + 3m : \vtwo(x) = j\}$, of sizes
+$|A_j| = 2^{k-1-j}$ ($j \le k-1$) plus one top atom.
+
+\emph{FACT 1 (per-shell injectivity).} On each shell, $x \mapsto (x/2^j) \bmod 2^k$ is
+injective: if $x = 2^j u$, $x' = 2^j u'$ with $u \equiv u' \pmod{2^k}$, then
+$3(m - m') = 2^j(u - u') \equiv 0 \pmod{2^{j+k}}$; as $\gcd(2,3)=1$ this forces
+$2^{j+k} \mid m - m'$, and $|m - m'| < 2^k$ gives $m = m'$. Hence the fiber count is $0/1$ per
+shell, and $\mathrm{coll} = \sum_{j,j'} |R_j \cap R_{j'}|$ over the shell images $R_j$.
+
+The diagonal contributes exactly $2^k$. The cross terms obey
+$\sum_{j < j'} |R_j \cap R_{j'}| \le \sum_{j' \ge 2} (j'-1) 2^{k-1-j'} + (k-1) = 2^{k-1} - 1$
+(the closed form includes the top atom's at most $k-1$ partners, covered by the truncation slack
+of the geometric series). Hence $\mathrm{coll} \le 2^k + 2(2^{k-1} - 1) < 3 \cdot 2^k$. The
+sharp constant is $\mathrm{coll}/2^k \to 31/12$, comfortably inside 3. Finally
+$\sum_b v_b^2 = \|c\|^2 - 1/N \le \|c\|^2$, the dropped term being the Perron coefficient of the
+probability vector $c$.
+\end{proof}
+
+%==============================================================================
+\section{The assembly}\label{sec:assembly}
+%==============================================================================
+
+\begin{proof}[Proof of Theorem~\ref{thm:main}]
+Fix a row $a \le k-2$ and set $e := k - a \ge 2$. Write the weight as
+$2^{a-b} = 2^a (1/2)^b$. By \eqref{eq:triangle}, Theorem~\ref{thm:lemmaA} and (R1),
+\[
+  \sum_b Q[a,b]\, 2^{a-b}
+  \;\le\; \underbrace{\sum_{d=1}^{e-2} 2^{-d/2}\, 2^{-d}}_{\text{clean cascade, truncated}}
+  \;+\; \underbrace{u_a 2^a \sum_{b=0}^{k-2} v_b\, 2^{-b}}_{\text{defect, all } b}.
+\]
+Two remarks. The clean sum \emph{truncates} at $d \le e-2$ because $b \le k-2$; at the top row
+$a = k - 2$ it is empty. The defect is summed over \emph{all} $b$, which absorbs its
+contribution to the upper blocks with no separate estimate.
+
+For the defect factor, Cauchy--Schwarz against the geometric weight and Theorem~\ref{thm:lemmaB}
+give, with no information about the profile of $(v_b)$,
+\[
+  \sum_{b=0}^{k-2} v_b\, 2^{-b}
+  \;\le\; \|v\|_2 \Bigl( \sum_{b \ge 0} 4^{-b} \Bigr)^{1/2}
+  \;\le\; \sqrt{3}\, 2^{-k/2} \cdot \tfrac{2}{\sqrt{3}} \;=\; 2^{1 - k/2},
+\]
+and with $u_a 2^a = 2^{(a-1)/2}$ (R3) the defect term is at most
+$2^{(a-1)/2}\, 2^{1-k/2} = 2^{-(e-1)/2}$. Hence
+\[
+  \sum_b Q[a,b]\, 2^{a-b} \;\le\; f(e) \;:=\; \sum_{d=1}^{e-2} 2^{-3d/2} + 2^{-(e-1)/2}.
+\]
+The difference $f(e+1) - f(e) = 2^{-(e-1)/2}\bigl(2^{-(e-1)} - (1 - 2^{-1/2})\bigr)$ is positive
+only at $e = 2$, so $f$ increases from $f(2) = 2^{-1/2}$ to its maximum
+$f(3) = 2^{-3/2} + 2^{-1} = 0.8535\ldots$ and decreases thereafter toward
+$G_{\mathrm{up}} = (2^{3/2} - 1)^{-1} = 0.5469\ldots$. Therefore
+$\cert(k) \le f(3) < 1$ for every $k \ge 3$, and Proposition~\ref{prop:reduction} completes the
+proof.
+\end{proof}
+
+\begin{remark}[Why truncation matters]\label{rem:truncation}
+Without the truncation one would bound the row sum by
+$G_{\mathrm{up}} + 2^{-1/2} = 1.25 > 1$ and wrongly conclude that the $L^2$ defect bound is
+insufficient (an earlier version of the assembly did exactly this and introduced the per-level
+Lemma C as a necessity). Row-wise, the two terms of $f$ trade off: rows with a long cascade have
+a small defect weight and vice versa, with the worst case at $e = 3$.
+\end{remark}
+
+\begin{remark}[Sharpness and measured values]\label{rem:sharp}
+The envelope is asymptotically sharp at the bottom row ($e = k$), where both the true row sum and
+$f(k)$ converge to $G_{\mathrm{up}}$; the row that sets the constant, $e = 3$, has a wide margin
+(true value $\approx 0.63$ against $f(3) = 0.854$). Ground-truth values (dense operator,
+both parities; reproducible with \texttt{fable\_assembly\_check.py}):
+
+\begin{center}
+\begin{tabular}{lcccccc}
+\toprule
+$k$ & 4 & 6 & 8 & 10 & 12 & 13 \\
+\midrule
+$\cert(k)$ & 0.6117 & 0.6338 & 0.6347 & 0.6345 & 0.6345 & 0.6344 \\
+$\rho(Q_k)$ & 0.5020 & 0.5535 & 0.5661 & 0.5673 & 0.5656 & 0.5644 \\
+$\|c\|_2\, 2^{k/2}$ & 1.6202 & 1.6105 & 1.6081 & 1.6075 & 1.6073 & 1.6072 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent All row bounds $R_a \le f(k-a)$ hold with margin at every tested $k$, and the rank-1
+factorisation $Q[a,b] = u_a v_b$ on $a \ge b$ is machine-exact.
+\end{remark}
+
+%==============================================================================
+\section{The per-level sharpening (Lemma C)}\label{sec:lemmaC}
+%==============================================================================
+
+Theorem~\ref{thm:main} needs only the $L^2$ mass of the defect. The per-level structure is
+nevertheless elementary and sharp, and improves the constant.
+
+\begin{theorem}[Lemma C]\label{thm:lemmaC}
+$v_b \le \tfrac{3}{4}\, 2^{-b}\, 2^{-k/2}$ for all $k$ and $0 \le b \le k-2$.
+\end{theorem}
+
+The proof (in the repository) rests on a frequency-doubling identity for the fiber exponential
+sum $S_k(\xi) = \sum_t \mathrm{cf}[t]\, e^{-2\pi i \xi t / 2^k}$:
+
+\begin{lemma}[H: homometry]\label{lem:H}
+For $k \ge 2$ and $2\xi \notin \{0, 2^{k-1}\} \bmod 2^k$: $S_k(2\xi) = S_{k-1}(\xi)$ exactly.
+\end{lemma}
+
+\begin{proof}[Proof idea]
+Split the fiber sum by the parity of $m$. One parity makes $3m + a$ odd and contributes a
+geometric series that vanishes away from the two excluded frequencies; the other parity halves
+the scale and reproduces the $(k-1)$-fiber exactly (the parity flip swaps the offsets
+$a = 1 \leftrightarrow 2$, matching the parity of $k-1$).
+\end{proof}
+
+Iterating Lemma~\ref{lem:H} reduces the level-$b$ energy to a single scale $p = k - b$, where a
+Parseval identity converts it into the half-shift autocorrelation $\mathrm{coll}(p) - A_p$, which
+the shell decomposition of Theorem~\ref{thm:lemmaB} bounds by $3 \cdot 2^{p-1} - 2$ (the $j = 0$
+shell cancels identically from the autocorrelation). Feeding Theorem~\ref{thm:lemmaC} through
+the truncated envelope of Section~\ref{sec:assembly} replaces $2^{-(e-1)/2}$ by $2^{-(e+1)/2}$
+and yields
+\[
+  \cert(k) \;\le\; \max_{e \ge 2}\Bigl[ \sum_{d=1}^{e-2} 2^{-3d/2} + 2^{-(e+1)/2} \Bigr]
+  \;=\; 0.6559\ldots \qquad (\text{maximum at } e = 4),
+\]
+remarkably close to the measured $0.6345$.
+
+%==============================================================================
+\section{Lean formalisation}\label{sec:lean}
+%==============================================================================
+
+The elementary core of the proof is machine-checked in Lean~4 against Mathlib (v4.27.0), in the
+repository module \texttt{lean/GapCertificate.lean} (15 theorems, no \texttt{sorry}, no new
+axioms):
+
+\begin{itemize}
+\item the shared divisibility engine ($2^N \mid 3(m - m')$ in a $2^N$-window forces $m = m'$),
+  and as corollaries FACT~1 of Theorem~\ref{thm:lemmaB} and the injectivity half of
+  Lemma~\ref{lem:SB};
+\item the affine step of Lemma~\ref{lem:CU} (\texttt{cu\_valuation\_frozen},
+  \texttt{cu\_syracuse\_affine});
+\item the envelope analysis of Section~\ref{sec:assembly}: $f(e) \le f(3) < 1$;
+\item the Cauchy--Schwarz defect bound and the abstract row-sum assembly
+  (\texttt{assembly\_row\_bound}, \texttt{certificate\_lt\_one}): given the block bounds of
+  Sections~\ref{sec:blocks}--\ref{sec:lemmaB} as hypotheses, every weighted row sum is
+  $\le f(k-a) < 1$.
+\end{itemize}
+
+Two formalisation dividends: FACT~1, parametrised by the lift index, needs no modulo-3 argument
+at all; and the identity $(2s^2)^{a+1} = 1$ for $s = 2^{-1/2}$ keeps every exponent in $\N$, so
+the formal assembly involves no real exponentiation. Not yet formalised: the operator chain of
+Proposition~\ref{prop:reduction}, the fiber count of Lemma~\ref{lem:CU}, the counting halves of
+Lemmas~\ref{lem:SB} and B, and Lemma C.
+
+%==============================================================================
+\section{What this theorem does and does not say}\label{sec:scope}
+%==============================================================================
+
+Theorem~\ref{thm:main} concerns the averaged Markov model: it says the mod-$2^k$ chain mixes
+uniformly fast in $k$. It says nothing about individual deterministic orbits.
+
+\textbf{The withdrawn cycle claim.} An earlier version of this project asserted that the uniform
+gap eliminates non-trivial Collatz cycles. The inference is false, by a control experiment: the
+$3x - 1$ map (equivalently, Collatz on negative integers) has non-trivial cycles
+($\{5, 7\}$, $\{17, 25, 37, 55, 41, 61, 91, 47, 71, 53, 79, 59, 89, 33, 49, 73\}$, \dots), yet
+its transfer operator passes the identical certificate, with an even stronger measured gap. The
+averaging over $2^k$ lifts that defines $T_k$ erases exactly the deterministic orbit structure a
+cycle lives in, in the same way that the doubling map is mixing while having dense periodic
+orbits. Ruling out Collatz cycles requires instruments sensitive to specific orbits (heights,
+linear forms in logarithms), not the spectrum of the averaged operator. Likewise the theorem has
+no bearing on divergent trajectories; the determinism-versus-probability gap quantified in the
+project's audit (a large-deviation shortfall of roughly a factor 12 for every counting-based
+route) remains the actual wall, consistent with the state of the art after \cite{Tao2019}.
+
+What the theorem does provide: a natural family of arithmetically structured, non-normal,
+non-doubly-stochastic operators of exponentially growing dimension with a uniform, explicit,
+elementarily provable spectral gap, whose sharp structure ($B^\ast B = 2^{-d} I$ blocks, a rank-1
+defect at the base-4 repunit $r^\ast$, the $31/12$ collision constant) is completely understood.
+
+\subsection*{Reproducibility}
+
+All claims are reproducible from
+\url{https://github.com/m4cd4r4/collatz-cycle-certificate}: the proof documents
+(\texttt{THEOREM.md} and the lemma files), the numerical ground-truth checks
+(\texttt{fable\_assembly\_check.py}, \texttt{verify\_assembly.py},
+\texttt{audit\_halfshift\_s4.py}, \texttt{lemmaB\_fact1\_rigorous.py}), the $3x{-}1$ control
+(\texttt{probe\_cycle\_link.py}, \texttt{CYCLE\_CLAIM\_REFUTED.md}), and the Lean project
+(\texttt{lean/}).
+
+\begin{thebibliography}{9}
+
+\bibitem{Lagarias2010}
+J.~C. Lagarias (ed.), \emph{The Ultimate Challenge: The $3x+1$ Problem}, American Mathematical
+Society, 2010.
+
+\bibitem{Tao2019}
+T.~Tao, \emph{Almost all orbits of the Collatz map attain almost bounded values}, Forum of
+Mathematics, Pi 10 (2022), e12. arXiv:1909.03562.
+
+\bibitem{Mori2024}
+L.~Mori, \emph{$C^\ast(T_1, T_2)$ irreducible on $\ell^2(\N)$ iff Collatz}, arXiv:2411.08084
+(2024).
+
+\bibitem{mathlib}
+The mathlib Community, \emph{The Lean mathematical library}, CPP 2020.
+
+\end{thebibliography}
+
+\end{document}
