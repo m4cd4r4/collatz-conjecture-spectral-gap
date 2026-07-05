@@ -185,6 +185,7 @@ python probe_cycle_recovery.py      # cycle-detector tests: spectrum/traces are 
 | `CYCLE_CLAIM_REFUTED.md` | **the retraction**: why the spectral gap does not eliminate cycles (3x-1 control) |
 | `CYCLE_STRUCTURE_RECOVERY.md` | follow-up: no cycle structure is recoverable from the spectral side; where it lives |
 | `probe_cycle_link.py`, `probe_cycle_recovery.py` | the 3x+1 vs 3x-1 control + cycle-detector tests |
+| `paper/syracuse_spectral_gap.pdf` | **the paper** (9 pp): the theorem, all proofs, the Lean section, and the scope/retraction statement |
 | `THEOREM.md` | **the consolidated theorem**: full spectral reduction + assembly, `cert(k) <= 0.8536` from A + B alone |
 | `lean/GapCertificate.lean` | **Lean 4 formalisation** of the elementary core (FACT 1, SB, CU, envelope, Cauchy-Schwarz assembly) - sorry-free, Mathlib v4.27.0 |
 | `UFULL_ASSEMBLY_PROOF.md` | the earlier row-sum assembly: `cert(k) < 0.9005` from Lemma A + Lemma C (Remark 2 corrected) |
