@@ -17,7 +17,8 @@
 > the identical certificate (`cert ~ 0.606 < 1`, `|lambda_2| ~ 0.29`) even more strongly than `3x+1`.
 > The averaging over `2^k` lifts that defines the operator washes out the deterministic orbit
 > structure, so cycles are invisible to the spectrum (the same way the doubling map is mixing yet has
-> dense periodic points). Full account: [CYCLE_CLAIM_REFUTED.md](CYCLE_CLAIM_REFUTED.md).
+> dense periodic points). Full account: [CYCLE_CLAIM_REFUTED.md](CYCLE_CLAIM_REFUTED.md). (The other
+> failure mode, divergent trajectories, was never addressed by this project either.)
 
 What remains correct and proved is a **uniform spectral gap for the Syracuse (3n+1) mod-`2^k` transfer
 operator** `T_k`: the lemmas (A, B, and the sharpening C), their shared Coset-Uniformity foundation,
@@ -29,9 +30,6 @@ and full proof chain - the spectral reduction written out end-to-end (with a 202
 to `0.656`) - is **[THEOREM.md](THEOREM.md)**. This is a real result about the operator. It simply
 does **not** carry the cycle-elimination corollary that was claimed, and it is not a proof of (any
 part of) the Collatz conjecture.
-
-> **Honest scope.** Cycle elimination is what was *attempted* and is now retracted. The divergent-
-> trajectory half of Collatz was never addressed. The surviving content is the operator spectral gap.
 
 ## Status at a glance
 
@@ -99,8 +97,7 @@ shared foundation (coset-uniformity), and the final "below 1" assembly are all p
 the entire reason the block is a rigid rescaling.*
 
 **Where it stands.** A correct, elementary, all-scales proof of a uniform spectral gap for the Syracuse
-transfer operator (`<= 0.8536`, room to spare). The cycle-elimination conclusion that motivated it is
-withdrawn. This is **not** a proof of any part of Collatz.
+transfer operator (`<= 0.8536`, room to spare) - nothing more, nothing less.
 
 ---
 
