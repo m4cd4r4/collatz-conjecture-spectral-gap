@@ -1,5 +1,15 @@
 # A uniform spectral gap for the Syracuse transfer operator
 
+[![paper](https://img.shields.io/badge/paper-9pp%20PDF-blue)](paper/syracuse_spectral_gap.pdf)
+[![Lean 4 core](https://img.shields.io/badge/Lean%204-core%20sorry--free-brightgreen)](lean/GapCertificate.lean)
+[![certificate](https://img.shields.io/badge/certificate-%E2%89%A4%200.8536%20%3C%201-success)](THEOREM.md)
+[![reproducible](https://img.shields.io/badge/figures%20%26%20proofs-reproducible-blue)](#reproduce-everything)
+![license](https://img.shields.io/badge/license-public%20domain-lightgrey)
+
+![scope](https://img.shields.io/badge/scope-operator%20spectral%20gap%20only-orange)
+[![cycle elimination retracted](https://img.shields.io/badge/cycle%20elimination-retracted-inactive)](CYCLE_CLAIM_REFUTED.md)
+![not a proof of Collatz](https://img.shields.io/badge/not%20a%20proof%20of-Collatz-critical)
+
 > **RETRACTION (2026-06-02, read first).** This repository previously claimed that the spectral-gap
 > certificate **eliminates non-trivial Collatz cycles**. **That claim is withdrawn - it is false.** A
 > uniform spectral gap of the transfer operator does NOT imply the absence of cycles. Decisive control:
@@ -22,6 +32,26 @@ part of) the Collatz conjecture.
 
 > **Honest scope.** Cycle elimination is what was *attempted* and is now retracted. The divergent-
 > trajectory half of Collatz was never addressed. The surviving content is the operator spectral gap.
+
+## Status at a glance
+
+| Component | State |
+|---|---|
+| Uniform spectral gap `cert(k) <= 0.8536 < 1`, every scale `k` | **Proved** (elementary, all-`k`) |
+| Lemmas A, B, C + Coset-Uniformity foundation + row-sum assembly | **Proved** |
+| Lean 4 formalisation of the elementary core | **Machine-checked, sorry-free** (Mathlib v4.27.0) |
+| Operator chain (Perron split, majorisation, Gelfand) + counting lemmas in Lean | Paper-only, formalisation pending |
+| Paper write-up, 9 pp | **Done** - [`paper/syracuse_spectral_gap.pdf`](paper/syracuse_spectral_gap.pdf) |
+| Cycle elimination (`gap => no cycles`) | **Retracted, false** - [why](CYCLE_CLAIM_REFUTED.md) |
+| Proof of the Collatz conjecture (any part) | Not attempted / not claimed |
+
+## Contents
+
+- [In plain terms](#in-plain-terms) - the whole story, no jargon
+- [The result, precisely](#the-result-precisely) - the certificate, Lemmas A / B / C, what remains
+- [Reproduce everything](#reproduce-everything) - one command per claim
+- [Repository map](#repository-map) - what each file is
+- [References](#references)
 
 ![certificate vs k](figures/fig4_certificate.png)
 
