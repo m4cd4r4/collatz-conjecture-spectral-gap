@@ -162,7 +162,23 @@ and by (4),
 ## Theorem C and the conclusion
 
 > **Theorem C.** `g_b < sqrt(3/4) = 0.8660 < 0.961` for all `k` and `0 <= b <= k-2`, **unconditionally**.
-> Hence `v_b = ||P_b c|| < (3/4) 2^{-b} 2^{-k/2}`, and the certificate is `< 1` uniformly.
+> Hence `v_b = ||P_b c|| < sqrt(3/4) 2^{-b} 2^{-k/2}`, and the certificate is `< 1` uniformly.
+
+> **CORRECTION (2026-08-02, task H0).** The second clause previously read
+> `v_b < (3/4) 2^{-b} 2^{-k/2}`. That does **not** follow: `g_b = v_b 2^b 2^{k/2}` by definition,
+> so `g_b < sqrt(3/4)` gives exactly `v_b < sqrt(3/4) 2^{-b} 2^{-k/2} = 0.8660 * 2^{-b} 2^{-k/2}`,
+> not `0.75 * 2^{-b} 2^{-k/2}`. Equation (8) above proves `g_b^2 <= 3/4 - 2^{-p}`, i.e. the
+> constant `sqrt(3/4)`; the sharp form `g_b <= 3/4` needs `g_b^2 <= 9/16` and is **machine-verified
+> to k = 26 only (DATA)**, as this document itself notes.
+>
+> This one line was the origin of the `3/4` constant everywhere downstream. Consequences, now
+> corrected in [EXTREMAL_VALUES.md](EXTREMAL_VALUES.md): the **proven** Lemma-C sharpening of the
+> certificate is `cert <= 0.6827`, not `0.6553`; the **proven** UFULL assembly constant is
+> `0.9551`, not `0.9005`. Both still close (`< 1`), and the headline
+> `cert <= 2^{-3/2} + 2^{-1} = 0.853553...` is untouched - it comes from Lemmas A + B alone and
+> never uses Lemma C. Statements still quoting `3/4` as proven, pending fix: this repo's
+> `THEOREM.md`, `CYCLE_CLAIM_REFUTED.md` line 58, and `paper/syracuse_spectral_gap.tex` line 431
+> (boxed as a Theorem). Owner: task T6.1 / T6.2.
 
 `g_b = v_b 2^b 2^{k/2}` is a function of the defect count `cf` alone (`c = cf/2^k`), and the bound on it
 uses only unconditional ingredients: **Lemma H** (parity split), the Parseval identities (2)-(5), and
