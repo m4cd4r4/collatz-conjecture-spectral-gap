@@ -22,7 +22,7 @@ the doc, at the point of claim.
 
 Under (a), "materially different" means **stable in `k`, not decaying**. A deviation that
 shrinks with `k` is the null result, not a distinction - the entrywise operator deviation
-decays (a few `* 2^-k`; measured constants 4-6) while the `cert` gap does not (`0.028-0.032`, flat). Report the deviation
+decays (exactly `(floor(k/2)+1) * 2^-k`) while the `cert` gap does not (`0.028-0.032`, flat). Report the deviation
 at two separated `k` and show it does not shrink, or the gate fails.
 
 Why this is not optional: `3x-1` passes the certificate **more strongly** than `3x+1`
@@ -36,8 +36,9 @@ two chains. The tempting claim - `3(-x)+1 = -(3x-1)` with `v2` preserved, so
 `Pi: x -> -x mod 2^k` gives `T_minus = Pi T_plus Pi` and identical spectra - is **FALSE**
 [2x]:
 
-- entrywise deviation decays (a few `* 2^-k`, measured constants 4-6; `max|T_minus - Pi T_plus Pi| = 0.0625` at `k=6`,
-  `0.019531` at `k=8`) and is confined **100% to the defect column**; the clean part *is*
+- entrywise deviation decays as exactly `(floor(k/2)+1) * 2^-k` (task T3.1, ratio 1.0000 at
+  every `k = 4..12`, two independent implementations; `max|T_minus - Pi T_plus Pi| = 0.0625` at
+  `k=6`, `0.019531` at `k=8`) and is confined **100% to the defect column**; the clean part *is*
   negation-covariant;
 - the **spectra do not converge**: deviation `0.03-0.06` at every `k >= 4`;
   `cert(+1) ~ 0.6345` vs `cert(-1) ~ 0.6061`, a `0.028-0.032` gap **stable in k**;
