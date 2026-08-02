@@ -44,6 +44,7 @@ the block-triangular form carries a *nonzero* off-diagonal block `d` throughout 
 | `mem_meanZero_of_eigenvector` | I.1, the eigenvector form of the same split: an eigenvector for `μ ≠ 1` lies in `V` |
 | `hasEigenvalue_compression_of_ne_one` | I.1: "`spec(T) = {1} u spec(A)`", set-level direction `spec(T) ⊆ {1} ∪ spec(A)` |
 | `hasEigenvalue_compression_one_of_two_le_finrank` | I.1: the multiplicity content of "as multisets" at `μ = 1`, in the **geometric**-multiplicity reading |
+| `colSum_comp_mulVecLin` | I.1: "`T := T_k` is column-stochastic: `1^T T = 1^T`" - the bridge showing the abstract hypothesis `φ ∘ₗ T = φ` is exactly column-stochasticity, with row sums left free |
 | `spectrum_subset_insert_one` | I.1: `spec(T) ⊆ {1} ∪ spec(A)` stated on `spectrum` |
 | `charpoly_perron_block`, `roots_charpoly_perron_block` | I.1: "In a basis adapted to `C^N = span(1) (+) V`, `T` is block-triangular, `T = [[1, 0], [d, A]]` ... The characteristic polynomial factors, so `spec(T) = {1} u spec(A)` as multisets" (**conditional on the adapted basis**, see the gap note) |
 | `norm_eigenvalue_pow_le_of_pow_bound` | I.2: "`rho(U_V) <= || U_V^p ||_2^{1/p}`, valid for any matrix - no normality or diagonalisability input" |
@@ -55,6 +56,14 @@ the block-triangular form carries a *nonzero* off-diagonal block `d` throughout 
 * **PROVEN outright**, no extra hypotheses: `meanZero_invariant`, `mem_meanZero_of_eigenvector`,
   `hasEigenvalue_compression_of_ne_one`, `hasEigenvalue_compression_one_of_two_le_finrank`,
   `spectrum_subset_insert_one`, all of §3 (the Gelfand substitute), and the §4 chain.
+* **Known weakening vs `THEOREM.md`, stated openly.** `THEOREM.md` I.1 asserts
+  `spec(T) = {1} u spec(A)` **as multisets**, i.e. with *algebraic* multiplicity. What is proved
+  unconditionally below is the set inclusion plus the `μ = 1` multiplicity case in the *geometric*
+  reading (`hasEigenvalue_compression_one_of_two_le_finrank`). These differ on a defective
+  eigenvalue: if `1` has algebraic multiplicity `≥ 2` but geometric multiplicity `1` in `T`
+  (a Jordan block at `1`), then `λ₂(T) = 1` and the paper's multiset statement still gives
+  `1 ∈ spec(A)`, whereas nothing below does. Closing that case needs the unconditional
+  block-triangular form, i.e. the missing Mathlib API named at the end of this header.
 * **PROVEN, conditional on an adapted basis**: `charpoly_perron_block` /
   `roots_charpoly_perron_block` prove the multiset factorisation *for a matrix already presented
   in the block form* `[[1,0],[d,A]]`. The existence of a basis putting `T` in that form is
@@ -210,6 +219,33 @@ theorem spectrum_subset_insert_one [FiniteDimensional K E] (hT : φ ∘ₗ T = �
       (hasEigenvalue_compression_of_ne_one hT h1 (HasEigenvalue.of_mem_spectrum hμ))
 
 end PerronSplit
+
+section ColumnStochastic
+
+open Matrix
+
+/-- **I.1, the column-stochasticity bridge.** "`T := T_k` is column-stochastic: `1^T T = 1^T`".
+
+For `φ = 1ᵀ` the sum-of-coordinates functional, `φ ∘ₗ T = φ` is *exactly* the statement that
+every column of `T` sums to `1`. Row sums are entirely unconstrained: this hypothesis is
+one-sided, and in particular does not entail `T 1 = 1` (double stochasticity). It also does not
+require `T` to be entrywise nonnegative, so §1 is genuinely a linear-algebra statement, not a
+Markov-chain one. Combined with §1 this shows the abstract hypothesis is satisfiable and is the
+right one. -/
+theorem colSum_comp_mulVecLin {n K : Type*} [Fintype n] [DecidableEq n] [Field K]
+    (T : Matrix n n K) (hT : ∀ j, ∑ i, T i j = 1) :
+    (∑ i, LinearMap.proj i : (n → K) →ₗ[K] K) ∘ₗ T.mulVecLin
+      = (∑ i, LinearMap.proj i : (n → K) →ₗ[K] K) := by
+  refine LinearMap.ext fun x => ?_
+  have hL : ((∑ i, LinearMap.proj i : (n → K) →ₗ[K] K) ∘ₗ T.mulVecLin) x
+      = ∑ i, ∑ j, T i j * x j := by
+    simp [Matrix.mulVec, dotProduct]
+  have hR : (∑ i, LinearMap.proj i : (n → K) →ₗ[K] K) x = ∑ i, x i := by simp
+  rw [hL, hR, Finset.sum_comm]
+  refine Finset.sum_congr rfl fun j _ => ?_
+  rw [← Finset.sum_mul, hT j, one_mul]
+
+end ColumnStochastic
 
 /-!
 ## Section 2: block-triangular characteristic polynomial (THEOREM.md I.1, multiset form)
