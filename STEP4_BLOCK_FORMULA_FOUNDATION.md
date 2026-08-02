@@ -103,8 +103,10 @@ visible in this file's own table above - so for `U_full` use the triangle inequa
 `Q[a,b] <= 2^{-(b-a)/2} + u_a v_b`, as the assembly does.)
 What it needs: (i) the Gauss-sum collapse identity `(U chi_eta)(r) = [v(r)<=b] w^{eta q(r)}` for
 `v(r) < k` (PROVED via coset-uniformity / Half-Shift Invariance), and (ii) the WITHIN-LEVEL isometry
-identity `B*B = 2^{-(b-a)} I_{d_b}`. Identity (ii) is the one structural fact still to be proved for
-all k. Its content: the level-a Fourier coefficients of `{g_eta : v2(eta)=b}` are orthonormal up to
+identity `B*B = 2^{-(b-a)} I_{d_b}`. Identity (ii) WAS the one structural fact still to be proved for
+all k when this document was written; it is **PROVED for all k** in
+`HALFSHIFT_S4_LEMMA_A_PROOF.md` Section 1 (SB) + Section 3 (S4) + Section 4 (owner counting) -
+see the correction note in the Honest-status section below. (Corrected 2026-08-02, task W1-A.) Its content: the level-a Fourier coefficients of `{g_eta : v2(eta)=b}` are orthonormal up to
 the scalar `2^{-(b-a)/2}` - i.e. the carry map `r -> q(r)` reindexes source level-b characters into
 level-a characters injectively with flat amplitude. (For U_full add the `O(2^{-k/2})` defect: Lemma A
 for U_full holds with an additive `O(2^{-k/2})` slack, which the certificate absorbs.)
@@ -130,7 +132,8 @@ Given A and B, Step-3 row sum `max_a sum_b Q[a,b] 2^{a-b}`:
   and the diagonal scaling `2^{a-b}` over the at-most-(k-1) lower band contributes `<= O(2^{k/2})`,
   which the `2^{-k/2}` prefactor exactly cancels.
 - Measured row-sum FLAT at 0.634 for k=6..13; `rho(Q) ~ 0.566`. Both `< 1` uniformly. Certificate
-  closes => `|lambda_2(T_k)| <= rho(Q) <= 0.634`, conditional on A and B holding for all k.
+  closes => `|lambda_2(T_k)| <= rho(Q) <= 0.634`, with A and B now both proved for all k
+(A: `HALFSHIFT_S4_LEMMA_A_PROOF.md` Sections 1/3/4; B: `LEMMA_B_PROOF.md`). [Updated 2026-08-02.]
 
 ## Honest status (PROVED-for-all-k vs VERIFIED-to-finite-k)
 
@@ -139,7 +142,15 @@ PROVED for all k (given the already-established Half-Shift / coset-uniformity le
 - `U_clean` strictly upper-triangular in level (Lemma B part (i)).
 - `D` rank-1, supported on the single row `r*` (Lemma B part (ii) structure).
 
-VERIFIED to k=13, NOT yet proved for all k (the two remaining obligations):
+**SUPERSEDED 2026-08-02 (task W1-A) - kept visible per withdraw-in-place.** Both obligations
+listed below were discharged, the same day this file was written, by later documents:
+Lemma A identity (ii) in `HALFSHIFT_S4_LEMMA_A_PROOF.md` Sections 1 (SB) + 3 (S4) + 4; the
+Lemma B scale by the collision bound `||c||^2 <= 3 * 2^{-k}` in `LEMMA_B_PROOF.md`. Note the
+speculated route below is **wrong about the mechanism**: the actual proof of (ii) is a shell
+bijection plus a finite geometric series and an exact owner count - there is no Gauss sum in
+it. Original text follows.
+
+~~VERIFIED to k=13, NOT yet proved for all k (the two remaining obligations):~~
 - Lemma A identity (ii): `B*B = 2^{-(b-a)} I_{d_b}` (the within-level isometry / flat-amplitude fact).
   This is the crux. Route: show the carry map `r -> q(r)=(3r+1)/2^{v(r)}` induces, on level-b
   characters, an orthonormal family of level-a characters with constant amplitude `2^{-(b-a)/2}` -

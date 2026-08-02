@@ -8,4 +8,4 @@ require mathlib from git
 
 @[default_target]
 lean_lib GapCertificate where
-  roots := #[`GapCertificate]
+  roots := #[`GapCertificate, `OperatorChain]

@@ -316,6 +316,16 @@ a stale assumption is caught.
   **open disagreement, not resolved** (see the PROVEN-label qualifier in
   [EXTREMAL_VALUES.md](EXTREMAL_VALUES.md)).
   Owner: task T6.1. Do not treat the two repos as mirrors until these close.
+- **Lemma A ingredient (ii) - the within-level isometry `B*B = 2^{-(b-a)} I` - is PROVED for all
+  `k`** (settled 2026-08-02, task W1-A). It is proved by `HALFSHIFT_S4_LEMMA_A_PROOF.md`
+  **Sections 1 (SB) + 3 (S4) + 4 (owner count)** - **not** Sections 1-2, and **not** from CU
+  (CU discharges the separate masked-phase ingredient (i), and R1/R2). That mis-citation was
+  repeated in several documents; do not propagate it. Consequence: the headline
+  `cert(k) <= 0.853553...` for all `k >= 3` is **PROVEN unqualified** - an earlier
+  "PROVEN-modulo-(ii)" hedge was withdrawn. Still NOT rounded up alongside it: the Lemma C
+  sharp `3/4` stays DATA (proven sharpening is `0.683`), `gap => no cycles` stays
+  FALSE-or-RETRACTED, and the headline chain is **not** machine-checked (Lean covers the
+  envelope/assembly core only).
 - Audit headline count, for drift detection: **131** claims labelled - 69 PROVEN, 19 DATA,
   14 FALSE-or-RETRACTED, 11 STALE-superseded, 9 CONJECTURAL, 7 CITED, 2 COMPLETE-at-sketch-level
   (4 labels referee-corrected downward, none upward).

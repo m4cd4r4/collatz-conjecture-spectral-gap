@@ -26,7 +26,7 @@ We prove `g_b < sqrt(3/4) = 0.8660 < 0.961` for all `k, b` (Theorem C below), **
 bound on `g_b` (a function of the defect count alone) uses only Lemma H (now proved, an elementary
 parity split), Parseval, and FACT 1 + the shell sizes (Lemma B's unconditional combinatorial core). The
 cross-scale homometry earlier sessions left un-derived is the content of Lemma H. The sharp `g_b <= 3/4`
-is verified exactly to `k=26` but not needed. The Half-Shift Invariance crux enters only where the
+is verified exactly to `k=26` but not needed. The Half-Shift Invariance dependence (now proved for all `k`, CU) enters only where the
 *assembly* uses the bound (the rank-1 defect factorisation R2), exactly as for Lemmas A and B; Lemma C
 introduces **no new conditionality**.
 
@@ -239,7 +239,11 @@ this sentence still standing 52 lines below the correction block.)
 **Inherited (the same dependence Lemmas A and B already carry):**
 - The bound's *use in the assembly* needs the lower-triangle factorisation `Q_D[a,b] = u_a v_b`,
   foundation fact R2 (rank-1 defect `D = e_{r*} c^*`), which rests on the Half-Shift Invariance /
-  coset-uniformity lemma (a draft with a finite-`k`-verified crux). This is not new to Lemma C.
+  coset-uniformity lemma, **proved unconditionally for all `k`** (CU,
+  [HALFSHIFT_S4_LEMMA_A_PROOF.md](HALFSHIFT_S4_LEMMA_A_PROOF.md) Sections 1-2). This is not new to
+  Lemma C. (Corrected 2026-08-02, task W1-A: this line previously called it "a draft with a
+  finite-`k`-verified crux". The "DRAFT" in `HalfShiftInvariance_DRAFT.md` refers to an unexecuted
+  **Lean** plan, not to an unproved mathematical crux.)
 
 So the precise status:
 

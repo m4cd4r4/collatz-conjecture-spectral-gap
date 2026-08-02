@@ -15,7 +15,11 @@ The reduction from Lemma B to that bound uses three foundation facts R1, R2, R3:
 (`||u||^2 = 1 - 2^{1-k}`) is unconditional; R1 (strict-upper `U_clean`) and R2 (defect `D` confined to
 row `r*`, `rank(D) <= 1`) are also now **proved unconditionally for all k** - they reduce by elementary
 algebra to the Coset-Uniformity lemma CU, proved by finite-group theory in
-[HALFSHIFT_S4_LEMMA_A_PROOF.md](HALFSHIFT_S4_LEMMA_A_PROOF.md) Sections 1-2. (Earlier drafts marked
+[HALFSHIFT_S4_LEMMA_A_PROOF.md](HALFSHIFT_S4_LEMMA_A_PROOF.md) Sections 1-2. (Note, added
+2026-08-02: that Sections 1-2 citation is correct for R1/R2, which do come from CU. Lemma A's
+ingredient (ii), the within-level isometry, is proved elsewhere - Sections 1, 3 and 4, via SB + S4
++ the owner count - and does NOT use CU. Do not extend the "Sections 1-2" pointer to it.)
+(Earlier drafts marked
 Half-Shift Invariance as "finite-k verified"; that is superseded - CU is the analytic proof. The only
 fact that remains finite-k-verified is the defect *nonvanishing* / "rank exactly 1", which is not used:
 every bound here is an upper bound that `D = 0` would satisfy trivially.) So Lemma B and its foundation

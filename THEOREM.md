@@ -97,7 +97,10 @@ hence `rho(A) = rho(U_V) <= lim_p ||Q^p||^{1/p} = rho(Q)`, and with I.1,
   `(U chi_eta)(r) = [v(r) <= v2(eta)] w^{eta (3r+1)/2^{v(r)}}`; the unique remaining row
   `r* = -3^{-1} mod 2^k` carries the rank-1 defect `D = e_{r*} c^*`, `c` its fiber distribution.
   ([HALFSHIFT_S4_LEMMA_A_PROOF.md](HALFSHIFT_S4_LEMMA_A_PROOF.md) Sections 1-2, foundation R1/R2.)
-- **Lemma A (exact upper cascade).** `||P_a U_clean P_b||_2 = 2^{-(b-a)/2}` for `a < b`, and
+- **Lemma A (exact upper cascade).** *(Proved for all `k` in
+  [HALFSHIFT_S4_LEMMA_A_PROOF.md](HALFSHIFT_S4_LEMMA_A_PROOF.md) Sections 1 (SB) + 3 (S4) + 4
+  (owner counting) - not from CU, which discharges the separate masked-phase ingredient.
+  Confirmed 2026-08-02, task W1-A.)* `||P_a U_clean P_b||_2 = 2^{-(b-a)/2}` for `a < b`, and
   `P_a U_clean P_b = 0` for `a >= b`. So by the triangle inequality, for ALL `a, b`:
   ```
     Q[a,b]  <=  2^{-(b-a)/2} [b > a]  +  u_a v_b ,

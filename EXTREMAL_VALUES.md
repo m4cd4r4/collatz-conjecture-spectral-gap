@@ -30,21 +30,38 @@ over a finite range, no proof) | `measured` (a computed value of the object itse
 bound). Labels never round up: a bound that consumes a `DATA` input is `DATA`, however good
 the numerics.
 
-> **Qualifier on every `PROVEN` row (added 2026-08-02 after an adversarial referee pass).**
-> Rows 1, 2 and 6 all consume **Lemma A**, whose ingredient (ii) is the within-level isometry
-> `B*B = 2^{-(b-a)} I`. The repo does **not** currently speak with one voice on whether (ii) is
-> discharged: [HALFSHIFT_S4_LEMMA_A_PROOF.md](HALFSHIFT_S4_LEMMA_A_PROOF.md) proves it from
-> Coset-Uniformity for all `k` (and the 2026-07-05 referee pass re-derived that as sound, as
-> does [THEOREM.md](THEOREM.md)), while
-> [STEP4_BLOCK_FORMULA_FOUNDATION.md](STEP4_BLOCK_FORMULA_FOUNDATION.md) lines 105-107 still
-> call it "the one structural fact still to be proved for all k" and
-> [LEMMA_C_PROOF.md](LEMMA_C_PROOF.md) still describes the R2 dependence as resting on a
-> finite-k-verified crux.
+> **RESOLVED 2026-08-02 (task W1-A). Every `PROVEN` below stands unqualified.**
 >
-> So read every `PROVEN` below as **PROVEN-modulo-(ii)/R2** until that disagreement is settled
-> by a single careful pass over HALFSHIFT Sections 1-2 (owner: task T6.1). This does not change
-> any number here; it changes what the strongest label in this file is entitled to mean. The
-> disagreement is recorded, not resolved (ES Technique 7d).
+> Earlier the same day this block carried a `PROVEN-modulo-(ii)/R2` hedge, because the repo
+> disagreed with itself about whether Lemma A's ingredient (ii) - the within-level isometry
+> `B*B = 2^{-(b-a)} I` - was discharged for all `k`. It is. The hedge is withdrawn.
+>
+> **Where (ii) is actually proved, stated precisely** (this citation was wrong everywhere,
+> including in the withdrawn hedge above): **not** HALFSHIFT Sections 1-2, and **not** from
+> Coset-Uniformity. CU discharges ingredient **(i)** (the masked-phase collapse defining
+> `U_clean`) and R1/R2. Ingredient **(ii)** is proved by
+> [HALFSHIFT_S4_LEMMA_A_PROOF.md](HALFSHIFT_S4_LEMMA_A_PROOF.md) **Section 1 (SB) + Section 3
+> (S4) + Section 4 (the owner counting)**, and CU is not used in that derivation at all.
+>
+> Why it is an all-`k` proof and not a finite-`k` one: SB is a bijection between two finite sets
+> of equal cardinality (`|S_j| = 2^{k-1-j}` odd residues either side); S4 is a finite geometric
+> series whose dead band `[j, k-2]` has lower edge exactly `j`, which is exactly the bound
+> `v2(alpha_j) >= j` established beforehand; the owner count is exact integer combinatorics over
+> `Z/2^k`. No induction, no k-dependent error term, no Gauss sum, no asymptotic.
+>
+> Evidence: full hand re-derivation; exact-integer (float-free) verification of SB and the
+> counting for `k = 5..16`, all `j`, all `a < b <= k-2`, zero failures; independent rebuild of
+> `U_clean` giving `max|B*B - 2^{-d}I| <= 4.8e-15` at `k = 8, 10, 12`; and the repo's own
+> `audit_halfshift_s4.py` re-run (worst `5.9e-13` at `k = 14`, both parities, boundary blocks
+> included). [STEP4_BLOCK_FORMULA_FOUNDATION.md](STEP4_BLOCK_FORMULA_FOUNDATION.md) and
+> [LEMMA_C_PROOF.md](LEMMA_C_PROOF.md) were stale - they predate the answer written the same
+> day - and are corrected in place.
+>
+> **Not touched by this resolution** (do not round these up alongside it): the Lemma C sharp
+> constant `3/4` remains **DATA**, so the proven sharpening is row 2's `0.6827`, not `0.6553`;
+> `gap => no cycles` remains **FALSE-or-RETRACTED**; and the Lean tree covers the
+> envelope/assembly core only - Part I and Lemma A are not formalised, so the headline chain is
+> **not** machine-checked.
 
 ---
 
