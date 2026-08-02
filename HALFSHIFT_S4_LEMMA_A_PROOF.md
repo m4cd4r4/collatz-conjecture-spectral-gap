@@ -120,7 +120,10 @@ as `r` runs over the shell `{v(r)=j}`, `q mod 2^{k-j}` runs over all odds mod `2
 ```
 A_j = w^{xi*3^{-1}} * Sodd(alpha_j, k-j).
 ```
-(`v2(alpha_j) >= j` is exactly what makes the shell sum land in `Sodd`'s canonical range `[attack1_lemmaA_proof.py](attack1_lemmaA_proof.py).)
+(`v2(alpha_j) >= j` is exactly what makes the shell sum land in `Sodd`'s canonical range `[0, 2^{k-j})`;
+for unrestricted `(eta,xi)` it fails ~85% of the time, but holds for every block `v2(eta)=b`,
+`v2(xi)=a`. Cross-checked: this closed form matches the literal sum over odd `r < 2^k` to `< 1.3e-10`
+at k=12 in [attack1_lemmaA_proof.py](attack1_lemmaA_proof.py).)
 
 **(S5) only `j = d` survives.** Place the valuations above against S4's dead-band `[j, k-2]`:
 - `j < d`: `v2(alpha_j) = a+j`, and `j <= a+j <= b-1 <= k-3`, in `[j, k-2]` => `A_j = 0`.

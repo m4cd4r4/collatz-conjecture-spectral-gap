@@ -125,7 +125,18 @@ For `x in A_j`, `oddpart(x) = u = x / 2^j` is odd; the within-shell image is `u 
 1. `u - u' = 2^k s` for some integer `s ≠ 0`, so `x - x' = 2^j(u - u') = 2^{k+j} s`.        (I)
 2. `x ≡ x' ≡ a (mod 3)` (both are `a + 3m` terms, a single class mod 3), so
    `3 | (x - x') = 2^{k+j} s`; as `gcd(3, 2) = 1`, this forces `3 | s`.                       (II)
-3. `x, x' in [a, a + 3*2^k - 3] ⊂ [lemmaB_fact1_rigorous.py](lemmaB_fact1_rigorous.py)
+3. `x, x' in [a, a + 3*2^k - 3] ⊂ [1, 3*2^k)`, so `|x - x'| < 3 * 2^k`, giving
+   `2^{k+j} |s| < 3 * 2^k`, i.e. `2^j |s| < 3`.                                              (R)
+
+From (II), `s ≠ 0` implies `|s| >= 3`, so `2^j |s| >= 3`, contradicting (R). Therefore `s = 0`
+and `x = x'`. QED
+
+The argument is parity-agnostic: it uses only that all AP terms share one residue class `a` mod 3
+and span an interval of length `< 3*2^k`. Both hold for `a = 1` and `a = 2`.
+
+Identities (I), (II), (R) and the resulting injectivity are verified on every within-shell pair
+for `k = 3..13`, both parities, in
+[lemmaB_fact1_rigorous.py](lemmaB_fact1_rigorous.py)
 (columns `(I) (II) (R) inj` all `True`).
 
 ### Diagonal and cross terms
