@@ -44,6 +44,20 @@ By the triangle inequality for the operator norm, for every `a, b`:
 
 ## Lemma C (new): sharp per-level bound on the defect covector
 
+> **PROVENANCE CORRECTION (2026-08-02, task H0).** The `3/4` constant boxed below is **DATA**,
+> not proven: it is machine-verified for `k = 6..22` here (and to `k = 26` elsewhere), with
+> equality at `b = k-4`, so it is sharp - but no proof of it exists. The analytic proof
+> subsequently written for it, [LEMMA_C_PROOF.md](LEMMA_C_PROOF.md), delivers only
+> `g_b^2 <= 3/4 - 2^{-p}`, i.e. the weaker constant `sqrt(3/4) = 0.8660`.
+>
+> This box and the boxed Theorem at "Assembly" below are an **independent and earlier** source
+> of the `3/4` form than LEMMA_C_PROOF.md - a fact an earlier version of this session's
+> correction got wrong. Under the *proven* constant the assembly constant here becomes
+> `G_up + (2/sqrt 3) 2^{-3/2} = 0.9551664511`, still `< 1`. Both are superseded anyway by
+> [THEOREM.md](THEOREM.md)'s `cert <= 0.853553...`, which needs only Lemmas A + B.
+> Full ladder with labels: [EXTREMAL_VALUES.md](EXTREMAL_VALUES.md). Left in place, unedited,
+> as the historical record.
+
 > **Lemma C.** For all `k` and all `0 <= b <= k-2`,
 > ```
 >     v_b  <=  (3/4) * 2^{-b} * 2^{-k/2} .

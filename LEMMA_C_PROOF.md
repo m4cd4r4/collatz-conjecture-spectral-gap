@@ -171,14 +171,29 @@ and by (4),
 > constant `sqrt(3/4)`; the sharp form `g_b <= 3/4` needs `g_b^2 <= 9/16` and is **machine-verified
 > to k = 26 only (DATA)**, as this document itself notes.
 >
-> This one line was the origin of the `3/4` constant everywhere downstream. Consequences, now
-> corrected in [EXTREMAL_VALUES.md](EXTREMAL_VALUES.md): the **proven** Lemma-C sharpening of the
-> certificate is `cert <= 0.6827`, not `0.6553`; the **proven** UFULL assembly constant is
-> `0.9551`, not `0.9005`. Both still close (`< 1`), and the headline
+> Consequences, recorded in [EXTREMAL_VALUES.md](EXTREMAL_VALUES.md): the **proven** Lemma-C
+> sharpening of the certificate is `cert <= 0.6827`, not `0.6553`; the **proven** UFULL assembly
+> constant is `0.9551`, not `0.9005`. Both still close (`< 1`), and the headline
 > `cert <= 2^{-3/2} + 2^{-1} = 0.853553...` is untouched - it comes from Lemmas A + B alone and
-> never uses Lemma C. Statements still quoting `3/4` as proven, pending fix: this repo's
-> `THEOREM.md`, `CYCLE_CLAIM_REFUTED.md` line 58, and `paper/syracuse_spectral_gap.tex` line 431
-> (boxed as a Theorem). Owner: task T6.1 / T6.2.
+> never uses Lemma C.
+>
+> **Correction to this correction (adversarial referee, same day).** An earlier version of this
+> block claimed the line above was "the origin of the `3/4` constant everywhere downstream".
+> That is chronologically wrong and was withdrawn. `UFULL_ASSEMBLY_PROOF.md` lines 47-51 states
+> its **own** boxed Lemma C at `v_b <= (3/4) ...` with its **own** DATA evidence
+> (`g_b^2 <= 9/16`, `k = 6..22`, equality at `b = k-4`) and derives its boxed
+> `cert < 0.900472` from it at line 79 - and this document was written *after* UFULL, at UFULL's
+> request (see the header, line 9). So UFULL is an **independent and earlier** source of the
+> `3/4` form; `0.9005` does not inherit from here.
+>
+> **Full inventory of statements still asserting the `3/4` form or its consequences**
+> (pending fix; owner T6.1 for docs, T6.2 for the paper):
+> `UFULL_ASSEMBLY_PROOF.md` 47-51 (boxed Lemma) and 79 (boxed Theorem);
+> `THEOREM.md` 25 and 154-157; `CYCLE_CLAIM_REFUTED.md` 13 and 58;
+> `LEMMA_B_PROOF.md` 198; `README.md` 149, 155, 191, 218;
+> `paper/syracuse_spectral_gap.tex` 53, 131, 431, 456;
+> and this file's own line 16 (Lemma C sharp form - correctly labelled sharp/DATA there, so it
+> is the one occurrence that may stand as written).
 
 `g_b = v_b 2^b 2^{k/2}` is a function of the defect count `cf` alone (`c = cf/2^k`), and the bound on it
 uses only unconditional ingredients: **Lemma H** (parity split), the Parseval identities (2)-(5), and
@@ -214,7 +229,12 @@ lower row-sum at the top is `<= 2^{-3/2} sqrt(3/4)(4/3) = 0.408`, and
   using FACT 1 and the shell sizes `|R_j| = 2^{p-1-j}`, which are Lemma B's combinatorial core, **proved
   there unconditionally** (the mod-3 + range injectivity, all `p`, both parities).
 
-So **Theorem C - the bound `v_b < (3/4) 2^{-b} 2^{-k/2}` - is unconditional.**
+So **Theorem C - the bound `v_b < sqrt(3/4) 2^{-b} 2^{-k/2}` - is unconditional.**
+(Corrected 2026-08-02, task H0: this line previously read `(3/4)`, the same non-sequitur
+corrected at Theorem C above - `g_b < sqrt(3/4)` gives `v_b < 0.8660 * 2^{-b} 2^{-k/2}`, not
+`0.75 * (...)`. What equation (8) proves is `g_b^2 <= 3/4 - 2^{-p}`. The sharp `g_b <= 3/4`
+is machine-verified to `k = 26` and is DATA. Flagged by the adversarial referee, which found
+this sentence still standing 52 lines below the correction block.)
 
 **Inherited (the same dependence Lemmas A and B already carry):**
 - The bound's *use in the assembly* needs the lower-triangle factorisation `Q_D[a,b] = u_a v_b`,

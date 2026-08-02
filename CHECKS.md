@@ -22,7 +22,7 @@ the doc, at the point of claim.
 
 Under (a), "materially different" means **stable in `k`, not decaying**. A deviation that
 shrinks with `k` is the null result, not a distinction - the entrywise operator deviation
-decays (`~5 * 2^-k`) while the `cert` gap does not (`0.028-0.032`, flat). Report the deviation
+decays (a few `* 2^-k`; measured constants 4-6) while the `cert` gap does not (`0.028-0.032`, flat). Report the deviation
 at two separated `k` and show it does not shrink, or the gate fails.
 
 Why this is not optional: `3x-1` passes the certificate **more strongly** than `3x+1`
@@ -36,7 +36,7 @@ two chains. The tempting claim - `3(-x)+1 = -(3x-1)` with `v2` preserved, so
 `Pi: x -> -x mod 2^k` gives `T_minus = Pi T_plus Pi` and identical spectra - is **FALSE**
 [2x]:
 
-- entrywise deviation decays (`~5 * 2^-k`; `max|T_minus - Pi T_plus Pi| = 0.0625` at `k=6`,
+- entrywise deviation decays (a few `* 2^-k`, measured constants 4-6; `max|T_minus - Pi T_plus Pi| = 0.0625` at `k=6`,
   `0.019531` at `k=8`) and is confined **100% to the defect column**; the clean part *is*
   negation-covariant;
 - the **spectra do not converge**: deviation `0.03-0.06` at every `k >= 4`;
@@ -72,7 +72,7 @@ Instantiate every asymptotic or uniform claim at a height a human can be wrong a
 | Check | Known-good value |
 |---|---|
 | `4*(0.29)^(s/2)` at `s = 6,586,818,670` (STATUS.md's own figure) | `10^(-1.77e9)` |
-| same, under the **PROVEN** gap `0.8536` | `10^(-2.26e8)` |
+| same, under the **PROVEN** `|lambda_2|` bound `0.8536` (gap `0.1464`) | `10^(-2.26e8)` |
 | same, under **measured** `|lambda_2| ~ 0.27` | `10^(-1.87e9)` |
 
 **The check is not the numeral.** All three are vacuously small, so computing them proves
@@ -277,10 +277,17 @@ a stale assumption is caught.
   but the assembly is **ABSTRACT**: Lemma A, R1 and Lemma B enter as named hypotheses
   (`hQupper`, `hQlower`, `hL2`). The Part I operator chain, the CU fiber count, SB
   surjectivity/cardinality, and Lemma B shell counting are **not** formalised.
-- `best_approximation_bound` (`DiophantineCycle.lean:78`, legacy private tree) is **FALSE as
-  formalised** - counterexample `s = 1330`, `T = 2108` (non-reduced multiple of the convergent
-  `1054/665`); Legendre needs a lowest-terms hypothesis the statement omits. Its `sorry` is
-  undischargeable.
+- `best_approximation_bound` (`DiophantineCycle.lean:78`, legacy private tree) was **FALSE as
+  formalised**. **Partially repaired 2026-08-02 (task H0), then repaired again the same day
+  after an adversarial referee pass.** The first witness (`s = 1330`, `T = 2108`, a non-reduced
+  multiple of the convergent `1054/665`) was killed by adding `Nat.Coprime T s` - but that was
+  **not sufficient**: `isConvergentDenom` is a finite `Finset` literal capped at
+  `6,586,818,670`, so any convergent denominator beyond the cap satisfies the hypothesis
+  vacuously. Coprime counterexample: `s = 65,470,613,321`, `T = 103,768,467,013`
+  (`|T/s - log2 3| = 1.0163e-22 < 1/(2s^2) = 1.1665e-22`) - convergent #22, which that file's
+  own header names as "the first dangerous convergent". A range bound `s <= 6586818670` was
+  added alongside the coprimality hypothesis. **Lesson for this checklist: a "not in the list"
+  hypothesis is only as strong as the list is complete.**
 - Legacy private Lean tree: **8** genuine axiom declarations remain - `AutomataApproach.lean` 2,
   `BoundedTrajectory.lean` 1, `Class3RunBounds.lean` 2, `CycleSpectral.lean` 2,
   `FrequencyAnalysis.lean` 1. Three of them (`Class3RunBounds.lean:131,159`,
@@ -297,6 +304,18 @@ a stale assumption is caught.
   from the private copies; a repo-wide sweep for the same link-rewrite signature found no
   further instances. **Re-check on any future port: the two repos are only as aligned as of
   this date.**
+- **The reconciliation is PARTIAL - "content-identical" is NOT yet true** (adversarial referee,
+  2026-08-02). Two known remaining divergences, deliberately left for a session with the time
+  to review the mathematics rather than ported blind:
+  (i) `HALFSHIFT_S4_LEMMA_A_PROOF.md` Sections 1-2 - the **private** copy is longer and carries
+  the SB multiplicity-exactly-1 paragraph and the derivation of half-shift invariance as a CU
+  corollary; the public copy still says "Lemma 1 of `HalfShiftInvariance_DRAFT.md` needs five
+  steps". The private copy appears to be ahead here.
+  (ii) `LEMMA_B_PROOF.md` Section 7 - public and private disagree on whether R1/R2/Lemma A are
+  unconditional. The private copy now carries an explicit correction block recording this as an
+  **open disagreement, not resolved** (see the PROVEN-label qualifier in
+  [EXTREMAL_VALUES.md](EXTREMAL_VALUES.md)).
+  Owner: task T6.1. Do not treat the two repos as mirrors until these close.
 - Audit headline count, for drift detection: **131** claims labelled - 69 PROVEN, 19 DATA,
   14 FALSE-or-RETRACTED, 11 STALE-superseded, 9 CONJECTURAL, 7 CITED, 2 COMPLETE-at-sketch-level
   (4 labels referee-corrected downward, none upward).

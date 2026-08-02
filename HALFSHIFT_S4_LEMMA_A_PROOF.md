@@ -174,7 +174,12 @@ Verified: machine-precision isometry for all `(a,b)`, k=6..14, both parities, bo
   `O(2^{-k/2})` defect controlled by the completed Lemma B collision bound. This assembly is the
   remaining certificate-level step, not a new hard input.
 - **Not claimed:** the completed certificate proves a uniform spectral gap for the Syracuse
-  transfer-operator family, conditional on the row-sum assembly above. (Correction 2026-07-05: it
+  transfer-operator family, conditional on the row-sum assembly above.
+  (*Superseded wording, kept visible per withdraw-in-place:* this bullet previously read
+  "**Not claimed:** this is cycle elimination via a uniform spectral gap, conditional on the
+  row-sum assembly above; it is not a proof of Collatz (divergent trajectories are untouched)"
+  - garbled, and in tension with this file's own retraction banner.)
+  (Correction 2026-07-05: it
   does NOT prove cycle elimination. The inference "gap => no cycles" is FALSE, not merely unproven:
   the `3x-1` operator passes the identical certificate yet `3x-1` has real cycles ({5,7}, {17,...}) -
   see [CYCLE_CLAIM_REFUTED.md](CYCLE_CLAIM_REFUTED.md), retracted 2026-06-02.) It is not a proof of

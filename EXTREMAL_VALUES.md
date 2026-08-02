@@ -30,6 +30,22 @@ over a finite range, no proof) | `measured` (a computed value of the object itse
 bound). Labels never round up: a bound that consumes a `DATA` input is `DATA`, however good
 the numerics.
 
+> **Qualifier on every `PROVEN` row (added 2026-08-02 after an adversarial referee pass).**
+> Rows 1, 2 and 6 all consume **Lemma A**, whose ingredient (ii) is the within-level isometry
+> `B*B = 2^{-(b-a)} I`. The repo does **not** currently speak with one voice on whether (ii) is
+> discharged: [HALFSHIFT_S4_LEMMA_A_PROOF.md](HALFSHIFT_S4_LEMMA_A_PROOF.md) proves it from
+> Coset-Uniformity for all `k` (and the 2026-07-05 referee pass re-derived that as sound, as
+> does [THEOREM.md](THEOREM.md)), while
+> [STEP4_BLOCK_FORMULA_FOUNDATION.md](STEP4_BLOCK_FORMULA_FOUNDATION.md) lines 105-107 still
+> call it "the one structural fact still to be proved for all k" and
+> [LEMMA_C_PROOF.md](LEMMA_C_PROOF.md) still describes the R2 dependence as resting on a
+> finite-k-verified crux.
+>
+> So read every `PROVEN` below as **PROVEN-modulo-(ii)/R2** until that disagreement is settled
+> by a single careful pass over HALFSHIFT Sections 1-2 (owner: task T6.1). This does not change
+> any number here; it changes what the strongest label in this file is entitled to mean. The
+> disagreement is recorded, not resolved (ES Technique 7d).
+
 ---
 
 ## The table
@@ -101,7 +117,7 @@ line ~456; the abstract's "improves the constant to 0.656" (tex lines ~52-54) is
 `3/4` is sharp. The only movement available is upward in confidence: prove `3/4` and row 3
 becomes PROVEN.
 
-**Row 4 - `0.63448`, measured.**
+**Row 4 - `0.634412` (k=13) / `0.634477` (k=12), measured.**
 This is what the assembly would give if the true `v_b` profile were proven rather than
 measured. Feed the measured profile through the identical Part III row sum, defining
 `S_k := 2^{k/2} sum_{b=0}^{k-2} v_b 2^{-b}`:
@@ -275,9 +291,13 @@ Every constant is computed twice by different means:
 3. **LEMMA_C_PROOF.md line 165 is internally inconsistent.** Theorem C's own statement reads
    "`g_b < sqrt(3/4) = 0.8660` ... Hence `v_b = ||P_b c|| < (3/4) 2^{-b} 2^{-k/2}`". The
    second clause does not follow from the first; `g_b < sqrt(3/4)` gives
-   `v_b < (sqrt 3/2) 2^{-b} 2^{-k/2}`, and `sqrt 3/2 = 0.866`, not `0.75`. This single line is
-   where the `sqrt(3/4) -> 3/4` upgrade enters the document chain, and everything downstream
-   that quotes `0.656` or `0.9005` inherits it. The rest of LEMMA_C_PROOF.md is consistent:
+   `v_b < (sqrt 3/2) 2^{-b} 2^{-k/2}`, and `sqrt 3/2 = 0.866`, not `0.75`. This line is where the
+   `sqrt(3/4) -> 3/4` upgrade enters *this document*. **It is NOT the sole root cause** (an
+   earlier version of this flag said so; withdrawn after an adversarial referee pass):
+   `UFULL_ASSEMBLY_PROOF.md` lines 47-51 boxes its own Lemma C at `3/4` with its own DATA
+   evidence and derives `0.9005` from it at line 79, and it was written *before*
+   LEMMA_C_PROOF.md (which the latter's header, line 9, records). So `0.9005` has an
+   independent origin. The rest of LEMMA_C_PROOF.md is consistent:
    equation (8) at line 159, the assembly evaluation at lines 184-188 (`0.955`), and the
    status summary at line 25 all correctly carry `sqrt(3/4)`.
 4. **UFULL_ASSEMBLY_PROOF.md line 154 prints `cert(6) = 0.633782`; the rebuild gives
