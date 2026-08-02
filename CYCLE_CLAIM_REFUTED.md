@@ -80,4 +80,13 @@ Collatz cycles would require an instrument sensitive to the deterministic orbit 
 height/transcendence or linear-forms-in-logs argument as in the classical cycle bounds of Baker-type,
 or a genuinely different operator), not the spectral gap proved here.
 
-Reproduce: `python probe_cycle_link.py`.
+Reproduce:
+
+- `python probe_cycle_link_cert.py` - the full table above, all six columns, both signs, with a
+  built-in regression check against the published digits.
+- `python probe_cycle_link.py` - the `|lambda_1|`, `|lambda_2|` columns only, over k = 4..12.
+
+(Correction 2026-08-02: this line previously named only `probe_cycle_link.py`, which computes
+eigenvalues and never computes `cert` or `rho(Q)` - so four of the six columns had no producer in
+the repository. `probe_cycle_link_cert.py` was added to close that gap; it reproduces every
+published digit of the table.)
