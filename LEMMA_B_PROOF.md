@@ -161,6 +161,10 @@ Therefore
           <= 2^{k-1} * sum_{j'>=0} j' 2^{-j'}  =  2^{k-1} * 2  =  2^k.
 ```
 
+(The top atom `x ≡ 0 (mod 2^k)` is a single element and intersects at most k ordinary shells,
+adding at most k cross pairs. These are covered by the slack of extending the series to infinity:
+`sum_{j'>=k} j' 2^{k-1-j'} = k+1 >= k`. Added 2026-07-05, Fable review Finding 3.)
+
 Hence `coll = diag + 2*cross <= 2^k + 2*2^k = 3 * 2^k`. **QED, all k.**
 
 ### Sharp constant (context, not needed)

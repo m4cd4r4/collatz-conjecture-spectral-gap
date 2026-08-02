@@ -10,7 +10,7 @@ Exact, validated foundation for the step-4 entry-bound lemma of the uniform spec
 Everything here is checked against `build_T` to machine precision; finite-k verification is named
 as such and never conflated with all-k proof.
 
-Scripts (all under [Collatz](Collatz)):
+Scripts (all in this repository's root):
 - [diagnose_block_formula.py](diagnose_block_formula.py) - corrects the block formula, proves the Gauss-sum collapse.
 - [step4_foundation.py](step4_foundation.py) - U = U_clean + rank-1 defect; Q tables.
 - [step4_within_level.py](step4_within_level.py) - the isometry identity B*B = 2^-d I.
@@ -95,8 +95,12 @@ block were rank-1, which it is not).
 
 **Lemma A (upper cascade).** For all k and all `0 <= a < b <= k-2`,
 ```
-|| P_a U_k P_b ||_2  <=  2^{-(b-a)/2}.
+|| P_a U_clean P_b ||_2  =  2^{-(b-a)/2}.
 ```
+(Correction 2026-07-05: stated for `U_clean`, where it is EXACT. The original `U_k` form
+`<= 2^{-(b-a)/2}` is numerically FALSE - the defect leaks a positive excess, +1.4e-4 at k=8,
+visible in this file's own table above - so for `U_full` use the triangle inequality
+`Q[a,b] <= 2^{-(b-a)/2} + u_a v_b`, as the assembly does.)
 What it needs: (i) the Gauss-sum collapse identity `(U chi_eta)(r) = [v(r)<=b] w^{eta q(r)}` for
 `v(r) < k` (PROVED via coset-uniformity / Half-Shift Invariance), and (ii) the WITHIN-LEVEL isometry
 identity `B*B = 2^{-(b-a)} I_{d_b}`. Identity (ii) is the one structural fact still to be proved for
