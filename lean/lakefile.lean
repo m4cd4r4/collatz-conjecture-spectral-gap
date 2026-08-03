@@ -10,4 +10,4 @@ require mathlib from git
 lean_lib GapCertificate where
   roots := #[`GapCertificate, `OperatorChain, `CountingLemmas, `LevelMajorisation,
              `CollisionBound, `Assembly, `LemmaA, `TransferOperator, `CharacterBasis,
-             `BlockVanishing, `OperatorBlock]
+             `BlockVanishing, `OperatorBlock, `DefectSplit]
