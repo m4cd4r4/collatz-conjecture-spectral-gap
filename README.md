@@ -27,7 +27,10 @@ giving `cert(k) <= 0.8536 < 1` and hence `|lambda_2(T_k)| < 1` uniformly. The co
 and full proof chain - the spectral reduction written out end-to-end (with a 2026-07-05 correction:
 `T_k` is not doubly stochastic, so the chain runs through `V = ker(1^T)` and the compression
 `P_V U P_V`), plus a simplification showing Lemmas A + B alone suffice (Lemma C sharpens the constant
-to `0.656`) - is **[THEOREM.md](THEOREM.md)**. This is a real result about the operator. It simply
+to **`0.6827` proven**, or `0.6553300859` conditional on a constant machine-verified to `k <= 26`;
+corrected 2026-08-03, the earlier figure `0.656` was that conditional value printed without its
+provenance and with a digit slip - see [EXTREMAL_VALUES.md](EXTREMAL_VALUES.md)) - is
+**[THEOREM.md](THEOREM.md)**. This is a real result about the operator. It simply
 does **not** carry the cycle-elimination corollary that was claimed, and it is not a proof of (any
 part of) the Collatz conjecture.
 
@@ -35,13 +38,23 @@ part of) the Collatz conjecture.
 
 | Component | State |
 |---|---|
-| Uniform spectral gap `cert(k) <= 0.8536 < 1`, every scale `k` | **Proved** (elementary, all-`k`) |
-| Lemmas A, B, C + Coset-Uniformity foundation + row-sum assembly | **Proved** |
-| Lean 4 formalisation of the elementary core | **Machine-checked, sorry-free** (Mathlib v4.27.0) |
-| Operator chain (Perron split, majorisation, Gelfand) + counting lemmas in Lean | Paper-only, formalisation pending |
+| Uniform spectral gap `cert(k) <= 0.853553... < 1`, every scale `k` | **PROVEN** (elementary, all-`k`, no hedge) |
+| Lemmas A, B + Coset-Uniformity foundation + row-sum assembly | **PROVEN** (all-`k`) |
+| Lemma C as *proved*: `g_b < sqrt(3/4) = 0.8660`, giving `cert <= 0.6826775358` | **PROVEN** (all-`k`) |
+| Lemma C in its *sharp* form `g_b <= 3/4`, giving `cert <= 0.6553300859` | **DATA** - machine-verified `k <= 26`, no proof |
+| Lean 4: elementary core, Part I.1-I.2 of the operator chain, counting lemmas | **Machine-checked, sorry-free** (Mathlib v4.27.0) |
+| Lean 4: Lemma B's shell counting into the assembly; glue to a concrete `T_k` | Paper-only, formalisation pending |
 | Paper write-up, 9 pp | **Done** - [`paper/syracuse_spectral_gap.pdf`](paper/syracuse_spectral_gap.pdf) |
 | Cycle elimination (`gap => no cycles`) | **Retracted, false** - [why](CYCLE_CLAIM_REFUTED.md) |
 | Proof of the Collatz conjecture (any part) | Not attempted / not claimed |
+
+*Label discipline (2026-08-03): `PROVEN` means an unconditional proof written out in this repo for
+all `k`; `DATA` means machine-verified over a finite range with no proof. Labels never round up - a
+bound consuming a `DATA` input stays `DATA`, however good the numerics. Every constant above is
+copied from [EXTREMAL_VALUES.md](EXTREMAL_VALUES.md), the single source of truth. The three Lean
+files are individually sorry-free on a clean axiom triple, but the headline chain end-to-end is
+**not** machine-checked - the assembly's counting inputs and the glue to a concrete `T_k` are still
+paper-only.*
 
 ## Contents
 
@@ -90,6 +103,8 @@ how divisible by two a number is; the crux was showing each block is a clean, ri
 (an *isometry*). People expected deep "Gauss sum" machinery; it comes down to the single fact that
 **3 is an odd number** (a unit modulo any power of two), plus bookkeeping. Three lemmas (A, B, C), their
 shared foundation (coset-uniformity), and the final "below 1" assembly are all proved for every scale.
+(The "below 1" number itself comes from A and B alone; C only sharpens it, and C's *sharpest* form is
+machine-checked rather than proved - see the corrected constants below.)
 
 ![block structure](figures/fig3_incidence.png)
 
@@ -148,11 +163,21 @@ proved unconditionally for all `k` by a 2-adic shell decomposition (per-shell in
 
 `v_b := ||P_b c||_2 <= (3/4) * 2^{-b} * 2^{-k/2}` for all `0 <= b <= k-2`, all `k`. The constant `3/4`
 is sharp (equality at `b = k-4`), verified exactly to `k=26`, with a `k`-independent boundary profile.
+
+> **CORRECTION (2026-08-03, task T6.1).** The `3/4` displayed in that sentence is **DATA**, not
+> proven. [LEMMA_C_PROOF.md](LEMMA_C_PROOF.md) proves `g_b^2 <= 3/4 - 2^{-p}`, i.e. the constant
+> `sqrt(3/4) = 0.8660`, so what is proved for all `k` is `v_b < sqrt(3/4) 2^{-b} 2^{-k/2}`. The sharp
+> form `g_b <= 3/4` is machine-verified to `k = 26` and has no proof. Downstream: the **proven**
+> Lemma-C sharpening of the certificate is `0.6826775358`, and `0.6553300859` is the value the sharp
+> constant would give. Neither touches the headline `0.853553...`, which uses Lemmas A + B only.
+> Ladder with labels: [EXTREMAL_VALUES.md](EXTREMAL_VALUES.md). Original text left above, unedited.
 It reduces to a periodization-excess bound on the defect covector `c` (the partial Gauss sum at `r*`):
 with `h_j = N ||fold_{2^j}(c)||^2`, the bound is `2^b (2 h_b - h_{b+1}) <= 9/16`. (Correction
 2026-07-05: the earlier claim here that the `L^2` mass alone fails at `1.25` was wrong - it ignored
 the truncation of the upper cascade at the top rows. Lemmas A + B alone give `cert(k) <= 0.8536`;
-Lemma C sharpens the constant to `0.656`. See [THEOREM.md](THEOREM.md) and the correction note in
+Lemma C sharpens the constant to `0.6827` proven, `0.6553300859` under the `DATA` sharp constant
+- corrected 2026-08-03 from `0.656`, which was the conditional value misprinted and unlabelled.
+See [THEOREM.md](THEOREM.md) and the correction note in
 [UFULL_ASSEMBLY_PROOF.md](UFULL_ASSEMBLY_PROOF.md).)
 
 Lemma C is now **proved** ([LEMMA_C_PROOF.md](LEMMA_C_PROOF.md)). The covector `c` is a 3x+1
@@ -171,11 +196,35 @@ does **not** follow, and is **withdrawn**, is cycle elimination: the gap `=> no 
 false ([CYCLE_CLAIM_REFUTED.md](CYCLE_CLAIM_REFUTED.md)). Ruling out non-trivial Collatz cycles would
 require an instrument sensitive to the deterministic orbit (e.g. linear-forms-in-logs / height bounds,
 as in classical cycle-length results), not this transfer-operator spectral gap. The remaining future
-work on the gap itself is completing its Lean formalisation: the elementary core (FACT 1, SB
-injectivity, Coset-Uniformity affine step, the envelope, and the Cauchy-Schwarz assembly) is
-machine-checked, sorry-free, in [lean/GapCertificate.lean](lean/GapCertificate.lean) (2026-07-05);
-the operator chain of THEOREM.md Part I (Perron split, majorisation, Gelfand) and the counting
-lemmas are still paper-only. Either way it formalises a correct-but-not-cycle-eliminating statement.
+work on the gap itself is completing its Lean formalisation. Machine-checked and sorry-free, on a
+clean axiom triple: the elementary core (FACT 1, SB injectivity, Coset-Uniformity affine step, the
+envelope, the Cauchy-Schwarz assembly) in [lean/GapCertificate.lean](lean/GapCertificate.lean)
+(2026-07-05); THEOREM.md Part I.1-I.2, the Perron split and the compression/Gelfand step, in
+[lean/OperatorChain.lean](lean/OperatorChain.lean); and the CU fibre count, SB surjectivity and shell
+cardinality in [lean/CountingLemmas.lean](lean/CountingLemmas.lean) (both 2026-08-03). Still
+paper-only: Lemma B's shell counting where it feeds the certificate assembly, and the glue tying the
+formal statements to a concrete `T_k` - so the headline chain end-to-end is **not** machine-checked.
+Either way it formalises a correct-but-not-cycle-eliminating statement.
+
+### What this method delivers at its optimum, and why sharpening it further would not help
+
+The ladder in [EXTREMAL_VALUES.md](EXTREMAL_VALUES.md) is the whole of what this method class - the
+averaged mod-`2^k` chain - is known to emit: `0.853553...` proven from Lemmas A + B, `0.6826775358`
+proven with Lemma C as actually proved, `0.6553300859` under a constant verified only to `k = 26`,
+and `cert(k)`'s own measured value `0.634412`, which the assembly already matches to six digits by
+`k = 12`. There is very little slack left to recover, and recovering it would sharpen a number that
+is *smaller* for `3x-1` - a map with real cycles - than for `3x+1` (`0.6061` against `0.6345`,
+stably in `k`). The mechanism is the same one that makes the gap provable: averaging over `2^k`
+lifts dilutes any genuine cycle edge to weight `2^{-k}`, so no quantity in the table separates "has
+cycles" from "has no cycles". Note the distinction that makes it worse rather than better: the
+certificate is not blind to the sign - it sees it, through the defect fibre - it simply prefers the
+wrong map. That much is established. Whether *every* invariant of this averaged chain is likewise
+blocked is conjectured, supported by the `3x-1` control, and **not proven here**.
+
+*Absurd-height instantiation, for calibration only.* At `s = 6,586,818,670` odd steps the proven
+`0.853553...` gives `4 g^{s/2} ~ 10^{-2.26e8}`; the measured `|lambda_2| ~ 0.27` gives
+`~10^{-1.87e9}`. Both are vacuously small, and neither means anything for cycles: the `3x-1`
+operator produces an even smaller number and `3x-1` has cycles. This is model theory only.
 
 ---
 
@@ -188,7 +237,8 @@ python audit_halfshift_s4.py        # coset-uniformity, S4, isometry parity-spli
 python attack1_lemmaA_proof.py      # closed-form B*B = 2^-d I, all (a,b), to k=14
 python lemmaB_fact1_rigorous.py     # collision bound coll <= 3*2^k, both parities, vs the true Syracuse fibre
 python adv_tril_sep_correct.py      # ||tril(Q_D)|| matches the dense operator (<1e-10); chain to k=24
-python verify_assembly.py           # the assembly: cert < 0.9005 (Lemma A+C route); matches build_T to 6 digits
+python verify_assembly.py           # the older Lemma A+C route (cert < 0.9551 proven / 0.9005 under the DATA
+                                    #   sharp constant); matches build_T to 6 digits. Superseded by the A+B route.
 python fable_assembly_check.py      # THEOREM.md envelope: R_a <= f(k-a), cert <= 0.8536, k=3..13 vs build_T
 python explore_vb_profile.py        # the v_b profile and per-row S_a (Lemma C ground truth)
 python probe_periodization.py       # g_b^2 = 2^b(2 h_b - h_{b+1}); sup = 9/16 (the Lemma C reduction)
@@ -215,7 +265,10 @@ python probe_cycle_recovery.py      # cycle-detector tests: spectrum/traces are 
 | `paper/syracuse_spectral_gap.pdf` | **the paper** (9 pp): the theorem, all proofs, the Lean section, and the scope/retraction statement |
 | `THEOREM.md` | **the consolidated theorem**: full spectral reduction + assembly, `cert(k) <= 0.8536` from A + B alone |
 | `lean/GapCertificate.lean` | **Lean 4 formalisation** of the elementary core (FACT 1, SB, CU, envelope, Cauchy-Schwarz assembly) - sorry-free, Mathlib v4.27.0 |
-| `UFULL_ASSEMBLY_PROOF.md` | the earlier row-sum assembly: `cert(k) < 0.9005` from Lemma A + Lemma C (Remark 2 corrected) |
+| `lean/OperatorChain.lean` | Lean 4: THEOREM.md Part I.1-I.2 (Perron split, compression, Gelfand) - sorry-free |
+| `lean/CountingLemmas.lean` | Lean 4: the CU fibre count, SB surjectivity, shell cardinality - sorry-free |
+| `EXTREMAL_VALUES.md` | **the constants source of truth**: every certificate constant with its evidence label |
+| `UFULL_ASSEMBLY_PROOF.md` | the earlier row-sum assembly from Lemma A + Lemma C: `cert(k) < 0.9551` proven, `< 0.9005` under the `DATA` sharp constant (Remark 2 corrected; superseded by THEOREM.md) |
 | `LEMMA_C_PROOF.md` | Lemma C proved (shell method + Lemma H homometry); assembly-strength bound |
 | `UFULL_ASSEMBLY_PLAN.md` | the prior cold-start brief for the assembly (now actioned) |
 | `verify_assembly.py`, `explore_vb_profile.py`, `verify_lemma_h.py`, `probe_*.py` | assembly + Lemma C / H verification |

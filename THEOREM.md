@@ -23,6 +23,11 @@ than the Lemma C route. Reproduce the numerics with `python fable_assembly_check
 > where `cert(k) := max_a sum_b Q_k[a,b] 2^{a-b}` and `Q_k[a,b] := ||P_a U_k P_b||_2` is the matrix
 > of level-block operator norms. With Lemma C the constant improves to `0.656`; the measured values
 > are `cert(k) ~ 0.6345`, `rho(Q_k) ~ 0.566`, `|lambda_2| ~ 0.27`.
+>
+> *(Correction 2026-08-03: "improves to `0.656`" is withdrawn as printed - the proven improvement is
+> `0.6826775358`, and `0.6553300859` is what the sharp `DATA` constant would give. See the correction
+> block under "The Lemma C refinement" below. The displayed `0.853553...` is unaffected and is
+> PROVEN unqualified.)*
 
 Inputs: Lemma A ([HALFSHIFT_S4_LEMMA_A_PROOF.md](HALFSHIFT_S4_LEMMA_A_PROOF.md)), Lemma B
 ([LEMMA_B_PROOF.md](LEMMA_B_PROOF.md)), and the foundation facts R1-R3
@@ -52,6 +57,13 @@ FALSE: columns of `T` sum to 1 exactly, but row sums deviate (`||T1 - 1||_2 ~ 0.
 another face of the `r*` defect), so the stationary distribution is only approximately uniform
 and `TJ != J`. The chain below is the corrected, one-sided derivation; nothing in it uses
 uniformity of the stationary distribution.
+
+*(Note added 2026-08-03, task T3.1.) The two phenomena named above - the row-sum deviation and the
+`r*` defect - are one phenomenon, exactly. `T 1 = (1 - 2^{1-k}) 1 + c` for every `k` (**PROVEN**,
+task T3.1 Lemma 4.1): the row-sum defect **is** the defect fibre `c`, so `||T 1 - 1||_2` is the norm
+of the mean-zero part of `c`, i.e. `||v||`. The unexplained constant `~0.76` printed above is
+identified as `sqrt(7/12) = 0.76376` - **DATA**, a fit over `k = 6..14`, not a proof, and nothing
+here depends on it. Nothing in the derivation below changes.*
 
 **I.1 (Perron split).** `T := T_k` is column-stochastic: `1^T T = 1^T`, hence `rho(T) = 1` and
 the mean-zero space `V = ker(1^T) = 1^perp` is `T`-invariant (`1^T (Tf) = 1^T f = 0`). In a basis
@@ -162,6 +174,36 @@ truncated envelope replaces the defect term by `2^{(a-1)/2} 2^{-k/2} = 2^{-(e+1)
 close to the measured `~0.6345` and a factor-`sqrt 2` sharpening of the defect term over
 Cauchy-Schwarz alone.
 
+> **CORRECTION (2026-08-03, task T6.1).** The paragraph and display immediately above are left
+> unedited; three things in them are wrong or unlabelled. Constants below are copied from
+> [EXTREMAL_VALUES.md](EXTREMAL_VALUES.md), the source of truth, and none of this touches the
+> headline `cert(k) <= 2^{-3/2} + 2^{-1} = 0.853553...`, which uses Lemmas A + B only.
+>
+> 1. **`0.65597...` is a misprint.** The formula printed directly above it evaluates at `e = 4` to
+>    `(1 + 3 sqrt 2)/8 = 0.6553300859`, verified in exact arithmetic and in float. Every downstream
+>    sentence stays true (`0.65533 < 0.656`); the digits do not.
+> 2. **That row is `DATA`, not proven, so it is not the sharpening this theorem is entitled to
+>    claim.** The input `v_b <= (3/4) 2^{-b} 2^{-k/2}` needs `g_b <= 3/4`, which is machine-verified
+>    to `k = 26` only. [LEMMA_C_PROOF.md](LEMMA_C_PROOF.md) equation (8) proves `g_b^2 <= 3/4 - 2^{-p}`,
+>    i.e. the constant `sqrt(3/4) = 0.8660`. Feeding *that* through the identical truncated envelope
+>    multiplies the defect term by `2/sqrt 3` and gives
+>    ```
+>      cert(k) <= max_{e>=2} [ sum_{d=1}^{e-2} 2^{-3d/2} + (2/sqrt 3) 2^{-(e+1)/2} ]
+>              =  (3 + 6 sqrt 2 + 2 sqrt 6)/24  =  0.6826775358    (max at e = 4),
+>    ```
+>    **PROVEN**, all `k`. `0.6553300859` remains available as the `DATA`-conditional row. The
+>    theorem box's "With Lemma C the constant improves to `0.656`" is corrected accordingly.
+> 3. **The binding row is `e* = 4`, not the envelope's `e = 3`.** The Sharpness remark above says the
+>    row that sets the constant is `e = 3`; that is true of the row-1 *envelope* `f(e)` and false of
+>    `cert(k)` itself, whose maximising row is `a* = k-4` (i.e. `e* = 4`) for every `k >= 4`. This is
+>    a bound-versus-measurement distinction, **not an error in the bound**: the envelope holds
+>    row-wise either way. The `e = 3` peak is an artifact of the Cauchy-Schwarz defect term being
+>    ~3.2x conservative there (`0.5` bound against `0.156` measured); the sharpened rows 2, 3 and 4
+>    of EXTREMAL_VALUES.md all peak at `e = 4`, matching the operator.
+>
+> None of the three changes the scope statement: `3x-1` passes all of these certificates more
+> strongly than `3x+1` and has real cycles, so a sharper constant here is not progress on Collatz.
+
 ## Verification
 
 ```
@@ -173,8 +215,11 @@ python audit_halfshift_s4.py      # CU, S4, and the Lemma A isometry to machine 
 
 ## Lean formalisation (elementary core)
 
-[lean/GapCertificate.lean](lean/GapCertificate.lean) - sorry-free, Mathlib v4.27.0
-(`cd lean && lake exe cache get && lake build`). Machine-checked (2026-07-05):
+Three files, all sorry-free on Mathlib v4.27.0 and all on the same clean axiom triple
+(verified with `#print axioms`, not by grepping for `sorry`):
+`cd lean && lake exe cache get && lake build`.
+
+[lean/GapCertificate.lean](lean/GapCertificate.lean) - machine-checked 2026-07-05:
 
 - the shared divisibility engine, FACT 1 (Lemma B) and SB injectivity (Lemma A's S1);
 - the Coset-Uniformity affine step (`cu_valuation_frozen`, `cu_syracuse_affine`);
@@ -182,8 +227,19 @@ python audit_halfshift_s4.py      # CU, S4, and the Lemma A isometry to machine 
 - the Cauchy-Schwarz defect bound (`defect_sum_bound`) and the abstract row-sum
   assembly of Part III (`assembly_row_bound`, `certificate_lt_one`).
 
-Not yet formalised: the operator chain of Part I (Perron split, majorisation,
-Gelfand), the CU fiber COUNT, SB surjectivity/cardinality, Lemma B's shell counting.
+[lean/OperatorChain.lean](lean/OperatorChain.lean) - added 2026-08-03, 15 theorems: Part I.1
+(Perron split) and I.2 (the compression `A^* = P_V U P_V` and the Gelfand bound). Recorded
+weakening, in-file: I.1's multiset (algebraic-multiplicity) form is COMPLETE-at-sketch-level;
+the geometric form is unconditional.
+
+[lean/CountingLemmas.lean](lean/CountingLemmas.lean) - added 2026-08-03, 30 theorems: the CU
+fibre count (image size `2^v`, fibre size `2^{K-v}` - note the orientation, the inverted reading
+is false whenever `v != K-v`), SB surjectivity and cardinality, shell cardinality.
+
+**Not yet formalised, and the reason the headline chain is NOT machine-checked end-to-end:**
+Lemma B's shell counting where it feeds the certificate assembly, and the glue connecting these
+abstract statements to a concrete `T_k`. Until both land, the Lean tree certifies the pieces, not
+the theorem.
 
 ## Honest scope (restated)
 

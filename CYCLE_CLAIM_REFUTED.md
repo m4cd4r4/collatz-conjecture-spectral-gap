@@ -12,6 +12,16 @@ column-stochastic mod-`2^k` Markov operator `T_k` in the character basis):
 ```
     cert(k) = max_a sum_b Q_k[a,b] 2^{a-b} < G_up + 2^{-3/2} = 0.9005 < 1,   uniformly in k,
 ```
+
+> **CONSTANTS CORRECTION (2026-08-03, task T6.1; display left unedited above).** Two changes, neither
+> affecting this document's conclusion. (i) `0.9005` consumes the sharp constant `g_b <= 3/4`, which
+> is machine-verified to `k = 26` and **not proved** - it is `DATA`. Under the constant actually
+> proved (`sqrt(3/4)`, [LEMMA_C_PROOF.md](LEMMA_C_PROOF.md) eq. (8)) this assembly gives
+> `G_up + 1/sqrt 6 = 0.9551664511 < 1`, **PROVEN**. (ii) This whole row is superseded: the A + B
+> route of [THEOREM.md](THEOREM.md) gives `cert(k) <= 2^{-3/2} + 2^{-1} = 0.853553...` from strictly
+> weaker inputs, PROVEN unqualified for all `k >= 3`. Full ladder with labels:
+> [EXTREMAL_VALUES.md](EXTREMAL_VALUES.md). The refutation below stands unchanged either way - a
+> smaller certificate is a stronger pass for `3x-1` too.
 hence `|lambda_2(U_k)| <= rho(Q_k) <= cert(k) < 1`: a **uniform spectral gap** for `T_k`. That part of
 the program is correct and unaffected by what follows.
 
@@ -54,10 +64,17 @@ not. The certificate is blind to cycles.
 
 **Survives (as correct mathematics, now without the cycle corollary):**
 - Lemma A: `||P_a U_clean P_b||_2 = 2^{-(b-a)/2}` exactly, all `k` (CU + SB + S4).
+  *(Citation corrected 2026-08-03: the within-level isometry `B*B = 2^{-(b-a)} I` comes from SB
+  (HALFSHIFT Section 1) + S4 (Section 3) + the owner count (Section 4). CU is not used for it; CU
+  discharges the separate masked-phase ingredient and R1/R2.)*
 - Lemma B: `||tril(Q_k)||_2 <= sqrt(3) 2^{-k/2}`, all `k` (the collision bound).
 - Lemma C: `v_b <= (3/4) 2^{-b} 2^{-k/2}`, all `k` (Lemma H homometry + shell bound).
+  *(Corrected 2026-08-03: what is proved for all `k` is `v_b < sqrt(3/4) 2^{-b} 2^{-k/2}`; the sharp
+  `3/4` form printed here is `DATA`, machine-verified to `k = 26`. Constants correction above.)*
 - Coset-Uniformity (CU): proved, all `k`, elementary.
-- The assembly: `cert(k) < 0.9005 < 1` uniformly.
+- The assembly: `cert(k) < 0.9005 < 1` uniformly. *(Corrected 2026-08-03: `0.9005` is `DATA`;
+  `0.9551664511` is this assembly's proven form, and the current proven constant is `0.853553...`,
+  from Lemmas A + B alone.)*
 These together are a correct, self-contained proof of a **uniform spectral gap for the Syracuse
 transfer operator** `T_k`. That is a real (if modest, and likely known-in-spirit) result. It simply
 does not have the cycle-elimination consequence that was claimed.

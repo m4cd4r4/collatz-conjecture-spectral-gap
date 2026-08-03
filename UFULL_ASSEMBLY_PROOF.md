@@ -95,6 +95,10 @@ self-similarity that powers Lemma B's collision count is the natural tool here.
 > where `G_up := sum_{d>=1} 2^{-3d/2} = 1/(2^{3/2} - 1) = 0.546918...`. Hence `rho(Q_k) <= cert(k) < 1`
 > uniformly.
 
+*(Label pointer, 2026-08-03, task T6.1: this is the boxed Theorem named in the provenance correction
+above. `0.900472...` is `DATA` - it consumes the sharp `3/4`. Its proven form is
+`G_up + (2/sqrt 3) 2^{-3/2} = 0.9551664511`; both are superseded by THEOREM.md's `0.853553...`.)*
+
 **The spectral reduction `cert(k) < 1 => no non-trivial cycles` (cited, established elsewhere).**
 This document proves the *algebraic* statement `cert(k) < 0.9005`. The link to a spectral gap is the
 standard two-step chain, established in the foundation, not re-proved here:
@@ -156,6 +160,10 @@ Two remarks on why the proof is not a wrap-up:
    > A + B alone give `cert(k) <= 0.8536` for all `k` - a better constant than this document's
    > `0.9005` - and Lemma C is a genuine sharpening (to `0.656` through the same truncated
    > envelope), not a necessity. Full statement and proof: [THEOREM.md](THEOREM.md).
+   >
+   > *(Constants updated 2026-08-03, task T6.1: "to `0.656`" carries the same `DATA`/misprint
+   > problem as everywhere else - the sharpening is `0.6826775358` proven, `0.6553300859` under the
+   > sharp constant verified to `k = 26`. The `0.8536` and the "not a necessity" verdict stand.)*
 
 ## Numerical certificate (ground truth, for comparison)
 

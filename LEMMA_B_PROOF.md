@@ -204,6 +204,25 @@ eliminating non-trivial Syracuse cycles. The remaining program-level obligations
 write-up of the standard spectral reduction (`cert < 1 => |lambda_2(U_k)| < 1`) and the Lean
 formalisation - not any finite-k crux.
 
+> **CORRECTION (2026-08-03, task T6.1).** The paragraph above is left unedited and is wrong in three
+> ways.
+>
+> 1. **"eliminating non-trivial Syracuse cycles" is FALSE, not merely unproven**, and was retracted
+>    2026-06-02 - see the banner at the top of this file and
+>    [CYCLE_CLAIM_REFUTED.md](CYCLE_CLAIM_REFUTED.md). `3x-1` passes the same certificate and has
+>    real cycles.
+> 2. **`0.9005` is `DATA`.** It consumes the sharp constant `g_b <= 3/4`, machine-verified to
+>    `k = 26` with no proof. The proven form of that assembly is `G_up + 1/sqrt 6 = 0.9551664511`,
+>    and it is superseded anyway: [THEOREM.md](THEOREM.md) gives `cert(k) <= 0.853553...` from
+>    Lemmas A + B alone, PROVEN for all `k >= 3`. Ladder: [EXTREMAL_VALUES.md](EXTREMAL_VALUES.md).
+> 3. **The Lemma A citation is imprecise in the same way flagged at the top of this file.** The
+>    within-level isometry is SB (Section 1) + S4 (Section 3) + the owner count (Section 4); **CU is
+>    not used in it**. CU discharges the masked-phase ingredient and R1/R2, which is what the
+>    "Sections 1-2" pointer above correctly refers to.
+>
+> Also outdated: the spectral reduction is no longer an open obligation - it is written out in
+> THEOREM.md Part I and Part I.1-I.2 is formalised in `lean/OperatorChain.lean`.
+
 ## Verification
 
 ```
