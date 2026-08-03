@@ -11,4 +11,4 @@ lean_lib GapCertificate where
   roots := #[`GapCertificate, `OperatorChain, `CountingLemmas, `LevelMajorisation,
              `CollisionBound, `Assembly, `LemmaA, `TransferOperator, `CharacterBasis,
              `BlockVanishing, `OperatorBlock, `DefectSplit, `ManifestInstance,
-             `CleanBlock, `OwnerCount, `OwnerPartition]
+             `CleanBlock, `OwnerCount, `OwnerPartition, `GramIdentity]
