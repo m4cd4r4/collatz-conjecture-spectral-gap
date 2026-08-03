@@ -213,11 +213,37 @@ python verify_assembly.py         # the Lemma C route numbers (cert ~0.6345, rho
 python audit_halfshift_s4.py      # CU, S4, and the Lemma A isometry to machine precision
 ```
 
-## Lean formalisation (elementary core)
+## Lean formalisation (COMPLETE, 2026-08-03)
 
-Three files, all sorry-free on Mathlib v4.27.0 and all on the same clean axiom triple
-(verified with `#print axioms`, not by grepping for `sorry`):
+**The headline chain is machine-checked end-to-end, with no undischarged hypothesis.**
+`GramIdentity.gap_certificate_unconditional` states: for every `k >= 3`, every eigenvalue
+`mu != 1` of the concretely defined transfer operator `TransferOperator.Tend k` satisfies
+`||mu|| <= envelope s 3 < 0.853554`. There is no hypothesis binder in that statement beyond
+`3 <= k` and the eigenvalue data itself.
+
+Seventeen files, 441 theorem/lemma declarations, all sorry-free on Mathlib v4.27.0, no
+`native_decide`, and every `#print axioms` set a SUBSET of `{propext, Classical.choice,
+Quot.sound}` (checked as a subset, not by string-matching the triple - several declarations
+legitimately use fewer, and a naive grep flags those as violations):
 `cd lean && lake exe cache get && lake build`.
+
+The chain, in dependency order: `Tcount` defines `T_k` from the lift window
+([lean/TransferOperator.lean](lean/TransferOperator.lean)); the character basis and the level
+projections `P_a` ([lean/CharacterBasis.lean](lean/CharacterBasis.lean)); the S1 character step
+and the Gauss collapse ([lean/BlockVanishing.lean](lean/BlockVanishing.lean)); the operator
+identity `P_a U_clean P_b = 0` for `a >= b` ([lean/OperatorBlock.lean](lean/OperatorBlock.lean));
+the defect split `U = U_clean + D` ([lean/DefectSplit.lean](lean/DefectSplit.lean)); nine of the
+ten manifest fields ([lean/ManifestInstance.lean](lean/ManifestInstance.lean)); the reduction of
+the tenth to (CLEAN) ([lean/CleanBlock.lean](lean/CleanBlock.lean)); the S6/S7 owner count and
+the owner partition ([lean/OwnerCount.lean](lean/OwnerCount.lean),
+[lean/OwnerPartition.lean](lean/OwnerPartition.lean)); and finally the upper-block entry theorem,
+the Gram identity `B*B = 2^{-d} I` and (CLEAN) itself
+([lean/GramIdentity.lean](lean/GramIdentity.lean)).
+
+**Still NOT formalised, stated plainly:** Lemma C's sharpening (`0.6827` / `0.6553`) - it is a
+sharpening of, not an input to, the `0.853553...` headline, so the chain does not need it; and
+the non-degeneracy `gc != 0`, which the certificate also does not need. Nothing else in the
+headline chain is paper-only.
 
 [lean/GapCertificate.lean](lean/GapCertificate.lean) - machine-checked 2026-07-05:
 
@@ -236,10 +262,11 @@ the geometric form is unconditional.
 fibre count (image size `2^v`, fibre size `2^{K-v}` - note the orientation, the inverted reading
 is false whenever `v != K-v`), SB surjectivity and cardinality, shell cardinality.
 
-**Not yet formalised, and the reason the headline chain is NOT machine-checked end-to-end:**
-Lemma B's shell counting where it feeds the certificate assembly, and the glue connecting these
-abstract statements to a concrete `T_k`. Until both land, the Lean tree certifies the pieces, not
-the theorem.
+*(The paragraph that stood here until 2026-08-03 - "Not yet formalised, and the reason the
+headline chain is NOT machine-checked end-to-end: Lemma B's shell counting where it feeds the
+certificate assembly, and the glue connecting these abstract statements to a concrete `T_k`" -
+is **withdrawn**. Both landed: the glue at `ManifestInstance.lean`, the counting through
+`Assembly.hL2_discharged`. The Lean tree now certifies the theorem, not only the pieces.)*
 
 ## Honest scope (restated)
 

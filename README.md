@@ -1,7 +1,7 @@
 # A uniform spectral gap for the Syracuse transfer operator
 
 [![paper](https://img.shields.io/badge/paper-9pp%20PDF-blue)](paper/syracuse_spectral_gap.pdf)
-[![Lean 4 core](https://img.shields.io/badge/Lean%204-core%20sorry--free-brightgreen)](lean/GapCertificate.lean)
+[![Lean 4](https://img.shields.io/badge/Lean%204-chain%20complete%2C%20sorry--free-brightgreen)](THEOREM.md#lean-formalisation-complete-2026-08-03)
 [![certificate](https://img.shields.io/badge/certificate-%E2%89%A4%200.8536%20%3C%201-success)](THEOREM.md)
 [![reproducible](https://img.shields.io/badge/figures%20%26%20proofs-reproducible-blue)](#reproduce-everything)
 ![license](https://img.shields.io/badge/license-public%20domain-lightgrey)
@@ -42,8 +42,8 @@ part of) the Collatz conjecture.
 | Lemmas A, B + Coset-Uniformity foundation + row-sum assembly | **PROVEN** (all-`k`) |
 | Lemma C as *proved*: `g_b < sqrt(3/4) = 0.8660`, giving `cert <= 0.6826775358` | **PROVEN** (all-`k`) |
 | Lemma C in its *sharp* form `g_b <= 3/4`, giving `cert <= 0.6553300859` | **DATA** - machine-verified `k <= 26`, no proof |
-| Lean 4: elementary core, Part I.1-I.2 of the operator chain, counting lemmas | **Machine-checked, sorry-free** (Mathlib v4.27.0) |
-| Lean 4: Lemma B's shell counting into the assembly; glue to a concrete `T_k` | Paper-only, formalisation pending |
+| Lean 4: the headline chain end-to-end, from `T_k`'s definition to `\|\|mu\|\| < 0.853554` | **Machine-checked, sorry-free, UNCONDITIONAL** (2026-08-03; 17 files, 441 decls, Mathlib v4.27.0) |
+| Lean 4: Lemma C's sharpening (`0.6827` / `0.6553`); the non-degeneracy `gc != 0` | Paper-only - and neither is an input to the headline |
 | Paper write-up, 9 pp | **Done** - [`paper/syracuse_spectral_gap.pdf`](paper/syracuse_spectral_gap.pdf) |
 | Cycle elimination (`gap => no cycles`) | **Retracted, false** - [why](CYCLE_CLAIM_REFUTED.md) |
 | Proof of the Collatz conjecture (any part) | Not attempted / not claimed |
@@ -51,10 +51,11 @@ part of) the Collatz conjecture.
 *Label discipline (2026-08-03): `PROVEN` means an unconditional proof written out in this repo for
 all `k`; `DATA` means machine-verified over a finite range with no proof. Labels never round up - a
 bound consuming a `DATA` input stays `DATA`, however good the numerics. Every constant above is
-copied from [EXTREMAL_VALUES.md](EXTREMAL_VALUES.md), the single source of truth. The three Lean
-files are individually sorry-free on a clean axiom triple, but the headline chain end-to-end is
-**not** machine-checked - the assembly's counting inputs and the glue to a concrete `T_k` are still
-paper-only.*
+copied from [EXTREMAL_VALUES.md](EXTREMAL_VALUES.md), the single source of truth. As of
+2026-08-03 the headline chain **is** machine-checked end-to-end and unconditional -
+`GramIdentity.gap_certificate_unconditional`, no hypothesis binder - superseding the note that
+stood here, which said it was not. `PROVEN` labels on the headline are now backed by Lean as well
+as by the prose proofs; the `DATA` label on Lemma C's sharp form is unaffected and unchanged.*
 
 ## Contents
 
@@ -135,8 +136,9 @@ The certificate is a true statement about the operator; the cycle inference draw
 *The block-norm matrix `Q` (log scale). The bright upper triangle is the cascade `Q[a,b] = 2^{-(b-a)/2}`;
 the dark lower triangle is the rank-1 `r*` defect, which vanishes like `2^{-k/2}`.*
 
-The certificate splits into three lemmas (A, B, C), all **proved for all `k`** (elementary; Lean
-formalisation pending), plus the row-sum assembly, also proved.
+The certificate splits into three lemmas (A, B, C), all **proved for all `k`** (elementary), plus
+the row-sum assembly, also proved. Lemmas A and B and the assembly are **machine-checked** as of
+2026-08-03; Lemma C, which sharpens the headline rather than feeding it, is paper-only.
 
 ### Lemma A - upper cascade (within-level isometry)
 
@@ -195,16 +197,22 @@ consolidated with the full spectral reduction in [THEOREM.md](THEOREM.md)). What
 does **not** follow, and is **withdrawn**, is cycle elimination: the gap `=> no cycles` inference is
 false ([CYCLE_CLAIM_REFUTED.md](CYCLE_CLAIM_REFUTED.md)). Ruling out non-trivial Collatz cycles would
 require an instrument sensitive to the deterministic orbit (e.g. linear-forms-in-logs / height bounds,
-as in classical cycle-length results), not this transfer-operator spectral gap. The remaining future
-work on the gap itself is completing its Lean formalisation. Machine-checked and sorry-free, on a
-clean axiom triple: the elementary core (FACT 1, SB injectivity, Coset-Uniformity affine step, the
-envelope, the Cauchy-Schwarz assembly) in [lean/GapCertificate.lean](lean/GapCertificate.lean)
-(2026-07-05); THEOREM.md Part I.1-I.2, the Perron split and the compression/Gelfand step, in
-[lean/OperatorChain.lean](lean/OperatorChain.lean); and the CU fibre count, SB surjectivity and shell
-cardinality in [lean/CountingLemmas.lean](lean/CountingLemmas.lean) (both 2026-08-03). Still
-paper-only: Lemma B's shell counting where it feeds the certificate assembly, and the glue tying the
-formal statements to a concrete `T_k` - so the headline chain end-to-end is **not** machine-checked.
-Either way it formalises a correct-but-not-cycle-eliminating statement.
+as in classical cycle-length results), not this transfer-operator spectral gap.
+
+**The Lean formalisation of the gap is complete as of 2026-08-03.** Seventeen files, 441
+theorem/lemma declarations, sorry-free, no `native_decide`, every `#print axioms` set a subset of
+`{propext, Classical.choice, Quot.sound}`. The end of the chain is
+`GramIdentity.gap_certificate_unconditional`: for every `k >= 3`, every eigenvalue `mu != 1` of
+the concretely defined `TransferOperator.Tend k` has `||mu|| < 0.853554`, with no undischarged
+hypothesis. See [THEOREM.md](THEOREM.md) for the file-by-file chain. The note that stood here -
+"the headline chain end-to-end is **not** machine-checked" - is superseded.
+
+**This changes nothing about scope.** A machine-checked certificate is still a certificate about
+the averaged mod-`2^k` chain, and the `3x-1` control still passes the identical certificate while
+having real cycles. Indeed the formalisation *sharpens* the limit rather than softening it: the
+only property of `3^{-1}` used anywhere in the Lean proof of the hard step is that it is **odd**,
+so every construction runs verbatim for `3x-1`. An unconditional certificate is not evidence about
+`3x+1` specifically. It formalises a correct-but-not-cycle-eliminating statement.
 
 ### What this method delivers at its optimum, and why sharpening it further would not help
 
@@ -264,9 +272,12 @@ python probe_cycle_recovery.py      # cycle-detector tests: spectrum/traces are 
 | `probe_cycle_link.py`, `probe_cycle_recovery.py` | the 3x+1 vs 3x-1 control + cycle-detector tests |
 | `paper/syracuse_spectral_gap.pdf` | **the paper** (9 pp): the theorem, all proofs, the Lean section, and the scope/retraction statement |
 | `THEOREM.md` | **the consolidated theorem**: full spectral reduction + assembly, `cert(k) <= 0.8536` from A + B alone |
-| `lean/GapCertificate.lean` | **Lean 4 formalisation** of the elementary core (FACT 1, SB, CU, envelope, Cauchy-Schwarz assembly) - sorry-free, Mathlib v4.27.0 |
-| `lean/OperatorChain.lean` | Lean 4: THEOREM.md Part I.1-I.2 (Perron split, compression, Gelfand) - sorry-free |
-| `lean/CountingLemmas.lean` | Lean 4: the CU fibre count, SB surjectivity, shell cardinality - sorry-free |
+| `lean/` | **Lean 4 formalisation, complete and unconditional** - 17 files, 441 theorem/lemma declarations, sorry-free on Mathlib v4.27.0. `lake build` from `lean/`. Chain and file-by-file breakdown in [THEOREM.md](THEOREM.md). |
+| `lean/GramIdentity.lean` | the end of the chain: the upper-block entry theorem, the Gram identity `B*B = 2^{-d} I`, (CLEAN), and `gap_certificate_unconditional` |
+| `lean/TransferOperator.lean` | `T_k` itself, defined from the lift window by `Tcount` - what the certificate is *about* |
+| `lean/GapCertificate.lean` | the elementary core (FACT 1, SB, CU, envelope, Cauchy-Schwarz assembly) |
+| `lean/OperatorChain.lean` | THEOREM.md Part I.1-I.2 (Perron split, compression, Gelfand) |
+| `lean/CountingLemmas.lean` | the CU fibre count, SB surjectivity, shell cardinality |
 | `EXTREMAL_VALUES.md` | **the constants source of truth**: every certificate constant with its evidence label |
 | `UFULL_ASSEMBLY_PROOF.md` | the earlier row-sum assembly from Lemma A + Lemma C: `cert(k) < 0.9551` proven, `< 0.9005` under the `DATA` sharp constant (Remark 2 corrected; superseded by THEOREM.md) |
 | `LEMMA_C_PROOF.md` | Lemma C proved (shell method + Lemma H homometry); assembly-strength bound |

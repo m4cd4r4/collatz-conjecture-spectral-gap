@@ -397,7 +397,8 @@ This file supplies **step (2)** of the S6/S7 argument only.  Still open:
   is what turns the combinatorics into the operator bound.
 * **(CLEAN)** itself, i.e. `‖P_a U_clean P_b‖ ≤ s^(b-a)`, the hypothesis of
   `CleanBlock.gap_certificate_of_clean`.  **That hypothesis is unchanged by this
-  file.**
+  file.**  (STATUS 2026-08-03: closed by `GramIdentity.clean_bound` (F3), which
+  consumes this file's `owner_count` directly.)
 -/
 
 #print axioms isCoprime_two_of_odd

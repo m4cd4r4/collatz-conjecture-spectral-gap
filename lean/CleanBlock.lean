@@ -9,7 +9,10 @@ Two scopes were offered:
   bound replaces `hQupper` as the single named residue.
 * **E2** — E1 **plus** a proof of the clean bound, closing `hQupper` outright.
 
-**This file lands E1. `hQupper` is NOT discharged.** `ManifestInstance.gap_certificate_concrete`
+**This file lands E1. `hQupper` is NOT discharged _by this file_.** (STATUS 2026-08-03: it is
+discharged by `GramIdentity.lean`, which proves this file's (CLEAN) hypothesis outright. The
+scope statement below remains true OF THIS FILE and is left standing as the audit trail.)
+`ManifestInstance.gap_certificate_concrete`
 still has an undischarged hypothesis; what changes is *which* hypothesis, and §6 records exactly
 where the clean bound stalls. Nothing below should be read as "`hQupper` is closed" — it is not.
 
@@ -283,8 +286,17 @@ theorem gap_certificate_of_clean_numeral {k : ℕ} (hk : 3 ≤ k)
 ## §6. What is NOT discharged, and exactly where the clean bound stalls
 --------------------------------------------------------------------------------
 
-**`hQupper` is OPEN.** `ManifestInstance.gap_certificate_concrete` still carries an
-undischarged hypothesis; this file changes which one. Do not read §5 as closing anything.
+**`hQupper` is OPEN _as of this file_.** `ManifestInstance.gap_certificate_concrete` still
+carries an undischarged hypothesis; this file changes which one. Do not read §5 as closing
+anything.
+
+**STATUS UPDATE 2026-08-03 (F3): (CLEAN) is now a theorem, `GramIdentity.clean_bound`, so
+`gap_certificate_of_clean` has an unconditional form, `GramIdentity.gap_certificate_unconditional`.**
+The four "missing" items listed below were built as L14 (owner count), L15 (disjoint
+ownership), and F3 (the upper-block entry theorem + the Gram identity + the norm). Item 4's
+prediction that a within-level block `B` must be defined and its adjoint formed turned out
+to be avoidable: F3 forms no adjoint at all. The rest of this section is accurate as a
+record of what was open when it was written.
 
 The residue is now (CLEAN), and nothing else. A read of `HALFSHIFT_S4_LEMMA_A_PROOF.md`
 §§1/3/4 and `STEP4_BLOCK_FORMULA_FOUNDATION.md` against this Lean development, done as part of

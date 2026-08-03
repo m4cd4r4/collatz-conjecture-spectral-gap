@@ -40,8 +40,9 @@ Four things are proved here, for all `k`:
 
 ## What is NOT discharged (do not soften this)
 
-**`Assembly.LemmaAFacts.hQupper` and `hQlower` both remain OPEN. This file closes 0 of the 2
-residue fields.** Concretely, and in plain words:
+**`Assembly.LemmaAFacts.hQupper` and `hQlower` both remain OPEN _as of this file_. This file
+closes 0 of the 2 residue fields.** (STATUS 2026-08-03: both since closed - `hQlower` at L12,
+`hQupper` at F3.) Concretely, and in plain words:
 
 1. **`P_a U_clean P_b = 0` is NOT proved as an operator identity.** §6b gets to *entries*:
    for every `η` of level `b` and `ξ` of level `a ≥ b`, the clean character-basis entry of
@@ -55,6 +56,8 @@ residue fields.** Concretely, and in plain words:
 2. **No operator norm is bounded anywhere in this file.** `Q[a,b] = ‖P_a U P_b‖₂` is still
    not defined in this development. `hQupper` additionally needs the `a < b` isometry
    `B*B = 2^{-d} I`, whose S6/S7 owner-counting (HALFSHIFT §4) is not formalised at all.
+   **STALE 2026-08-03:** `Q` is `ManifestInstance.Qmat` (L12); the owner-counting is L14/L15;
+   the isometry is `GramIdentity.gram_upper` (F3).
 3. **The defect is still not decomposed.** `hQlower`'s bound is a bound on the rank-one
    defect, and §6/§6b explicitly *exclude* `r*` - by the hypothesis `v₂(3r+1) < k` and by
    summing only over `(Icc 1 (k-1)).biUnion (shell k)` respectively.

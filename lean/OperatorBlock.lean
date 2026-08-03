@@ -40,8 +40,9 @@ Three things are proved here, for all `k`:
 
 ## What is NOT discharged (do not soften this - it is the same list L7, L8, L9 all carried)
 
-**`Assembly.LemmaAFacts.hQupper` and `hQlower` both remain OPEN. This file closes 0 of the 2
-residue fields.** In plain words:
+**`Assembly.LemmaAFacts.hQupper` and `hQlower` both remain OPEN _as of this file_. This file
+closes 0 of the 2 residue fields.** (STATUS 2026-08-03: both since closed - `hQlower` at L12,
+`hQupper` at F3.) In plain words:
 
 1. **`Q[a,b] = ‖P_a U P_b‖₂` is still not defined anywhere in this development, and no
    operator norm is bounded anywhere.** `P_Uclean_P_eq_zero` says a block is the zero
@@ -55,6 +56,8 @@ residue fields.** In plain words:
    bounds nothing about the operator `hQlower` is actually about.
 3. **`hQupper` is untouched.** The `a < b` half needs the isometry `B*B = 2^{-d}I` and its
    S6/S7 owner-counting (HALFSHIFT §4), which is not formalised anywhere in this development.
+   **STALE 2026-08-03:** the owner-counting is `OwnerCount.owner_count` (L14) and
+   `OwnerPartition.owner_biUnion` (L15); the isometry is `GramIdentity.gram_upper` (F3).
    Note `LemmaA.survivor_dead_band` has hypothesis `a < b` and is therefore not the lemma
    used below - the `a ≥ b` regime runs through `CharacterBasis.survivor_dead_band_lower`,
    which L8 proved for that regime specifically.

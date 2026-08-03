@@ -371,13 +371,20 @@ structure LemmaAFacts (k K : ℕ) {F : Type*} [NormedAddCommGroup F] [InnerProdu
   (foundation R3), giving `Q[a,b] ≤ 2^{-(b-a)/2} + u_a v_b`.
   Source: `HALFSHIFT_S4_LEMMA_A_PROOF.md` §§1,3,4 + `STEP4_BLOCK_FORMULA_FOUNDATION.md` R3.
   Evidence label: **COMPLETE-at-sketch-level** - proved on paper for all `k` (confirmed
-  2026-08-02, task W1-A), NOT formalised. **This is the residue.** -/
+  2026-08-02, task W1-A).
+  **STATUS 2026-08-03 (F3): no longer the residue.** For the concrete `T_k` this field is
+  now a theorem, `GramIdentity.hQupper_holds`, via `GramIdentity.clean_bound`. The label
+  above describes the ABSTRACT structure, whose user must still supply the field; it is
+  retained for that reading only. -/
   hQupper : ∀ a b : Fin K, (a : ℕ) < (b : ℕ) →
     Q a b ≤ s ^ ((b : ℕ) - (a : ℕ)) + s ^ ((a : ℕ) + 1) * levelVec gc (b : ℕ)
   /-- **LEMMA A, lower part (R1).** THEOREM.md Part II: *"`P_a U_clean P_b = 0` for `a ≥ b`"*, so
   on and below the diagonal `Q[a,b] ≤ u_a v_b` is pure defect.
   Source: `STEP4_BLOCK_FORMULA_FOUNDATION.md` R1 + `HALFSHIFT_S4_LEMMA_A_PROOF.md`.
-  Evidence label: **COMPLETE-at-sketch-level**. **This is the residue.** -/
+  Evidence label: **COMPLETE-at-sketch-level**.
+  **STATUS: this stopped being a residue at L12 (2026-08-03), before F3** - for the
+  concrete `T_k` it is `ManifestInstance.Qmat_lower_eq`, and with EQUALITY. The
+  "This is the residue" label was already stale when F3 found it. -/
   hQlower : ∀ a b : Fin K, (b : ℕ) ≤ (a : ℕ) →
     Q a b ≤ s ^ ((a : ℕ) + 1) * levelVec gc (b : ℕ)
   /-- **The identification of the defect covector.** `gc` is the level decomposition of the

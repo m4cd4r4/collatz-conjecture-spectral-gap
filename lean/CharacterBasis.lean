@@ -37,9 +37,11 @@ Concretely it proves, for all `k`:
 
 ## What is NOT discharged (do not soften this)
 
-**`Assembly.LemmaAFacts.hQupper` and `hQlower` both remain OPEN. This file closes 0 of the 2
-residue fields.** `Q` is still not defined anywhere in this development, and no operator norm
-is bounded anywhere in this file. Three named gaps stand between `lower_block_entry_vanishes`
+**`Assembly.LemmaAFacts.hQupper` and `hQlower` both remain OPEN _as of this file_. This file
+closes 0 of the 2 residue fields.** `Q` is still not defined anywhere in this development, and
+no operator norm is bounded anywhere in this file. (STATUS 2026-08-03: `Q` is since defined -
+`ManifestInstance.Qmat`, L12 - and both fields are since closed, `hQlower` at L12 and
+`hQupper` at F3.) Three named gaps stand between `lower_block_entry_vanishes`
 and `hQlower`:
 
 1. **The S1 reduction is not formalised.** `HALFSHIFT_S4_LEMMA_A_PROOF.md` §4 turns the

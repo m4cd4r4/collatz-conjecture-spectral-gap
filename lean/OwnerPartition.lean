@@ -474,7 +474,14 @@ In plain words, and without overclaiming:
   transfer operator, which is `U` minus the defect.  (F3) would give the norm of
   the ideal block; relating that to `U_clean` is a further step.
   **`CleanBlock.gap_certificate_of_clean`'s hypothesis is unchanged by this
-  file.**  Nothing here closes it, and the certificate still rests on it.
+  file.**  Nothing here closes it.
+
+  **STATUS 2026-08-03 (F3): the certificate no longer rests on it.**  (CLEAN) is
+  `GramIdentity.clean_bound` and the unconditional form is
+  `GramIdentity.gap_certificate_unconditional`.  Note for the record that this
+  file's own forecast above - that the off-diagonal Gram sums "have to be shown
+  to cancel", "a character-sum argument, not a counting one" - was WRONG: they
+  vanish by disjoint support, i.e. by `ownedBy_disjoint`, proved in THIS file.
 -/
 
 #print axioms mem_ownedBy

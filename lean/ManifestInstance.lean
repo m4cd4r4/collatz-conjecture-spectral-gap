@@ -30,7 +30,7 @@ Field by field:
 | `hQblock` | **PROVEN** | §7, `ContinuousLinearMap.le_opNorm` |
 | `hQlower` | **PROVEN** | §7, from L11's `norm_P_U_P_le` - and with **equality**, `Qmat_lower_eq` |
 | `hDefectVec` | **PROVEN** | §8 |
-| `hQupper` | **OPEN. The sole residue.** | - |
+| `hQupper` | **CLOSED 2026-08-03 (F3).** Was "the sole residue". | `GramIdentity.hQupper_holds` |
 
 ## STANDING GATE - sign scope, unchanged
 

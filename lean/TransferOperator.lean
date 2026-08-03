@@ -31,8 +31,9 @@ Concretely it proves, for all `k`:
 
 ## What is NOT discharged (do not soften this)
 
-**`Assembly.LemmaAFacts.hQupper` and `hQlower` remain OPEN. 0 of the 2 residue fields are
-closed by this file.** Neither is even *stated* here: both are bounds on
+**`Assembly.LemmaAFacts.hQupper` and `hQlower` remain OPEN _as of this file_. 0 of the 2
+residue fields are closed by this file.** (STATUS 2026-08-03: both are since closed for the
+concrete `T_k` - `hQlower` at L12, `hQupper` at F3. The per-file claim stands.) Neither is even *stated* here: both are bounds on
 `Q[a,b] = ‖P_a U_k P_b‖₂`, which needs the character-basis transform of `T_k` and the
 operator norms of its level blocks. This file does not build the character basis, does not
 define `Q`, and proves nothing about any operator norm. What it removes is the *prerequisite*
