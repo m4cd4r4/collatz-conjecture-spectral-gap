@@ -169,6 +169,31 @@ Therefore
 adding at most k cross pairs. These are covered by the slack of extending the series to infinity:
 `sum_{j'>=k} j' 2^{k-1-j'} = k+1 >= k`. Added 2026-07-05, Fable review Finding 3.)
 
+> **CORRECTION (2026-08-03, task L4 — a referee finding from the Lean formalisation).**
+> The **first line of the display above is false for small k as written**, because the top atom is
+> counted in `cross` but its shell index `j' = k` lies outside the range `j' = 0..k-1`. Measured:
+>
+> | k | actual `cross` | displayed bound `sum_{j'<k} j' 2^{k-1-j'}` | holds? |
+> |---|---|---|---|
+> | 3 | 5 | 4 | **NO** |
+> | 4 | 13 | 11 | **NO** |
+> | 5 | 24 | 26 | yes |
+> | 6 | 51 | 57 | yes |
+>
+> The paragraph immediately above repairs the *conclusion* (the infinite-series slack absorbs the
+> atom), so `coll(k) <= 3*2^k` was never in danger. But the displayed intermediate line does not
+> hold standalone, and a reader checking it at `k = 3` or `4` will find it fails.
+>
+> **Correct finite form**, proved for all `k` in
+> [lean/CollisionBound.lean](lean/CollisionBound.lean) (`card_Lset_le`, `geom_weighted`) and
+> verified numerically at every `k = 3..9`:
+> ```
+>     cross  <=  sum_{j'=0}^{k-1} j' * 2^{k-1-j'}  +  k  =  2^k - 1 .
+> ```
+> This needs no infinite series and is exact rather than slack. It also yields a slightly
+> **stronger** conclusion than the one below: `coll(k) + 2 <= 3*2^k`, i.e. `coll(k) <= 3*2^k - 2`
+> (`coll_le_sharp`). The `3*2^k` form stated below remains true and is what downstream consumes.
+
 Hence `coll = diag + 2*cross <= 2^k + 2*2^k = 3 * 2^k`. **QED, all k.**
 
 ### Sharp constant (context, not needed)
