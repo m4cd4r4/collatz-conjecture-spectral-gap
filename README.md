@@ -1,6 +1,6 @@
 # A uniform spectral gap for the Syracuse transfer operator
 
-[![paper](https://img.shields.io/badge/paper-9pp%20PDF-blue)](paper/syracuse_spectral_gap.pdf)
+[![paper](https://img.shields.io/badge/paper-10pp%20PDF-blue)](paper/syracuse_spectral_gap.pdf)
 [![Lean 4](https://img.shields.io/badge/Lean%204-chain%20complete%2C%20sorry--free-brightgreen)](THEOREM.md#lean-formalisation-complete-2026-08-03)
 [![certificate](https://img.shields.io/badge/certificate-%E2%89%A4%200.8536%20%3C%201-success)](THEOREM.md)
 [![reproducible](https://img.shields.io/badge/figures%20%26%20proofs-reproducible-blue)](#reproduce-everything)
@@ -44,7 +44,7 @@ part of) the Collatz conjecture.
 | Lemma C in its *sharp* form `g_b <= 3/4`, giving `cert <= 0.6553300859` | **DATA** - machine-verified `k <= 26`, no proof |
 | Lean 4: the headline chain end-to-end, from `T_k`'s definition to `\|\|mu\|\| < 0.853554` | **Machine-checked, sorry-free, UNCONDITIONAL** (2026-08-03; 17 files, 441 decls, Mathlib v4.27.0) |
 | Lean 4: Lemma C's sharpening (`0.6827` / `0.6553`); the non-degeneracy `gc != 0` | Paper-only - and neither is an input to the headline |
-| Paper write-up, 9 pp | **Done** - [`paper/syracuse_spectral_gap.pdf`](paper/syracuse_spectral_gap.pdf) |
+| Paper write-up, 10 pp | **Done** - [`paper/syracuse_spectral_gap.pdf`](paper/syracuse_spectral_gap.pdf) |
 | Cycle elimination (`gap => no cycles`) | **Retracted, false** - [why](CYCLE_CLAIM_REFUTED.md) |
 | Proof of the Collatz conjecture (any part) | Not attempted / not claimed |
 
@@ -270,7 +270,7 @@ python probe_cycle_recovery.py      # cycle-detector tests: spectrum/traces are 
 | `CYCLE_CLAIM_REFUTED.md` | **the retraction**: why the spectral gap does not eliminate cycles (3x-1 control) |
 | `CYCLE_STRUCTURE_RECOVERY.md` | follow-up: no cycle structure is recoverable from the spectral side; where it lives |
 | `probe_cycle_link.py`, `probe_cycle_recovery.py` | the 3x+1 vs 3x-1 control + cycle-detector tests |
-| `paper/syracuse_spectral_gap.pdf` | **the paper** (9 pp): the theorem, all proofs, the Lean section, and the scope/retraction statement |
+| `paper/syracuse_spectral_gap.pdf` | **the paper** (10 pp): the theorem, all proofs, the Lean section, and the scope/retraction statement |
 | `THEOREM.md` | **the consolidated theorem**: full spectral reduction + assembly, `cert(k) <= 0.8536` from A + B alone |
 | `lean/` | **Lean 4 formalisation, complete and unconditional** - 17 files, 441 theorem/lemma declarations, sorry-free on Mathlib v4.27.0. `lake build` from `lean/`. Chain and file-by-file breakdown in [THEOREM.md](THEOREM.md). |
 | `lean/GramIdentity.lean` | the end of the chain: the upper-block entry theorem, the Gram identity `B*B = 2^{-d} I`, (CLEAN), and `gap_certificate_unconditional` |

@@ -461,28 +461,57 @@ remarkably close to the measured $0.6345$.
 \section{Lean formalisation}\label{sec:lean}
 %==============================================================================
 
-The elementary core of the proof is machine-checked in Lean~4 against Mathlib (v4.27.0), in the
-repository module \texttt{lean/GapCertificate.lean} (15 theorems, no \texttt{sorry}, no new
-axioms):
+Theorem~\ref{thm:main} is machine-checked in Lean~4 against Mathlib (v4.27.0), end to end and
+with no undischarged hypothesis. The endpoint is \texttt{gap\_certificate\_unconditional}: for
+every $k \ge 3$, every eigenvalue $\mu \ne 1$ of the operator $T_k$ --- \emph{defined inside the
+formalisation} from the lift window, not axiomatised --- satisfies $\|\mu\| < 0.853554$.
+
+The project is 17 files and 441 theorem/lemma declarations, with no \texttt{sorry}, no
+\texttt{native\_decide}, and every \texttt{\#print axioms} set a subset of
+$\{\texttt{propext}, \texttt{Classical.choice}, \texttt{Quot.sound}\}$. (That check is a subset
+test, not a string match: a number of declarations legitimately use fewer axioms.) The
+correspondence with this paper is:
 
 \begin{itemize}
-\item the shared divisibility engine ($2^N \mid 3(m - m')$ in a $2^N$-window forces $m = m'$),
-  and as corollaries FACT~1 of Theorem~\ref{thm:lemmaB} and the injectivity half of
-  Lemma~\ref{lem:SB};
-\item the affine step of Lemma~\ref{lem:CU} (\texttt{cu\_valuation\_frozen},
-  \texttt{cu\_syracuse\_affine});
-\item the envelope analysis of Section~\ref{sec:assembly}: $f(e) \le f(3) < 1$;
-\item the Cauchy--Schwarz defect bound and the abstract row-sum assembly
-  (\texttt{assembly\_row\_bound}, \texttt{certificate\_lt\_one}): given the block bounds of
-  Sections~\ref{sec:blocks}--\ref{sec:lemmaB} as hypotheses, every weighted row sum is
-  $\le f(k-a) < 1$.
+\item \textbf{$T_k$ itself} --- \texttt{TransferOperator.lean}. \texttt{Tcount k u r} counts the
+  lifts $m < 2^k$ of the odd residue $r$ with $\mathrm{Syr}(r + m 2^k) \equiv u$, which is
+  Section~\ref{sec:setup}'s definition transcribed. Nothing downstream is about an abstract
+  operator satisfying axioms.
+\item \textbf{Proposition~\ref{prop:reduction}} (the spectral reduction) ---
+  \texttt{OperatorChain.lean}: the Perron split on $\ker \mathbf{1}^\top$, the compression, and
+  the Gelfand step. The one-sided form is load-bearing and is the form proved: $T_k$ is
+  \emph{not} doubly stochastic and its stationary vector is \emph{not} uniform.
+\item \textbf{Lemma~\ref{lem:CU}} (coset uniformity), including the fiber count, and the
+  counting halves of Lemma~\ref{lem:SB} --- \texttt{CountingLemmas.lean}.
+\item \textbf{Theorem~\ref{thm:lemmaB}} (the collision count) --- \texttt{CollisionBound.lean},
+  reaching the assembly through \texttt{Assembly.hL2\_discharged}.
+\item \textbf{Theorem~\ref{thm:lemmaA}} --- the survivor analysis of
+  Section~\ref{sec:blocks} in \texttt{LemmaA.lean} (the $S4$ dead band, the valuation table, the
+  survivor rule), the entry theorem and $B^\ast B = 2^{-d} I$ in \texttt{GramIdentity.lean}
+  (\texttt{gram\_upper}), the owner count and the ownership partition in
+  \texttt{OwnerCount.lean} and \texttt{OwnerPartition.lean}, and (R1), the $a \ge b$ vanishing,
+  as an operator identity in \texttt{OperatorBlock.lean}.
+\item \textbf{The assembly of Section~\ref{sec:assembly}} --- \texttt{Assembly.lean}, with the
+  envelope $f(e) \le f(3) < 1$ and the row-sum bound; instantiated at the concrete $T_k$ in
+  \texttt{ManifestInstance.lean}.
 \end{itemize}
 
-Two formalisation dividends: FACT~1, parametrised by the lift index, needs no modulo-3 argument
-at all; and the identity $(2s^2)^{a+1} = 1$ for $s = 2^{-1/2}$ keeps every exponent in $\N$, so
-the formal assembly involves no real exponentiation. Not yet formalised: the operator chain of
-Proposition~\ref{prop:reduction}, the fiber count of Lemma~\ref{lem:CU}, the counting halves of
-Lemmas~\ref{lem:SB} and B, and Lemma C.
+Three formalisation dividends are worth recording. FACT~1, parametrised by the lift index, needs
+no modulo-3 argument at all. The identity $(2s^2)^{a+1} = 1$ for $s = 2^{-1/2}$ keeps every
+exponent in $\N$, so the formal assembly involves no real exponentiation. And the dead band of
+Lemma~\ref{lem:S4} must be stated in divisibility form rather than as
+$k - m \le \vtwo(\alpha) \le k-2$: the valuation form is false at $\alpha = 0$ under the
+convention $\vtwo(0) = 0$, and the formalisation caught this where inspection had not.
+
+The formalisation followed this paper's own proof of Theorem~\ref{thm:lemmaA} without
+alteration, including the step that had been expected to be hardest. The off-diagonal entries of
+$B^\ast B$ do not require a cancellation among roots of unity; as the proof above says, distinct
+columns have disjoint row support, so every off-diagonal summand already carries a zero factor.
+
+\textbf{Not formalised.} Lemma C (Section~\ref{sec:lemmaC}) --- it sharpens the constant rather
+than feeding it, so Theorem~\ref{thm:main} does not depend on it --- and the non-degeneracy
+$g_c \ne 0$, which the certificate also does not use. Nothing else in the chain of
+Theorem~\ref{thm:main} is paper-only.
 
 %==============================================================================
 \section{What this theorem does and does not say}\label{sec:scope}
@@ -499,7 +528,22 @@ its transfer operator passes the identical certificate, with an even stronger me
 averaging over $2^k$ lifts that defines $T_k$ erases exactly the deterministic orbit structure a
 cycle lives in, in the same way that the doubling map is mixing while having dense periodic
 orbits. Ruling out Collatz cycles requires instruments sensitive to specific orbits (heights,
-linear forms in logarithms), not the spectrum of the averaged operator. Likewise the theorem has
+linear forms in logarithms), not the spectrum of the averaged operator.
+
+We claim no novelty for the principle behind this control, only for the specific certificate it
+defeats. That the sign is invisible to this class of instrument is recorded in the literature:
+Kontorovich and Lagarias observe that the differences between the dynamics of $3x+1$ and $5x+1$
+on the integers are ``invisible at the level of measure theory'' \cite{KontorovichLagarias2010},
+and note that the conjugacy results of Bernstein and Lagarias \cite{BernsteinLagarias1996} carry
+the identical ergodic theory to all $ax+b$ maps --- which includes $3x-1$. Matthews states the
+same phenomenon from the other direction, that for relatively prime type maps the prediction of
+overall cycling or divergence is independent of the remainder values \cite{Matthews2010}. That
+$3x-1$ has non-trivial cycles is folklore. What is ours here is narrower and sufficient: the
+observation that \emph{this} certificate, with \emph{these} constants, is passed by $3x-1$ with a
+stronger measured gap, which is what makes the withdrawn inference demonstrably false rather than
+merely unsupported.
+
+Likewise the theorem has
 no bearing on divergent trajectories; the determinism-versus-probability gap quantified in the
 project's audit (a large-deviation shortfall of roughly a factor 12 for every counting-based
 route) remains the actual wall, consistent with the state of the art after \cite{Tao2019}.
@@ -528,6 +572,18 @@ Society, 2010.
 \bibitem{Tao2019}
 T.~Tao, \emph{Almost all orbits of the Collatz map attain almost bounded values}, Forum of
 Mathematics, Pi 10 (2022), e12. arXiv:1909.03562.
+
+\bibitem{BernsteinLagarias1996}
+D.~J. Bernstein and J.~C. Lagarias, \emph{The $3x+1$ conjugacy map}, Canadian Journal of
+Mathematics 48 (1996), 1154--1169.
+
+\bibitem{KontorovichLagarias2010}
+A.~V. Kontorovich and J.~C. Lagarias, \emph{Stochastic models for the $3x+1$ and $5x+1$
+problems}, in \cite{Lagarias2010}. arXiv:0910.1944.
+
+\bibitem{Matthews2010}
+K.~R. Matthews, \emph{Generalized $3x+1$ mappings: Markov chains and ergodic theory}, in
+\cite{Lagarias2010}.
 
 \bibitem{Mori2024}
 L.~Mori, \emph{$C^\ast(T_1, T_2)$ irreducible on $\ell^2(\N)$ iff Collatz}, arXiv:2411.08084
