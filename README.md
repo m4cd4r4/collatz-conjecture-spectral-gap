@@ -20,6 +20,123 @@
 > dense periodic points). Full account: [CYCLE_CLAIM_REFUTED.md](CYCLE_CLAIM_REFUTED.md). (The other
 > failure mode, divergent trajectories, was never addressed by this project either.)
 
+## In plain terms
+
+**The Collatz game.** Pick a whole number. If it is even, halve it. If it is odd, triple it and add
+one. Repeat. The conjecture (open since the 1930s) says you always eventually reach 1. Two ways it
+*could* fail: a number could **loop forever** in a cycle that never hits 1, or it could **grow to
+infinity**. This project set out to attack the first failure mode (ruling out loops) - and the central
+idea, it turns out, **does not work**. What survives is a clean side-result about a matrix.
+
+**The trick that was tried.** Instead of following one number, follow the *cloud* of where numbers
+land, and write that as a big table of numbers (a "transfer operator"). The hope was: if the operator's
+second-largest characteristic size (eigenvalue) is **below 1** - a "spectral gap" - then the cloud
+mixes and there is no room for a hidden loop. We proved that gap, with room to spare, at every scale.
+
+**Why the idea fails.** A spectral gap measures mixing of the *averaged* cloud, and averaging throws
+away the exact step-by-step orbit - which is the only thing a loop lives in.
+
+The clean test, and you can check it by hand in ten seconds. The very similar `3x-1` map (triple and
+subtract one) **does** have loops:
+
+```
+    5  ->  3(5) - 1 = 14 = 2 x 7   ->  7
+    7  ->  3(7) - 1 = 20 = 4 x 5   ->  5
+```
+
+so `{5,7}` closes, and `{17, 25, 37, 55, 41, 61, 91}` is a second, longer one. Yet the `3x-1` operator
+passes the **same** certificate, and passes it **more strongly** (`cert ~ 0.606` against `3x+1`'s
+`0.854`). So a gap below 1 cannot be what rules out loops - if it were, it would "rule out" the
+`3x-1` loops that plainly exist. (Same lesson as the doubling map `x -> 2x mod 1`, which mixes about
+as well as anything can and still has infinitely many loops, dense everywhere.) The cycle claim is
+**withdrawn**; details in [CYCLE_CLAIM_REFUTED.md](CYCLE_CLAIM_REFUTED.md).
+
+![spectrum](figures/fig2_spectrum.png)
+
+*The operator's eigenvalues. The top one is 1; the rest sit well below it. This gap is real and proved -
+but it does not rule out cycles (the cyclic `3x-1` operator looks identical).*
+
+**What we actually proved.** That spectral gap, for every scale `k`. The matrix splits into blocks by
+how divisible by two a number is; the crux was showing each block is a clean, rigid rescaling
+(an *isometry*). People expected deep "Gauss sum" machinery; it comes down to the single fact that
+**3 is an odd number** (a unit modulo any power of two), plus bookkeeping. Three lemmas (A, B, C), their
+shared foundation (coset-uniformity), and the final "below 1" assembly are all proved for every scale.
+(The "below 1" number itself comes from A and B alone; C only sharpens it, and C's *sharpest* form is
+machine-checked rather than proved - see the corrected constants below.)
+
+![block structure](figures/fig3_incidence.png)
+
+*One block, drawn as its nonzero pattern: exactly one mark per row. That single combinatorial fact is
+the entire reason the block is a rigid rescaling.*
+
+**Where it stands.** A correct, elementary, all-scales proof of a uniform spectral gap for the Syracuse
+transfer operator (`<= 0.8536`, room to spare) - nothing more, nothing less.
+
+---
+
+## What is this good for?
+
+An honest answer, most useful first. This is pure mathematics on an open problem, so item 5 says
+plainly where the usefulness stops.
+
+**1. A ten-minute falsification test for Collatz claims - the most transferable thing here.**
+
+Collatz attracts a very large number of claimed proofs. Most of those that argue by averaging,
+density, entropy, statistics, or a Markov model share one weakness, and there is now a quick test
+for it:
+
+> **Run the argument against `3x - 1`.** If it goes through unchanged, it is wrong - because
+> `3x - 1` has the loops `{5,7}` and `{17,25,37,55,41,61,91}` shown above.
+
+The test costs nothing, needs nothing from this repository, and is decisive. It works because
+almost every averaged model treats the `+1` and the `-1` identically. That is not a hunch: it is
+proved here, machine-checked, for every odd shift and at every depth
+([`lean/SignBlind.lean`](lean/SignBlind.lean)). If you are refereeing a Collatz manuscript, try
+this first.
+
+**2. Reusable formal mathematics.**
+
+The Lean 4 development is public domain, sorry-free, and modular. Several pieces stand alone and
+are useful to anyone formalising nearby material:
+
+| file | what it gives you, independent of Collatz |
+|---|---|
+| [`lean/CountingLemmas.lean`](lean/CountingLemmas.lean) | 2-adic counting: fibres of `x -> 3x + c` mod `2^k`, valuation layers, shell decompositions |
+| [`lean/CharacterBasis.lean`](lean/CharacterBasis.lean) | a genuine `OrthonormalBasis` of characters on `Z/2^k`, with level projections by 2-adic valuation |
+| [`lean/GramIdentity.lean`](lean/GramIdentity.lean) | a Gram identity `B*B = 2^{-d} I`, proved without ever forming an adjoint |
+| [`lean/SignBlind.lean`](lean/SignBlind.lean) | `3x + c` valuation statistics are the same for every odd `c`, at every depth - the theorem behind item 1 |
+
+Formalising number theory is slow. A sorry-free block someone else already paid for is worth
+having.
+
+**3. A negative result, which saves other people's time.**
+
+The companion analysis identifies a broad class of averaged-model arguments and shows that **no
+argument in that class can settle Collatz either way** - every such argument is blind to the sign,
+and the `3x-1` map answers the sign-blind question in the negative. Knowing which avenues are
+closed is worth real time in a problem famous for consuming careers. Negative results are
+underrated.
+
+**4. A worked example of a verification discipline.**
+
+Every claim here was measured numerically *before* it was stated, and every theorem was
+**mutation-tested** - the statement is deliberately broken in a dozen ways to confirm that each
+hypothesis is load-bearing and that the proof is not quietly proving something weaker. Constants
+carry labels (`PROVEN` / `DATA`) that never round up. The repository contains a retraction of its
+own headline claim. If you run a formalisation project, the method transfers - and it is why the
+false claim was caught here rather than by a referee.
+
+**5. Where the usefulness stops.**
+
+There is no cryptographic, engineering, or commercial application, and none is claimed. Transfer
+operators and 2-adic dynamics do turn up elsewhere - in symbolic dynamics, and in the analysis of
+some arithmetic pseudorandom generators - but no connection to those is established here, and
+asserting one would be exactly the kind of overreach this project exists to avoid.
+
+---
+
+## The technical statement
+
 What remains correct and proved is a **uniform spectral gap for the Syracuse (3n+1) mod-`2^k` transfer
 operator** `T_k`: the lemmas (A, B, and the sharpening C), their shared Coset-Uniformity foundation,
 and the row-sum assembly are proved for every scale `k` by elementary 2-adic / finite-group arguments,
@@ -60,6 +177,9 @@ as by the prose proofs; the `DATA` label on Lemma C's sharp form is unaffected a
 ## Contents
 
 - [In plain terms](#in-plain-terms) - the whole story, no jargon
+- [What is this good for?](#what-is-this-good-for) - honest uses, and where the usefulness stops
+- [The technical statement](#the-technical-statement) - what is proved, in one paragraph
+- [Status at a glance](#status-at-a-glance) - every claim with its label
 - [The result, precisely](#the-result-precisely) - the certificate, Lemmas A / B / C, what remains
 - [Reproduce everything](#reproduce-everything) - one command per claim
 - [Repository map](#repository-map) - what each file is
@@ -70,52 +190,6 @@ as by the prose proofs; the `DATA` label on Lemma C's sharp form is unaffected a
 *The certificate value stays flat below 1 as the scale `k` grows, giving a uniform spectral gap. (Note:
 the `3x-1` operator, which has cycles, produces the same below-1 curve - so this does not forbid cycles;
 see the retraction. Computed from the real operator; reproduce with `python generate_figures.py`.)*
-
----
-
-## In plain terms
-
-**The Collatz game.** Pick a whole number. If it is even, halve it. If it is odd, triple it and add
-one. Repeat. The conjecture (open since the 1930s) says you always eventually reach 1. Two ways it
-*could* fail: a number could **loop forever** in a cycle that never hits 1, or it could **grow to
-infinity**. This project set out to attack the first failure mode (ruling out loops) - and the central
-idea, it turns out, **does not work**. What survives is a clean side-result about a matrix.
-
-**The trick that was tried.** Instead of following one number, follow the *cloud* of where numbers
-land, and write that as a big table of numbers (a "transfer operator"). The hope was: if the operator's
-second-largest characteristic size (eigenvalue) is **below 1** - a "spectral gap" - then the cloud
-mixes and there is no room for a hidden loop. We proved that gap, with room to spare, at every scale.
-
-**Why the idea fails.** A spectral gap measures mixing of the *averaged* cloud, and averaging throws
-away the exact step-by-step orbit - which is the only thing a loop lives in. The clean test: the very
-similar `3x-1` map (triple and subtract one) **does** have loops, like `5 -> 7 -> 5`. Yet its operator
-has the **same** gap and passes the **same** certificate. So a gap below 1 cannot be what rules out
-loops - if it were, it would wrongly "rule out" the `3x-1` loops that plainly exist. (Same lesson as
-the doubling map `x -> 2x`, which mixes perfectly yet is full of loops.) The cycle claim is **withdrawn**;
-details in [CYCLE_CLAIM_REFUTED.md](CYCLE_CLAIM_REFUTED.md).
-
-![spectrum](figures/fig2_spectrum.png)
-
-*The operator's eigenvalues. The top one is 1; the rest sit well below it. This gap is real and proved -
-but it does not rule out cycles (the cyclic `3x-1` operator looks identical).*
-
-**What we actually proved.** That spectral gap, for every scale `k`. The matrix splits into blocks by
-how divisible by two a number is; the crux was showing each block is a clean, rigid rescaling
-(an *isometry*). People expected deep "Gauss sum" machinery; it comes down to the single fact that
-**3 is an odd number** (a unit modulo any power of two), plus bookkeeping. Three lemmas (A, B, C), their
-shared foundation (coset-uniformity), and the final "below 1" assembly are all proved for every scale.
-(The "below 1" number itself comes from A and B alone; C only sharpens it, and C's *sharpest* form is
-machine-checked rather than proved - see the corrected constants below.)
-
-![block structure](figures/fig3_incidence.png)
-
-*One block, drawn as its nonzero pattern: exactly one mark per row. That single combinatorial fact is
-the entire reason the block is a rigid rescaling.*
-
-**Where it stands.** A correct, elementary, all-scales proof of a uniform spectral gap for the Syracuse
-transfer operator (`<= 0.8536`, room to spare) - nothing more, nothing less.
-
----
 
 ## The result, precisely
 
