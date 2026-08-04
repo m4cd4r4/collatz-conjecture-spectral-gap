@@ -74,6 +74,48 @@ transfer operator (`<= 0.8536`, room to spare) - nothing more, nothing less.
 
 ---
 
+## What the theorem is actually about
+
+Worth reading even if you skip everything else, because the obvious reading of "uniform spectral
+gap for the Collatz transfer operator" is **wrong**, and the correct one is more interesting.
+
+**The honest object mixes instantly.** Build the transition matrix the *proper* way - condition
+on the **full** 2-adic fibre of a residue rather than on the finite window of lifts `m < 2^k`.
+Call it `K_k`. Then `K_k` is nilpotent off its top eigenvalue: `|lambda_2(K_k)| = 0`. It reaches
+equilibrium in finitely many steps. So **the mixing of the averaged mod-`2^k` Collatz dynamics is
+trivial**, and the certificate is not measuring it. (That nilpotence is classical, from the
+Bernstein-Lagarias conjugacy - not proved here. The numerics are consistent with it: see
+[`verify_truncation_reading.py`](verify_truncation_reading.py).)
+
+**So what is `T_k`?** It is `K_k` with the full-fibre average replaced by the finite lift window
+`[0, 2^k)`. That substitution touches **exactly one row**:
+
+```
+    rank(T_k - K_k) = 1        for every k
+    ||T_k - K_k||_1  ~ 0.25 - 0.50    and it does NOT shrink as k grows
+```
+
+Both checked for `k = 3..8`.
+
+**The defect is rank one, but it is not small.** A rank-one perturbation of that size can, in
+general, drag an eigenvalue onto the unit circle and destroy mixing completely. **The theorem is
+the statement that it never does, at any scale**: `|lambda_2(T_k)| <= 0.853553...` for every
+`k >= 3`, with the true values near `0.27`.
+
+So the honest description is: **a uniform spectral stability result for the finite-window
+approximation.** Anyone computing mod-`2^k` Collatz statistics over a finite window of lifts -
+which is essentially everyone who computes with this chain - is using `T_k` and not `K_k`, and is
+relying, usually silently, on that approximation not degenerating as the window refines. This is
+the theorem that says it doesn't.
+
+**One limit, stated plainly.** This is about the *spectrum*, not about *mixing times*. `T_k` is
+strongly non-normal and its eigenvector condition number grows like `10^k`, so a bound on
+`|lambda_2|` does **not** convert into a total-variation mixing bound uniform in `k`. Spectrum
+and mixing come apart here. Conflating them is exactly the error of this project's withdrawn
+March 2026 draft; the current proof avoids it by never touching eigenvectors.
+
+---
+
 ## What is this good for?
 
 An honest answer, most useful first. This is pure mathematics on an open problem, so item 5 says
@@ -177,6 +219,7 @@ as by the prose proofs; the `DATA` label on Lemma C's sharp form is unaffected a
 ## Contents
 
 - [In plain terms](#in-plain-terms) - the whole story, no jargon
+- [What the theorem is actually about](#what-the-theorem-is-actually-about) - the obvious reading is wrong
 - [What is this good for?](#what-is-this-good-for) - honest uses, and where the usefulness stops
 - [The technical statement](#the-technical-statement) - what is proved, in one paragraph
 - [Status at a glance](#status-at-a-glance) - every claim with its label
