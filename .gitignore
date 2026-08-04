@@ -16,3 +16,16 @@ _Tsparse/
 Thumbs.db
 .vscode/
 .idea/
+
+# LaTeX build artefacts (paper/*.pdf IS tracked deliberately)
+*.aux
+*.log
+*.out
+*.toc
+*.synctex.gz
+*.fls
+*.fdb_latexmk
+
+# Lean build
+.lake/
+build/
