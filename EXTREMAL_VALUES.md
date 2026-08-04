@@ -126,10 +126,13 @@ so `3/4` cannot be lowered). LEMMA_C_PROOF.md line 28 states plainly that the sh
 verified exactly to `k=26` but not needed".
 *The printed value `0.65597` in THEOREM.md line 157 is a misprint.* The formula printed
 immediately above it evaluates to `(1 + 3 sqrt 2)/8 = 0.6553300859` at `e = 4`, verified in
-exact arithmetic and in float. The same misprint appears at `paper/syracuse_spectral_gap.tex`
-line ~456; the abstract's "improves the constant to 0.656" (tex lines ~52-54) is true of
-`0.65533` and remains true, but is an overclaim in provenance, not in arithmetic: it is a
-`DATA` constant presented as proven.
+exact arithmetic and in float. The abstract's "improves the constant to 0.656" (tex lines
+~52-54) was true of `0.65533` and remained true in arithmetic, but was an overclaim in
+provenance: a `DATA` constant presented as proven. **FIXED 2026-08-04.** The abstract now reads
+`0.6827` for the proven sharpening and states separately that `0.6553` rests on a constant
+verified only to `k <= 26`; the same split was made at the Lemma C forward reference in the
+introduction. The PDF was rebuilt. THEOREM.md line 172's `0.65597` is left in place with its
+correction note immediately below it, per withdraw-in-place.
 *To move down a row:* nothing. Row 3 is already the best the `g_b <= 3/4` route can give, and
 `3/4` is sharp. The only movement available is upward in confidence: prove `3/4` and row 3
 becomes PROVEN.

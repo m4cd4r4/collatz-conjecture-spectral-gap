@@ -50,8 +50,9 @@ where $\cert(k)$ is an explicit weighted row-sum certificate over a 2-adic frequ
 The proof is entirely elementary: finite cyclic 2-group arithmetic (three uniform-fiber lemmas
 sharing one engine, ``3 is a unit modulo $2^k$''), a finite geometric series, an integer collision
 count, and a single application of the Cauchy--Schwarz inequality. A sharper per-level bound on
-the defect covector improves the constant to $0.656$; the measured values are
-$\cert(k) \approx 0.6345$ and $|\lambda_2| \approx 0.27$. The elementary core of the proof is
+the defect covector improves the constant to $0.6827$; a further sharpening to $0.6553$ rests on
+a constant verified only for $k \leq 26$ and is labelled as such throughout. The measured values
+are $\cert(k) \approx 0.6345$ and $|\lambda_2| \approx 0.27$. The elementary core of the proof is
 machine-checked in Lean~4 (Mathlib, sorry-free).
 
 \textbf{Scope.} This is a theorem about the Markov model, not about Collatz orbits. In
@@ -86,6 +87,40 @@ where $\lambda_2$ is the second-largest eigenvalue in modulus and
 $Q_k[a,b] = \|P_a U_k P_b\|_2$ is the matrix of block operator norms of the Koopman adjoint
 $U_k = T_k^{\!\top}$ over the 2-adic frequency grading of Section~\ref{sec:setup}.
 \end{theorem}
+
+\subsection*{What the theorem says, informally}
+
+A reader who wants the shape of the result before the notation may take the following as the
+whole story.
+
+The Collatz map is deterministic, and deterministic questions about it are hard. A standard
+softening is to stop following one number and follow instead \emph{where numbers land on
+average}, recording only the remainder modulo a power of two. That turns the map into a random
+walk on a finite set of states --- the $2^{k-1}$ odd residues mod $2^k$ --- and $T_k$ is the
+matrix of that walk. The averaging is over the $2^k$ integers sharing a given residue.
+
+A random walk ``mixes'' when the memory of where it started decays. The rate is governed by the
+second-largest eigenvalue $\lambda_2$: mixing happens exactly when $|\lambda_2| < 1$, and faster
+the smaller it is. For a \emph{single} $k$ this is a finite computation and carries no
+information. The content of Theorem~\ref{thm:main} is that one constant works for
+\emph{every} $k$ at once, even though the matrix grows exponentially.
+
+The proof has one idea, applied three times. Multiplication by $3$ is invertible modulo any power
+of two --- because $3$ is odd --- so it permutes residues and spreads any set of them perfectly
+evenly across the classes it can reach. Everything else is bookkeeping: sorting residues by how
+divisible they are by two, summing a geometric series over those layers, counting collisions in
+one exceptional row, and applying Cauchy--Schwarz once. There is no analysis and no computer
+search inside the proof.
+
+The one place the argument could have failed, and does not, is that top layer. The cascade of
+blocks \emph{truncates} there rather than continuing, and it is exactly that truncation which
+makes an $L^2$ estimate strong enough. Without it the bound would exceed $1$ and say nothing.
+
+Finally, and this is not a caveat but the main thing to carry away: none of this bears on the
+Collatz conjecture, and Section~\ref{sec:scope} shows by an explicit control that it cannot.
+Averaging destroys the very structure a cycle lives in.
+
+\subsection*{Why the theorem is of interest}
 
 The interest of the theorem is threefold. First, uniformity: the bound is independent of $k$,
 while the state space grows as $2^{k-1}$. Second, the constant is explicit and the true values
@@ -128,8 +163,9 @@ operator theorem itself.
 \end{enumerate}
 
 Section~\ref{sec:lemmaC} records the sharper per-level defect bound (Lemma C, via an elementary
-frequency-doubling identity), which improves the constant to $0.656$ but is not needed for
-Theorem~\ref{thm:main}. Section~\ref{sec:lean} describes the Lean~4 formalisation of the
+frequency-doubling identity), which improves the constant to $0.6827$ but is not needed for
+Theorem~\ref{thm:main}. Its sharp form gives $0.6553$ but consumes a constant verified only to
+$k \leq 26$; we keep the two apart and never quote the sharper number as proved. Section~\ref{sec:lean} describes the Lean~4 formalisation of the
 elementary core. Section~\ref{sec:scope} delimits scope.
 
 %==============================================================================
@@ -522,8 +558,9 @@ uniformly fast in $k$. It says nothing about individual deterministic orbits.
 
 \textbf{The withdrawn cycle claim.} An earlier version of this project asserted that the uniform
 gap eliminates non-trivial Collatz cycles. The inference is false, by a control experiment: the
-$3x - 1$ map (equivalently, Collatz on negative integers) has non-trivial cycles
-($\{5, 7\}$, $\{17, 25, 37, 55, 41, 61, 91, 47, 71, 53, 79, 59, 89, 33, 49, 73\}$, \dots), yet
+$3x - 1$ map (equivalently, Collatz on negative integers) has non-trivial cycles --- in Syracuse
+form exactly $\{5, 7\}$ and $\{17, 25, 37, 55, 41, 61, 91\}$, besides the trivial $\{1\}$, and no
+others below $2 \times 10^6$ --- yet
 its transfer operator passes the identical certificate, with an even stronger measured gap. The
 averaging over $2^k$ lifts that defines $T_k$ erases exactly the deterministic orbit structure a
 cycle lives in, in the same way that the doubling map is mixing while having dense periodic
@@ -553,6 +590,33 @@ non-doubly-stochastic operators of exponentially growing dimension with a unifor
 elementarily provable spectral gap, whose sharp structure ($B^\ast B = 2^{-d} I$ blocks, a rank-1
 defect at the base-4 repunit $r^\ast$, the $31/12$ collision constant) is completely understood.
 
+\subsection*{What this is good for}
+
+Three uses, none of which is progress on Collatz.
+
+\textbf{A falsification test for averaged arguments.} The control experiment above generalises
+into a cheap and decisive check that costs a referee ten minutes. \emph{Run the candidate
+argument against $3x - 1$.} If it goes through unchanged, it is wrong, because $3x-1$ has the
+cycles listed above. This works because averaged models are typically blind to the sign of the
+shift, and that blindness is not a heuristic: for every odd $c$ and every valuation pattern
+$(j_1, \dots, j_t)$ with $\sum j_i + 1 \leq k$, the number of odd residues mod $2^k$ realising
+that pattern under $x \mapsto 3x + c$ is $2^{\,k-1-\sum j_i}$, independent of $c$. Equivalently
+the induced probability is $2^{-\sum j_i}$, with no $k$ in it, so the two valuation processes
+have identical finite-dimensional distributions. This is machine-checked (\texttt{SignBlind.lean},
+sorry-free); the underlying conjugacy is classical \cite{BernsteinLagarias1996, Lagarias1985}.
+
+\textbf{Reusable formalisation.} The Lean development is public domain and modular. Independently
+of Collatz it supplies 2-adic fibre counts for $x \mapsto 3x + c$ mod $2^k$, an orthonormal
+character basis on $\Z/2^k$ with projections graded by valuation, and a Gram identity
+$B^\ast B = 2^{-d} I$ established without forming an adjoint.
+
+\textbf{A negative result.} Knowing which families of argument are closed is worth time in a
+problem that has consumed a great deal of it. Every route surveyed here that makes contact with
+the conjecture exits through the same door --- an orbit-quantified statement about a hypothetical
+infinite trajectory --- and no averaged spectral datum reaches that door.
+
+We claim no application outside mathematics and are not aware of one.
+
 \subsection*{Reproducibility}
 
 All claims are reproducible from
@@ -576,6 +640,10 @@ Mathematics, Pi 10 (2022), e12. arXiv:1909.03562.
 \bibitem{BernsteinLagarias1996}
 D.~J. Bernstein and J.~C. Lagarias, \emph{The $3x+1$ conjugacy map}, Canadian Journal of
 Mathematics 48 (1996), 1154--1169.
+
+\bibitem{Lagarias1985}
+J.~C. Lagarias, \emph{The $3x+1$ problem and its generalizations}, American Mathematical Monthly
+92 (1985), 3--23.
 
 \bibitem{KontorovichLagarias2010}
 A.~V. Kontorovich and J.~C. Lagarias, \emph{Stochastic models for the $3x+1$ and $5x+1$
