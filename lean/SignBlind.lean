@@ -3,21 +3,35 @@
 
 ## SCOPE DECLARATION (read this first)
 
-This file proves **one** thing, and it is the finite-level, elementary core of the barrier
-argument's input I1:
+This file proves the finite-level, elementary core of the barrier argument's input I1, in two
+stages.
+
+**Stage A (§2–§3b), one step.**
 
 > For every **odd** `c`, the map `r ↦ (3r + c) mod 2^k` carries the odd residues mod `2^k`
 > **bijectively onto the even residues**.  Consequently the distribution of `v₂(3r + c)` over
 > odd `r` is **the same for every odd `c`** — in particular for `c = 1` (the `3x+1` Syracuse
 > step) and `c = 2^k − 1` (the `3x−1` step).
 
+**Stage B (§3c), every depth.**
+
+> For every odd `c` and every valuation pattern `(j₁, …, jₜ)` with each `jᵢ ≥ 1` and
+> `Σjᵢ + 1 ≤ k`, the number of odd `r < 2^k` realising that pattern is `2^{k−1−Σjᵢ}` —
+> again independent of `c` (`pattern_count`, `pattern_count_sign_blind`).
+
+Stage B is the stronger statement and the one the barrier actually consumes: the two
+valuation processes agree not merely in their one-step marginals but on **every cylinder set**
+inside the clean band.  It rests on a step bijection (`step_image`) — a step of valuation `j`
+carries its fibre bijectively onto the odd residues one level down — so depth-`t` counting at
+level `k` is depth-`(t−1)` counting at level `k − j`.
+
 It does **NOT**:
 
 * say anything about Collatz cycles, or about the conjecture in either direction;
-* prove the process-level statement `L₊ = L₋` (equality of the two *valuation-process* laws
-  on `ℤ₂`).  That needs Haar measure, the conjugacy map `Q_∞` and a Bernoulli property;
-  Mathlib has no `IsBernoulli`, and this file constructs no measure at all.  **What is here is
-  the one-step, finite-`k` statement, and calling it more than that would be an overclaim;**
+* prove the process-level statement `L₊ = L₋` on `ℤ₂` outright.  Stage B gives every cylinder
+  count *within the clean band* `Σjᵢ + 1 ≤ k`; passing to `ℤ₂` needs the band to be removed by
+  a limit `k → ∞` and the counts turned into a measure.  **That step is not here, and calling
+  Stage B the process-level law would be an overclaim;**
 * touch the certificate.  `GramIdentity.gap_certificate_unconditional` neither uses nor needs
   anything below.
 
@@ -44,8 +58,8 @@ Injectivity of `r ↦ (3r + c) mod 2^k` is **not** proved here — it is
 `GapCertificate.eq_of_two_pow_dvd_three_mul_sub` and constructs no inverse of `3`.  This file
 supplies only the parity bookkeeping and the counting.
 
-Sorry-free, no `native_decide`.  Calibration §3, explicit count §3b, mutation table §5,
-axiom audit §6.
+Sorry-free, no `native_decide`.  Calibration §3 and §3c, explicit count §3b, depth-`t` count
+§3c, mutation table §5 (18 mutations, all fail), axiom audit §6.
 -/
 
 import CountingLemmas
@@ -229,6 +243,145 @@ theorem valuation_count_explicit {k c j : ℕ} (hk : 1 ≤ k) (hc : c % 2 = 1)
 
 /-!
 --------------------------------------------------------------------------------
+## §3c. Stage B — the t-step clean-pattern count
+--------------------------------------------------------------------------------
+
+### Calibration, run BEFORE proving
+
+Two sweeps, both with **0 mismatches**:
+
+* the *step bijection* (`step_image` below) — 308 cases over `k = 3…13`, `j = 1…k−1`, and
+  shifts `c ∈ {1, 2^k−1, 3, 2^(k+1)+7}`, including one larger than the modulus;
+* the *pattern count* — 770 clean patterns over `k = 5…12`, `t = 1…3`, both signs, count
+  exactly `2^{k−1−Σj}`.
+
+### The structure that makes the induction work
+
+A step of valuation `j` does not merely land somewhere; it lands on **the same problem one
+level down**.  `r ↦ (3r + c) / 2^j` carries the level-`j` fibre *bijectively* onto
+`oddResidues (k − j)`.  So depth-`t` counting at level `k` reduces to depth-`(t−1)` counting
+at level `k − j`, and the induction is structural on the pattern list.
+-/
+
+/-- Counting through an injective reindexing.  Proved by the same sum trick as
+`count_comp_shiftMap_indep`, so the two stay in step. -/
+theorem card_filter_of_image {S : Finset ℕ} {φ : ℕ → ℕ} (hinj : Set.InjOn φ (↑S : Set ℕ))
+    (Q : ℕ → Prop) [DecidablePred Q] :
+    (S.filter (fun r => Q (φ r))).card = ((S.image φ).filter Q).card := by
+  classical
+  rw [Finset.card_filter, Finset.card_filter,
+    Finset.sum_image (fun x hx y hy h => hinj hx hy h)]
+
+/-- A step of valuation `j` divides out exactly `2^j`, leaving an odd residue one level down. -/
+theorem shiftMap_div_odd {k c r j : ℕ} (hj : 1 ≤ j) (hjk : j + 1 ≤ k)
+    (hr : r ∈ oddResidues k) (hv : v2 (shiftMap k c r) = j) :
+    shiftMap k c r / 2 ^ j ∈ oddResidues (k - j) := by
+  classical
+  have hs0 : shiftMap k c r ≠ 0 := by
+    intro hc0; rw [hc0] at hv; simp [v2] at hv; omega
+  have hmod := (v2_eq_iff_mod hs0).1 hv
+  have hlt : shiftMap k c r < 2 ^ k := Nat.mod_lt _ (Nat.two_pow_pos k)
+  have hpow : (2 : ℕ) ^ k = 2 ^ j * 2 ^ (k - j) := by rw [← pow_add]; congr 1; omega
+  have hjp : (0 : ℕ) < 2 ^ j := Nat.two_pow_pos j
+  obtain ⟨q, hq⟩ : ∃ q, shiftMap k c r / 2 ^ (j + 1) = q := ⟨_, rfl⟩
+  have h := Nat.div_add_mod (shiftMap k c r) (2 ^ (j + 1))
+  rw [hmod, hq] at h
+  have hval : shiftMap k c r = 2 ^ j * (2 * q + 1) := by rw [← h, pow_succ]; ring
+  have hdiv : shiftMap k c r / 2 ^ j = 2 * q + 1 := by
+    rw [hval]; exact Nat.mul_div_cancel_left _ hjp
+  rw [oddResidues, mem_filter, mem_range, hdiv]
+  refine ⟨?_, by omega⟩
+  have : shiftMap k c r / 2 ^ j < 2 ^ (k - j) :=
+    Nat.div_lt_of_lt_mul (by rw [← hpow]; exact hlt)
+  omega
+
+/-- Injectivity of `r ↦ (3r + c)/2^j` on the level-`j` fibre: `2^j` can be multiplied back,
+after which `shiftMap_injOn` applies. -/
+theorem step_injOn {k c j : ℕ} :
+    Set.InjOn (fun r => shiftMap k c r / 2 ^ j)
+      (↑((oddResidues k).filter (fun r => v2 (shiftMap k c r) = j)) : Set ℕ) := by
+  classical
+  intro x hx y hy hxy
+  simp only [coe_filter, Set.mem_setOf_eq] at hx hy
+  have hdx : (2 : ℕ) ^ j ∣ shiftMap k c x := by rw [← hx.2]; exact pow_padicValNat_dvd
+  have hdy : (2 : ℕ) ^ j ∣ shiftMap k c y := by rw [← hy.2]; exact pow_padicValNat_dvd
+  have hs : shiftMap k c x = shiftMap k c y := by
+    rw [← Nat.div_mul_cancel hdx, ← Nat.div_mul_cancel hdy]
+    exact congrArg (· * 2 ^ j) hxy
+  exact shiftMap_injOn (by simpa using hx.1) (by simpa using hy.1) hs
+
+/-- **THE STEP BIJECTION.**  `r ↦ (3r + c)/2^j` maps the level-`j` fibre *onto* the odd
+residues one level down.  `c` again appears nowhere in the conclusion. -/
+theorem step_image {k c j : ℕ} (hk : 1 ≤ k) (hc : c % 2 = 1) (hj : 1 ≤ j) (hjk : j + 1 ≤ k) :
+    ((oddResidues k).filter (fun r => v2 (shiftMap k c r) = j)).image
+        (fun r => shiftMap k c r / 2 ^ j)
+      = oddResidues (k - j) := by
+  classical
+  refine Finset.eq_of_subset_of_card_le ?_ ?_
+  · intro x hx
+    obtain ⟨r, hr, rfl⟩ := mem_image.1 hx
+    rw [mem_filter] at hr
+    exact shiftMap_div_odd hj hjk hr.1 hr.2
+  · rw [oddResidues_card (by omega : 1 ≤ k - j), card_image_of_injOn step_injOn,
+      valuation_count_explicit hk hc hj hjk]
+
+/-- The depth-`t` valuation pattern, as a decidable predicate.  Structural on the pattern
+list; the level drops by `j` at each step, which is exactly `step_image`'s content. -/
+def patternB (c : ℕ) : List ℕ → ℕ → ℕ → Bool
+  | [], _, _ => true
+  | (j :: js), k, r =>
+      (v2 (shiftMap k c r) == j) && patternB c js (k - j) (shiftMap k c r / 2 ^ j)
+
+/-- **STAGE B.**  For every odd shift `c` and every clean pattern, the count is
+`2^(k-1-Σj)` — independent of `c`.
+
+"Clean" is `js.sum + 1 ≤ k`: the pattern must not consume more bits than the modulus has. -/
+theorem pattern_count {c : ℕ} (hc : c % 2 = 1) :
+    ∀ (js : List ℕ) (k : ℕ), (∀ j ∈ js, 1 ≤ j) → js.sum + 1 ≤ k →
+      ((oddResidues k).filter (fun r => patternB c js k r = true)).card
+        = 2 ^ (k - 1 - js.sum) := by
+  classical
+  intro js
+  induction js with
+  | nil =>
+    intro k _ hk
+    simp only [patternB, List.sum_nil, Nat.sub_zero, Finset.filter_True]
+    exact oddResidues_card (by omega)
+  | cons j js ih =>
+    intro k hjs hsum
+    have hj : 1 ≤ j := hjs j (by simp)
+    simp only [List.sum_cons] at hsum
+    have hsum' : js.sum + 1 ≤ k - j := by omega
+    have hjk : j + 1 ≤ k := by omega
+    have hk : 1 ≤ k := by omega
+    have hsplit : (oddResidues k).filter (fun r => patternB c (j :: js) k r = true)
+        = ((oddResidues k).filter (fun r => v2 (shiftMap k c r) = j)).filter
+            (fun r => patternB c js (k - j) (shiftMap k c r / 2 ^ j) = true) := by
+      rw [Finset.filter_filter]
+      apply Finset.filter_congr
+      intro r _
+      simp only [patternB, Bool.and_eq_true, beq_iff_eq]
+    rw [hsplit,
+      card_filter_of_image (Q := fun x => patternB c js (k - j) x = true) step_injOn,
+      step_image hk hc hj hjk,
+      ih (k - j) (fun x hx => hjs x (by simp [hx])) hsum']
+    simp only [List.sum_cons]
+    congr 1
+    omega
+
+/-- **THE PROCESS-LEVEL SIGN-BLINDNESS, at finite `k`.**  Any two odd shifts induce the same
+depth-`t` pattern counts; `3x+1` and `3x−1` in particular.
+
+This is barrier input I1 in the form the barrier actually uses it — the mod-`2^k` chain's
+valuation process, at every finite depth. -/
+theorem pattern_count_sign_blind {c c' : ℕ} (hc : c % 2 = 1) (hc' : c' % 2 = 1)
+    (js : List ℕ) (k : ℕ) (hjs : ∀ j ∈ js, 1 ≤ j) (hsum : js.sum + 1 ≤ k) :
+    ((oddResidues k).filter (fun r => patternB c js k r = true)).card
+      = ((oddResidues k).filter (fun r => patternB c' js k r = true)).card := by
+  rw [pattern_count hc js k hjs hsum, pattern_count hc' js k hjs hsum]
+
+/-!
+--------------------------------------------------------------------------------
 ## §4. Non-vacuity
 --------------------------------------------------------------------------------
 
@@ -259,6 +412,17 @@ example : (evenResidues 6).card = 32 := by
 /-- The `3x−1` shift at `k = 6` is `63`, which is odd. -/
 example : (2 ^ 6 - 1) % 2 = 1 := sub_one_odd (by norm_num)
 
+/-- Stage B is non-vacuous too: at `k = 6` the depth-2 pattern `(2, 1)` is realised by
+`2^(6-1-3) = 4` odd residues, for the `3x+1` step. -/
+example : ((oddResidues 6).filter (fun r => patternB 1 [2, 1] 6 r = true)).card = 4 := by
+  rw [pattern_count (by norm_num) [2, 1] 6 (by decide) (by norm_num)]
+  decide
+
+/-- And by the same 4 for the `3x−1` step — a depth-2 instance of the barrier's input I1. -/
+example : ((oddResidues 6).filter (fun r => patternB 1 [2, 1] 6 r = true)).card
+    = ((oddResidues 6).filter (fun r => patternB 63 [2, 1] 6 r = true)).card :=
+  pattern_count_sign_blind (by norm_num) (by norm_num) [2, 1] 6 (by decide) (by norm_num)
+
 /-!
 --------------------------------------------------------------------------------
 ## §5. Mutation tests
@@ -276,6 +440,28 @@ example : (2 ^ 6 - 1) % 2 = 1 := sub_one_odd (by norm_num)
 N1 is the one that matters: it is the check that the **parity of the shift** is what makes
 the image shift-independent, rather than some accident of `3`.
 
+Stage B (§3c) was mutated separately, 12 mutations, all fail:
+
+| # | mutation | result |
+|---|---|---|
+| B1 | `pattern_count`: `2 ^ (k - 1 - js.sum)` → `2 ^ (k - js.sum)` | fails |
+| B2 | `pattern_count`: `2 ^ (k - 1 - js.sum)` → `2 ^ (k - 2 - js.sum)` | fails |
+| B3 | `pattern_count`: `hc : c % 2 = 1` → `c % 2 = 0` | fails |
+| B4 | `pattern_count`: drop the clean band, `js.sum + 1 ≤ k` → `js.sum ≤ k` | fails |
+| B5 | `pattern_count`: drop positivity of each step, `1 ≤ j` → `0 ≤ j` | fails |
+| B6 | `step_image`: target level `k - j` → `k - j + 1` | fails |
+| B7 | `step_image`: target `oddResidues` → `evenResidues` | fails |
+| B8 | `shiftMap_div_odd`: lands in `oddResidues k` rather than `oddResidues (k - j)` | fails |
+| B9 | `shiftMap_div_odd`: drop `1 ≤ j` | fails |
+| B10 | `card_filter_of_image`: drop the injectivity hypothesis | fails |
+| B11 | `patternB`: recursion keeps level `k` instead of dropping to `k - j` | fails |
+| B12 | `patternB`: recursion forgets the `/ 2 ^ j` | fails |
+
+B4 and B11 are the two that matter.  B4 is the clean band: `2^{k−1−Σj}` is only the count
+while the pattern has not consumed the modulus, and the theorem must say so.  B11 is the
+structural claim — that a step of valuation `j` lands on *the same problem one level down*,
+which is what makes the induction work at all rather than merely typecheck.
+
 --------------------------------------------------------------------------------
 ## §6. Axiom audit
 --------------------------------------------------------------------------------
@@ -291,6 +477,12 @@ the image shift-independent, rather than some accident of `3`.
 #print axioms evenResidues_v2_eq
 #print axioms valuation_count_explicit
 #print axioms valuation_count_sign_blind
+#print axioms card_filter_of_image
+#print axioms shiftMap_div_odd
+#print axioms step_injOn
+#print axioms step_image
+#print axioms pattern_count
+#print axioms pattern_count_sign_blind
 #print axioms sub_one_odd
 #print axioms plus_minus_agree
 
