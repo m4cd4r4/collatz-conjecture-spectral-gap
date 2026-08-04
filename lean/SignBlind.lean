@@ -19,19 +19,33 @@ stages.
 > `Σjᵢ + 1 ≤ k`, the number of odd `r < 2^k` realising that pattern is `2^{k−1−Σjᵢ}` —
 > again independent of `c` (`pattern_count`, `pattern_count_sign_blind`).
 
-Stage B is the stronger statement and the one the barrier actually consumes: the two
-valuation processes agree not merely in their one-step marginals but on **every cylinder set**
-inside the clean band.  It rests on a step bijection (`step_image`) — a step of valuation `j`
-carries its fibre bijectively onto the odd residues one level down — so depth-`t` counting at
-level `k` is depth-`(t−1)` counting at level `k − j`.
+Stage B rests on a step bijection (`step_image`) — a step of valuation `j` carries its fibre
+bijectively onto the odd residues one level down — so depth-`t` counting at level `k` is
+depth-`(t−1)` counting at level `k − j`.
+
+**Stage C (§3d), the counts as a law.**
+
+> Dividing Stage B by the number of odd residues, the level **cancels**:
+> `P(pattern) = (1/2)^Σjᵢ`, with no `k` on the right (`pattern_prob`).  So the probability is
+> not merely convergent in `k`, it is *constant* on the clean band
+> (`pattern_prob_level_indep`); it **factorises** over the steps, which is independence
+> (`pattern_prob_iid`); and it is the same for every odd shift
+> (`pattern_prob_sign_blind`).
+
+Stage C is the form the barrier actually consumes: the two valuation processes have the same
+finite-dimensional distributions, and both are iid geometric.
 
 It does **NOT**:
 
 * say anything about Collatz cycles, or about the conjecture in either direction;
-* prove the process-level statement `L₊ = L₋` on `ℤ₂` outright.  Stage B gives every cylinder
-  count *within the clean band* `Σjᵢ + 1 ≤ k`; passing to `ℤ₂` needs the band to be removed by
-  a limit `k → ∞` and the counts turned into a measure.  **That step is not here, and calling
-  Stage B the process-level law would be an overclaim;**
+* prove `L₊ = L₋` as a statement about a **measure on `ℤ₂`**.  Two steps are missing and
+  neither is here: (1) that Haar on `ℤ₂` restricted to level `k` is uniform on residues mod
+  `2^k`, so that the counting probability *is* the Haar probability; (2) a measure on `ℕ^ℕ`
+  with these cylinder masses — which, because the limit law is iid, needs a product measure
+  and π-system uniqueness rather than general Kolmogorov extension.  Both are routine and
+  citable.  **The honest description is: the combinatorial content of `L₊ = L₋` is complete
+  and machine-checked; the measure-theoretic wrapper is not.**  Calling Stage C the
+  process-level law on `ℤ₂` would be an overclaim;
 * touch the certificate.  `GramIdentity.gap_certificate_unconditional` neither uses nor needs
   anything below.
 
@@ -59,7 +73,7 @@ Injectivity of `r ↦ (3r + c) mod 2^k` is **not** proved here — it is
 supplies only the parity bookkeeping and the counting.
 
 Sorry-free, no `native_decide`.  Calibration §3 and §3c, explicit count §3b, depth-`t` count
-§3c, mutation table §5 (18 mutations, all fail), axiom audit §6.
+§3c, the law §3d, mutation table §5 (**24 mutations, all fail**), axiom audit §6.
 -/
 
 import CountingLemmas
@@ -382,6 +396,118 @@ theorem pattern_count_sign_blind {c c' : ℕ} (hc : c % 2 = 1) (hc' : c' % 2 = 1
 
 /-!
 --------------------------------------------------------------------------------
+## §3d. Stage C — the counts ARE the process law, and the level cancels
+--------------------------------------------------------------------------------
+
+Stage B is a count.  Divide it by the number of odd residues and it becomes a *probability* —
+and the `k` cancels:
+
+```
+    2^(k-1-sum j) / 2^(k-1)  =  2^(-sum j)
+```
+
+with no `k` on the right.  **So there is no limit to take.**  Every finite pattern lies in the
+clean band for all large `k`, and its probability is not merely convergent there, it is
+*constant*.  Stage C says that in three forms: division-free (`pattern_count_mul`), as a
+probability (`pattern_prob`), and as the level-independence that makes the phrase "the process
+law" mean something (`pattern_prob_level_indep`).
+
+Two consequences worth keeping apart:
+
+* the process is **iid geometric** — `2^(-sum j)` factorises as `prod 2^(-j_i)`
+  (`pattern_prob_iid`), and each factor is the one-step law of §3b.  Independence is the
+  factorisation; identical distribution is §3b;
+* `3x+1` and `3x-1` have **the same** finite-dimensional distributions
+  (`pattern_prob_sign_blind`).
+
+### What is still missing, precisely
+
+`L_+ = L_-` as a statement about a *measure on `Z_2`* needs two further steps, and **neither is
+in this file**:
+
+1. That Haar measure on `Z_2` restricted to level `k` is uniform on the residues mod `2^k`, so
+   that the counting probability below *is* the Haar probability.  Standard: `Z_2` is a compact
+   group and the balls are cosets of `2^k Z_2`.
+2. A measure on `N^N` whose cylinder masses are the numbers below.  Because the target law is
+   iid, this needs a product measure and a pi-system uniqueness argument — **not** general
+   Kolmogorov extension.
+
+Both are routine and both are citable.  Formalising them is a measure-theory project, not a
+counting one, and the honest description of Stage C is: *the combinatorial content of
+`L_+ = L_-` is complete and machine-checked; the measure-theoretic wrapper is not.*
+-/
+
+/-- **STAGE C, division-free.**  The pattern count times `2^(sum j)` is exactly the total
+number of odd residues.  Everything else in this section is arithmetic on this one line. -/
+theorem pattern_count_mul {c : ℕ} (hc : c % 2 = 1) (js : List ℕ) (k : ℕ)
+    (hjs : ∀ j ∈ js, 1 ≤ j) (hsum : js.sum + 1 ≤ k) :
+    ((oddResidues k).filter (fun r => patternB c js k r = true)).card * 2 ^ js.sum
+      = (oddResidues k).card := by
+  rw [pattern_count hc js k hjs hsum, oddResidues_card (by omega), ← pow_add]
+  congr 1
+  omega
+
+/-- **STAGE C, as a probability.**  `P(pattern) = (1/2)^(sum j)` — the level `k` has cancelled
+and appears nowhere on the right. -/
+theorem pattern_prob {c : ℕ} (hc : c % 2 = 1) (js : List ℕ) (k : ℕ)
+    (hjs : ∀ j ∈ js, 1 ≤ j) (hsum : js.sum + 1 ≤ k) :
+    (((oddResidues k).filter (fun r => patternB c js k r = true)).card : ℚ)
+        / ((oddResidues k).card : ℚ)
+      = ((1 : ℚ) / 2) ^ js.sum := by
+  have hnum : (((oddResidues k).filter (fun r => patternB c js k r = true)).card : ℚ)
+      = (2 : ℚ) ^ (k - 1 - js.sum) := by
+    rw [pattern_count hc js k hjs hsum]; push_cast; ring
+  have hden : ((oddResidues k).card : ℚ) = (2 : ℚ) ^ (k - 1 - js.sum) * (2 : ℚ) ^ js.sum := by
+    rw [oddResidues_card (by omega), ← pow_add]
+    push_cast
+    congr 1
+    omega
+  rw [hnum, hden, div_pow, one_pow, div_mul_eq_div_div,
+    div_self (by positivity : ((2 : ℚ) ^ (k - 1 - js.sum)) ≠ 0)]
+
+/-- `2^(-sum j)` factorises over the steps.  This is the **independence** half of "iid
+geometric"; the identical-distribution half is `valuation_count_explicit` in §3b. -/
+theorem prob_factorises (js : List ℕ) :
+    ((1 : ℚ) / 2) ^ js.sum = (js.map (fun j => ((1 : ℚ) / 2) ^ j)).prod := by
+  induction js with
+  | nil => simp
+  | cons j js ih => rw [List.sum_cons, pow_add, List.map_cons, List.prod_cons, ih]
+
+/-- **The valuation process is iid geometric**, for every odd shift: the probability of a
+pattern is the product of the one-step probabilities. -/
+theorem pattern_prob_iid {c : ℕ} (hc : c % 2 = 1) (js : List ℕ) (k : ℕ)
+    (hjs : ∀ j ∈ js, 1 ≤ j) (hsum : js.sum + 1 ≤ k) :
+    (((oddResidues k).filter (fun r => patternB c js k r = true)).card : ℚ)
+        / ((oddResidues k).card : ℚ)
+      = (js.map (fun j => ((1 : ℚ) / 2) ^ j)).prod :=
+  (pattern_prob hc js k hjs hsum).trans (prob_factorises js)
+
+/-- **The level is gone.**  Two different levels, both in the clean band, give the *same*
+probability.  This is why Stage C needs no limit: the sequence in `k` is eventually constant,
+not merely convergent. -/
+theorem pattern_prob_level_indep {c : ℕ} (hc : c % 2 = 1) (js : List ℕ) (k k' : ℕ)
+    (hjs : ∀ j ∈ js, 1 ≤ j) (hsum : js.sum + 1 ≤ k) (hsum' : js.sum + 1 ≤ k') :
+    (((oddResidues k).filter (fun r => patternB c js k r = true)).card : ℚ)
+        / ((oddResidues k).card : ℚ)
+      = (((oddResidues k').filter (fun r => patternB c js k' r = true)).card : ℚ)
+        / ((oddResidues k').card : ℚ) := by
+  rw [pattern_prob hc js k hjs hsum, pattern_prob hc js k' hjs hsum']
+
+/-- **THE FINITE-DIMENSIONAL DISTRIBUTIONS AGREE.**  `3x+1` and `3x-1` — and every other odd
+shift — induce the same probability on every valuation pattern in the clean band.
+
+This is the combinatorial content of `L_+ = L_-`.  It is *not* the measure-theoretic statement;
+see the two missing steps listed above. -/
+theorem pattern_prob_sign_blind {c c' : ℕ} (hc : c % 2 = 1) (hc' : c' % 2 = 1)
+    (js : List ℕ) (k : ℕ) (hjs : ∀ j ∈ js, 1 ≤ j) (hsum : js.sum + 1 ≤ k) :
+    (((oddResidues k).filter (fun r => patternB c js k r = true)).card : ℚ)
+        / ((oddResidues k).card : ℚ)
+      = (((oddResidues k).filter (fun r => patternB c' js k r = true)).card : ℚ)
+        / ((oddResidues k).card : ℚ) := by
+  rw [pattern_prob hc js k hjs hsum, pattern_prob hc' js k hjs hsum]
+
+/-!
+--------------------------------------------------------------------------------
 ## §4. Non-vacuity
 --------------------------------------------------------------------------------
 
@@ -457,6 +583,22 @@ Stage B (§3c) was mutated separately, 12 mutations, all fail:
 | B11 | `patternB`: recursion keeps level `k` instead of dropping to `k - j` | fails |
 | B12 | `patternB`: recursion forgets the `/ 2 ^ j` | fails |
 
+Stage C (§3d) was mutated separately, 6 mutations, all fail:
+
+| # | mutation | result |
+|---|---|---|
+| C1 | `pattern_count_mul`: right-hand side `card` → `card * 2` | fails |
+| C2 | `pattern_prob`: `(1/2) ^ js.sum` → `(1/2) ^ (js.sum + 1)` | fails |
+| C3 | `pattern_prob`: drop the clean band, `js.sum + 1 ≤ k` → `js.sum ≤ k` | fails |
+| C4 | `prob_factorises`: `.prod` → `.sum` (independence → nonsense) | fails |
+| C5 | `pattern_prob_level_indep`: drop the band on the second level `k'` | fails |
+| C6 | `pattern_prob_sign_blind`: `c' % 2 = 1` → `c' % 2 = 0` | fails |
+
+C4 is the one that matters for Stage C: it is the check that the factorisation is genuinely a
+*product* over steps — that is what makes the process independent rather than merely having
+the right marginals.  C3 and C5 re-check the clean band at the probability level, where it is
+easiest to forget, since the band does not appear in the value `(1/2)^Σj`.
+
 B4 and B11 are the two that matter.  B4 is the clean band: `2^{k−1−Σj}` is only the count
 while the pattern has not consumed the modulus, and the theorem must say so.  B11 is the
 structural claim — that a step of valuation `j` lands on *the same problem one level down*,
@@ -483,6 +625,12 @@ which is what makes the induction work at all rather than merely typecheck.
 #print axioms step_image
 #print axioms pattern_count
 #print axioms pattern_count_sign_blind
+#print axioms pattern_count_mul
+#print axioms pattern_prob
+#print axioms prob_factorises
+#print axioms pattern_prob_iid
+#print axioms pattern_prob_level_indep
+#print axioms pattern_prob_sign_blind
 #print axioms sub_one_odd
 #print axioms plus_minus_agree
 
