@@ -420,21 +420,43 @@ Two consequences worth keeping apart:
 * `3x+1` and `3x-1` have **the same** finite-dimensional distributions
   (`pattern_prob_sign_blind`).
 
-### What is still missing, precisely
+### What is still missing, precisely — and the exact route, checked against Mathlib
 
-`L_+ = L_-` as a statement about a *measure on `Z_2`* needs two further steps, and **neither is
-in this file**:
+`L_+ = L_-` as a statement about a *measure* needs two further steps, and **neither is in this
+file**.  They are named here rather than waved at, because "routine" is a claim and this one was
+checked (Mathlib v4.27.0, 2026-08-04).
 
-1. That Haar measure on `Z_2` restricted to level `k` is uniform on the residues mod `2^k`, so
-   that the counting probability below *is* the Haar probability.  Standard: `Z_2` is a compact
-   group and the balls are cosets of `2^k Z_2`.
-2. A measure on `N^N` whose cylinder masses are the numbers below.  Because the target law is
-   iid, this needs a product measure and a pi-system uniqueness argument — **not** general
-   Kolmogorov extension.
+**Step 1 — the target law exists and its cylinders are computable.**  Everything needed is
+already in Mathlib, and no general Kolmogorov extension theorem is involved:
 
-Both are routine and both are citable.  Formalising them is a measure-theory project, not a
-counting one, and the honest description of Stage C is: *the combinatorial content of
-`L_+ = L_-` is complete and machine-checked; the measure-theoretic wrapper is not.*
+* `ProbabilityTheory.geometricPMF` — and the fit is exact, not approximate.
+  `geometricPMFReal (1/2) n = (1/2)^n * (1/2) = 2^{-(n+1)}`, so our law `P(v = j) = 2^{-j}` is
+  that PMF shifted by one, `j = n + 1`.
+* `MeasureTheory.Measure.infinitePiNat` — the product measure on `Π n, X n` indexed by `ℕ`.
+* `MeasureTheory.Measure.infinitePiNat_map_restrict` and `isProjectiveLimit_infinitePiNat` —
+  restricting to a `Finset` gives the ordinary finite `Measure.pi`.
+* `piContent_eq_infinitePiNat` — the measure of a `measurableCylinders` set is the finite
+  product, which is exactly the number `pattern_prob` computes.
+* `ProbabilityTheory.iIndepFun_infinitePi` — independence comes free rather than being proved.
+
+So the assembly is: build the target as `infinitePiNat` of the shifted geometric PMF, and match
+on cylinders.  `pattern_prob` *is* the cylinder mass.  That is a real Lean task but a bounded
+one, and it needs no new theory.
+
+**Step 2 — tying the counting measure to Haar on `Z_2`.**  That Haar restricted to level `k` is
+uniform on residues mod `2^k` (the balls being cosets of `2^k Z_2`) is standard, but Mathlib has
+`PadicInt` without, so far as this check found, the Haar-measure development that would make it
+a one-liner.  **This is the genuinely missing piece**, and it is the reason the file still does
+not claim `L_+ = L_-` on `Z_2`.
+
+Note that Step 2 is avoidable if one is willing to state the theorem at finite level instead:
+"for every `k`, the uniform measure on `oddResidues k` pushed forward by the depth-`t` valuation
+map is the `t`-fold product of the geometric law, for every pattern in the clean band" is a
+purely finite statement, is what Stage C already proves, and needs no `Z_2` at all.
+
+The honest description of Stage C is therefore: *the combinatorial content of `L_+ = L_-` is
+complete and machine-checked; the measure-theoretic wrapper is not, Step 1 is bounded and
+supported by existing Mathlib, and Step 2 is the one that would need new material.*
 -/
 
 /-- **STAGE C, division-free.**  The pattern count times `2^(sum j)` is exactly the total

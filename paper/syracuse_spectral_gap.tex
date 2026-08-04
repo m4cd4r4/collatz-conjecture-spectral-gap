@@ -502,7 +502,7 @@ with no undischarged hypothesis. The endpoint is \texttt{gap\_certificate\_uncon
 every $k \ge 3$, every eigenvalue $\mu \ne 1$ of the operator $T_k$ --- \emph{defined inside the
 formalisation} from the lift window, not axiomatised --- satisfies $\|\mu\| < 0.853554$.
 
-The project is 17 files and 441 theorem/lemma declarations, with no \texttt{sorry}, no
+The project is 18 files and 449 theorem/lemma declarations, with no \texttt{sorry}, no
 \texttt{native\_decide}, and every \texttt{\#print axioms} set a subset of
 $\{\texttt{propext}, \texttt{Classical.choice}, \texttt{Quot.sound}\}$. (That check is a subset
 test, not a string match: a number of declarations legitimately use fewer axioms.) The
@@ -530,7 +530,39 @@ correspondence with this paper is:
 \item \textbf{The assembly of Section~\ref{sec:assembly}} --- \texttt{Assembly.lean}, with the
   envelope $f(e) \le f(3) < 1$ and the row-sum bound; instantiated at the concrete $T_k$ in
   \texttt{ManifestInstance.lean}.
+\item \textbf{The sign-blindness of Section~\ref{sec:scope}} --- \texttt{SignBlind.lean}. This
+  file is a \emph{sibling}, not a link in the chain above: it imports nothing beyond
+  \texttt{CountingLemmas.lean}, and \texttt{gap\_certificate\_unconditional} neither uses nor
+  needs it. It proves that for every odd $c$ and every valuation pattern with
+  $\sum j_i + 1 \le k$ the count is $2^{\,k-1-\sum j_i}$, hence the probability $2^{-\sum j_i}$
+  with no $k$ in it, hence identical finite-dimensional distributions for $3x+1$ and $3x-1$.
+  What it does \emph{not} do is construct a measure on $\Z_2$; see the caveat below.
 \end{itemize}
+
+\begin{remark}[What the sign-blindness formalisation does not contain]
+\texttt{SignBlind.lean} establishes the combinatorial content of the equality of the two
+valuation-process laws --- every cylinder mass, at every depth, inside the band
+$\sum j_i + 1 \le k$. It does not establish that equality as a statement about measures on
+$\Z_2$. Two steps are missing, and they are not equally hard.
+
+The passage from cylinder masses to a measure on $\N^\N$ is the lighter one, and requires no new
+theory: Mathlib already carries the product measure \texttt{Measure.infinitePiNat} indexed by
+$\N$, its projective-limit property, the identification of its value on measurable cylinders
+with the finite product, and the independence of its coordinates. The target law is an exact fit
+for \texttt{geometricPMF} at parameter $1/2$ shifted by one, since
+$(1/2)^n (1/2) = 2^{-(n+1)}$. What \texttt{SignBlind.lean} computes \emph{is} the cylinder mass,
+so the assembly is bounded work against existing library material, and no general Kolmogorov
+extension theorem enters.
+
+The harder step is tying the counting measure to Haar measure on $\Z_2$ --- that Haar restricted
+to level $k$ is uniform on residues mod $2^k$, the balls being cosets of $2^k \Z_2$. This is
+standard mathematics, but Mathlib provides \texttt{PadicInt} without the accompanying Haar
+development, so it is the piece that would need new material. It is avoidable at the cost of
+stating the result at finite level, where no $\Z_2$ appears at all.
+
+We are explicit about this because the distance between ``all cylinder masses agree'' and ``the
+laws are equal'' is exactly the kind of step it is tempting to elide.
+\end{remark}
 
 Three formalisation dividends are worth recording. FACT~1, parametrised by the lift index, needs
 no modulo-3 argument at all. The identity $(2s^2)^{a+1} = 1$ for $s = 2^{-1/2}$ keeps every
