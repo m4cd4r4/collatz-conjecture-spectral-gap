@@ -47,7 +47,7 @@ this file is `c`-uniform.
 
 Sorry-free.  Specialisation lemmas throughout, mutation table below, axiom audit `§6`.
 
-## MUTATIONS (12, all fail)
+## MUTATIONS (16, all fail)
 
 | # | mutation | result |
 |---|---|---|
@@ -63,6 +63,10 @@ Sorry-free.  Specialisation lemmas throughout, mutation table below, axiom audit
 | S10 | `cu_syracuse_affineS`: exponent `K - v` → `K` | fails |
 | S11 | `cu_syracuse_fibre_cardS`: `2^(K-v)` → `2^K` | fails |
 | S12 | `cu_syracuse_fibre_cardS`: drop oddness of `x` | fails |
+| S13 | `oddPart_mul_odd`: `d % 2 = 1` → `d % 2 = 0` | fails |
+| S14 | `oddPart_mul_odd`: drop `n ≠ 0` | fails |
+| S15 | `oddPart_three_add`: drop the factor `3` on the right | fails |
+| S16 | `oddPart_three_add`: `m + 1` → `m` (the off-by-one) | fails |
 
 S3 and S8 are the ones that matter.  S3: `rstarS` would otherwise be a definition with no
 verified spec, and the formula came from Euler's theorem rather than being derived here — it was
@@ -271,6 +275,55 @@ theorem cu_syracuse_fibre_cardS {c x K : ℕ} (hc : c % 2 = 1) (hx : x % 2 = 1)
 
 /-!
 --------------------------------------------------------------------------------
+## §2c. Odd multipliers pass through the odd part — the key to Lemma B at `a = 3`
+--------------------------------------------------------------------------------
+
+Calibration (`calibrate_lemmaB_shift.py`) showed that Lemma B for a general odd shift is a
+**three-case** problem, not an infinite family: the offset `a = (3r* + c)/2^k` only ever takes
+the values `1, 2, 3`, and the collision count depends on `a` alone.  `CollisionBound.lean`
+already covers the cases arising at `c = 1`.  The one new case is `a = 3`, and there
+
+```
+    coll(k, 3) = 3·2^k − 2      exactly, for every k
+```
+
+so the constant `3` is **sharp** — margin exactly `2` at every scale.  A proof that leans on
+the *growing* margin available at `c = 1` will fail here.
+
+The reduction that makes `a = 3` tractable is the lemma below.  Since `oddPart(3 + 3m) =
+3·oddPart(m+1)` and multiplication by `3` is a bijection mod `2^k`, the `a = 3` collision count
+is just the odd-part fibre count of `[1, 2^k]` — an elementary object with fibre sizes
+`#{j : 2^j q ≤ 2^k}`, giving `coll(k,3) = (k+1)^2 + Σ_{i=2}^{k} 2^{i-2}(k-i+1)^2` and the
+recurrence `coll(k+1,3) = 2·coll(k,3) + 2`.  All five steps verified numerically before any of
+this was written.
+
+**Only the first step is formalised here.**  The fibre count and the recurrence are not.
+-/
+
+/-- **An odd multiplier passes through the odd part.**  For odd `d` and `n ≠ 0`,
+`oddPart (d * n) = d * oddPart n`.
+
+This is why `a = 3` reduces to a shift-free counting problem, and it is the only property of
+`3` involved — the same "3 is odd" that the whole development runs on. -/
+theorem oddPart_mul_odd {d n : ℕ} (hd : d % 2 = 1) (hn : n ≠ 0) :
+    (d * n) / 2 ^ v2 (d * n) = d * (n / 2 ^ v2 n) := by
+  have hd0 : d ≠ 0 := by omega
+  have hdn : d * n ≠ 0 := Nat.mul_ne_zero hd0 hn
+  have hvd : v2 d = 0 := v2_odd_mod d hd
+  have hv : v2 (d * n) = v2 n := by
+    unfold v2 at *
+    rw [padicValNat.mul hd0 hn, hvd, zero_add]
+  rw [hv, Nat.mul_div_assoc _ (pow_v2_dvd n hn)]
+
+/-- The instance the `a = 3` case needs: `oddPart (3 + 3m) = 3 * oddPart (m + 1)`. -/
+theorem oddPart_three_add {m : ℕ} :
+    (3 + 3 * m) / 2 ^ v2 (3 + 3 * m) = 3 * ((m + 1) / 2 ^ v2 (m + 1)) := by
+  have h : 3 + 3 * m = 3 * (m + 1) := by ring
+  rw [h]
+  exact oddPart_mul_odd (by norm_num) (by omega)
+
+/-!
+--------------------------------------------------------------------------------
 ## §3. The defect residue, for a general shift
 --------------------------------------------------------------------------------
 
@@ -387,6 +440,8 @@ example {x K k : ℕ} (hk : 1 ≤ k) (hx : x % 2 = 1)
 #print axioms cu_syracuse_affineS
 #print axioms cu_syracuse_affineS_one
 #print axioms cu_syracuse_fibre_cardS
+#print axioms oddPart_mul_odd
+#print axioms oddPart_three_add
 #print axioms three_coprime_two_pow
 #print axioms three_pow_totient
 #print axioms rstarS_spec
