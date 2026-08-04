@@ -46,10 +46,17 @@ odd `c` tested, `k = 4..8`, all pass:
 * Lemma B's `‖D‖₂ ≤ √3 · 2^{-k/2}` holds throughout;
 * `rank(D) = 1`, with `r*` the solution of `3r + c ≡ 0 (mod 2^k)`.
 
-**One risk carried forward:** gate 3 is nearly saturated at `c = 2^k - 1`, i.e. exactly the
-`3x-1` case — at `k = 8`, `0.108112` against a limit of `0.108253`, a margin of `0.13%`.  The
-`√3` constant may be sharp there, so no later step may lean on slack that does not exist for
-the shift the control experiment actually cares about.
+**One risk carried forward:** gate 3 is nearly saturated at `c = 2^k - 1` — at `k = 8`,
+`0.108112` against a limit of `0.108253`, a margin of `0.13%`.  The `√3` constant may be sharp
+there, so no later step may lean on slack that does not exist at that shift.
+
+> **CORRECTED 2026-08-05.**  This paragraph used to read "at `c = 2^k - 1`, i.e. exactly the
+> `3x-1` case ... the shift the control experiment actually cares about".  **`c = 2^k - 1` is
+> not the `3x−1` shift** — `-1` and `2^k - 1` agree mod `2^k`, and `oddPart` does not factor
+> through that.  Full correction, with the measurement, at the head of §4.  The saturation is
+> real but belongs to the substitute: for the genuine `c = −1` the same quantity is `1.5284`
+> against `√3 = 1.7321`, an `11.8%` margin.  Both `calibrate_general_shift.py` and this file
+> carried the substitution, so the gates were being checked on the wrong operator.
 
 ## THE ONE STRUCTURAL DIFFERENCE FROM `c = 1`
 
@@ -930,11 +937,52 @@ theorem rstarS_spec {c k : ℕ} (hk : 1 ≤ k) :
 
 /-!
 --------------------------------------------------------------------------------
-## §4. Non-vacuity: the two maps the control experiment compares
+## §4. Non-vacuity: a second concrete odd shift
 --------------------------------------------------------------------------------
+
+**CORRECTION, 2026-08-05 — read this before citing anything in this section.**
+
+This section used to say that `c = 2^k - 1` *is* the `3x−1` shift, and that its statements are
+"about the `3x−1` operator".  **That is false, and it is this corpus's own failure mode (2): the
+right-looking theorem about the wrong object.**
+
+`-1` and `2^k - 1` agree mod `2^k`, but `oddPart` is **not** a function of the residue mod `2^k`
+— the lift window is the whole point of the construction.  Concretely at `k = 3`, `n = 1`:
+
+```
+    oddPart (3·1 − 1)       = 1
+    oddPart (3·1 + 2^3 − 1) = 5
+```
+
+The two transfer operators differ entrywise at every `k` measured (total entry difference
+`2, 12, 8, 44, 32, 172` at `k = 3..8`).  So the statements below are true theorems about the
+legitimate odd shift `2^k - 1`; they are **not** about `3x−1`, and this section does not advance
+the control experiment.  `syracuseS` takes `c : ℕ`, so it **cannot express `3x−1` at all** — that
+needs an integer shift, and building it is open work.
+
+**The conclusion survives the correction, measured independently (`calibrate_true_minus_one`
+gate, added the same day).**  The genuine `3x−1` operator, integer shift `c = −1`, passes all
+four calibration gates at `k = 4..8`: `cert ≤ 0.8536` (measured `0.578`–`0.606`), Lemma A's clean
+block norms **exactly** `2^{-(b-a)/2}`, `rank D = 1`, `‖D‖₂ ≤ √3 · 2^{-k/2}`.  So nothing that
+was believed about `3x−1` is now in doubt — but it was being *checked* on a substitute.
+
+**SCOPE OF THE ERROR, checked rather than assumed.**  The original control experiment is
+**unaffected** — `probe_cycle_link.py`, `probe_cycle_link_cert.py` and `extremal_values_check.py`
+all take a genuine integer `sign = -1` (`oddpart(3n + sign)`), so `CYCLE_CLAIM_REFUTED.md`'s
+table is about the real `3x−1` map and its refutation stands.  The substitution entered only
+with the `3x + c` generalisation line, where `c` was parametrised as a **natural number** and
+`-1` had to be represented as `2^k - 1`: `calibrate_general_shift.py` gates G1–G4, and this file.
+Both now carry the correction, and G5 checks the real map directly.
+
+**One recorded risk moves with the correction.**  This file's header flags gate 3 as nearly
+saturated "at `c = 2^k − 1`, i.e. exactly the `3x−1` case" — `0.13%` margin at `k = 8`.  That
+saturation belongs to the **substitute**: `‖D‖·2^{k/2}` is `1.7298` there against `√3 = 1.7321`,
+but only `1.5284` for the true `c = −1`, an `11.8%` margin.  The `√3` sharpness worry was
+attached to the wrong operator.
 -/
 
-/-- `2^k - 1` is odd for `k ≥ 1`: the `3x−1` shift is in scope of every theorem above. -/
+/-- `2^k - 1` is odd for `k ≥ 1`: this shift is in scope of every theorem above.  It is **not**
+the `3x−1` shift — see the correction at the head of this section. -/
 theorem sub_one_odd {k : ℕ} (hk : 1 ≤ k) : (2 ^ k - 1) % 2 = 1 := by
   have h : (2 : ℕ) ^ k = 2 * 2 ^ (k - 1) := by rw [← pow_succ']; congr 1; omega
   have hp : 0 < 2 ^ (k - 1) := Nat.two_pow_pos _
@@ -944,13 +992,14 @@ theorem sub_one_odd {k : ℕ} (hk : 1 ≤ k) : (2 ^ k - 1) % 2 = 1 := by
 example {n : ℕ} (hn : n % 2 = 1) : syracuseS 1 n % 2 = 1 :=
   syracuseS_odd (by norm_num) hn
 
-/-- **And so does the `3x−1` step**, at every level.  This is the first Lean statement in the
-certificate tree that is about the `3x−1` operator rather than about `3x+1`. -/
+/-- **And so does the `3x + (2^k − 1)` step**, at every level.  Previously captioned "the first
+Lean statement about the `3x−1` operator"; it is not — see the section correction. -/
 example {k n : ℕ} (hk : 1 ≤ k) (hn : n % 2 = 1) : syracuseS (2 ^ k - 1) n % 2 = 1 :=
   syracuseS_odd (sub_one_odd hk) hn
 
-/-- **Non-vacuity for `3x−1`.**  The fibre count holds for the shift the control experiment
-cares about, not merely for a hypothetical odd `c`. -/
+/-- **Non-vacuity at a second concrete shift.**  The fibre count holds for `c = 2^k − 1`, not
+merely for a hypothetical odd `c`.  Previously captioned "non-vacuity for `3x−1`", which it is
+not — the two operators differ entrywise; see the section correction. -/
 example {x K k : ℕ} (hk : 1 ≤ k) (hx : x % 2 = 1)
     (hK : v2 (3 * x + (2 ^ k - 1)) < K) (m0 : ℕ) :
     ((range (2 ^ K)).filter

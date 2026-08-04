@@ -19,6 +19,10 @@ What is checked, for every odd shift c and several k
   G2  Lemma A: the clean upper-cascade block norms are EXACTLY 2^{-(b-a)/2}
   G3  Lemma B: the defect covector satisfies ||c||_2 <= sqrt(3) * 2^{-k/2}
   G4  the defect really is supported on ONE row, and that row is the r* solving 3r + c = 0
+  G5  ALL FOUR of the above for the TRUE 3x-1, i.e. the genuine integer shift c = -1
+      (added 2026-08-05).  G1-G4 run 3x-1 as c = 2^k - 1, which is a DIFFERENT OPERATOR: -1 and
+      2^k - 1 agree mod 2^k but oddPart does not factor through the residue.  G5 exists because
+      that substitution went unnoticed here and in ShiftedOperator.lean.  It passes.
 
 Conventions follow probe_cycle_link_cert.py / fable_assembly_check.py exactly: odd residues mod
 2^k, chi_xi(r) = w^{xi r}/sqrt(N), level(xi) = v2(xi), Q[a,b] = ||P_a U P_b||_2 with U = T^T,
@@ -160,14 +164,49 @@ def run():
             print("   %d | %6d  |    %d    | %.6f |    %.6f    | %s | %d"
                   % (k, c, dr, dn, lim, "yes" if ok else "NO", rs))
 
+    print("\nG5  THE TRUE 3x-1, integer shift c = -1  (added 2026-08-05)")
+    print("   Every gate above ran 3x-1 as c = 2^k - 1.  THAT IS NOT THE 3x-1 MAP: -1 and")
+    print("   2^k - 1 agree mod 2^k, and oddPart does not factor through the residue - the lift")
+    print("   window is the whole point.  At k=3, n=1: oddPart(3-1)=1 but oddPart(3+8-1)=5, and")
+    print("   the two operators differ entrywise at every k (2,12,8,44,32,172 at k=3..8).")
+    print("   So the real map gets its own gate, with c used as a genuine integer.")
+    print("   k | cert_-1  | <= bound | max|Qclean - 2^{-(b-a)/2}| | rank D | ||D||_2 | limit")
+    for k in (4, 5, 6, 7, 8):
+        cert, _, Qcl, dn, dr, rs = analyse(k, -1)
+        K = k - 1
+        worst = 0.0
+        for a in range(K):
+            for b in range(a + 1, K):
+                worst = max(worst, abs(Qcl[a, b] - 2.0 ** (-(b - a) / 2.0)))
+        lim = np.sqrt(3) * 2.0 ** (-k / 2.0)
+        ok = cert <= BOUND + 1e-9
+        if not ok:
+            FAIL.append("G5 cert=%.6f > bound at k=%d c=-1" % (cert, k))
+        if worst >= 1e-9:
+            FAIL.append("G5 clean block norm deviates by %.2e at k=%d c=-1" % (worst, k))
+        if dr != 1:
+            FAIL.append("G5 rank(D)=%d at k=%d c=-1" % (dr, k))
+        if dn > lim + 1e-9:
+            FAIL.append("G5 ||D||=%.5f > %.5f at k=%d c=-1" % (dn, lim, k))
+        print("   %d | %.6f |   %s    |         %.2e           |   %d    | %.6f | %.6f"
+              % (k, cert, "yes" if ok else "NO", worst, dr, dn, lim))
+    print("   NOTE the margin that moves with this correction: ||D||*2^(k/2) at k=8 is 1.7298")
+    print("   for c=2^k-1 (0.13% below sqrt3=1.7321) but 1.5284 for the true c=-1 (11.8%).")
+    print("   The recorded 'sqrt3 may be sharp for the shift the control cares about' risk was")
+    print("   attached to the substitute, not to 3x-1.")
+
     print()
     if FAIL:
         print("FAILURES (%d):" % len(FAIL))
         for f in FAIL[:20]:
             print("  " + f)
         return 1
-    print("ALL CHECKS PASS - the lemma-level ingredients transfer to every odd shift tested.")
-    print("The 'runs verbatim for 3x-1' claim is supported; the Lean refactor is justified.")
+    print("ALL CHECKS PASS - the lemma-level ingredients transfer to every odd shift tested,")
+    print("AND to the true 3x-1 (integer c = -1), which G5 now checks directly rather than")
+    print("through the c = 2^k - 1 substitute the other gates use.")
+    print("The 'runs verbatim for 3x-1' claim is supported at the lemma level.  NOTE: the Lean")
+    print("syracuseS takes c : Nat and so cannot express c = -1 at all - an integer-shifted")
+    print("definition is open work.  See ShiftedOperator.lean section 4.")
     return 0
 
 
