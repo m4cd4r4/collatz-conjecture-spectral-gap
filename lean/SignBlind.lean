@@ -44,7 +44,8 @@ Injectivity of `r ↦ (3r + c) mod 2^k` is **not** proved here — it is
 `GapCertificate.eq_of_two_pow_dvd_three_mul_sub` and constructs no inverse of `3`.  This file
 supplies only the parity bookkeeping and the counting.
 
-Sorry-free, no `native_decide`.  Calibration §3, mutation table §5, axiom audit §6.
+Sorry-free, no `native_decide`.  Calibration §3, explicit count §3b, mutation table §5,
+axiom audit §6.
 -/
 
 import CountingLemmas
@@ -176,6 +177,58 @@ theorem valuation_count_sign_blind {k c c' : ℕ} (hk : 1 ≤ k)
 
 /-!
 --------------------------------------------------------------------------------
+## §3b. The explicit count
+--------------------------------------------------------------------------------
+
+`valuation_count_sign_blind` says the two counts *agree*.  This says what they **are**.
+The bridge is `CountingLemmas.v2_eq_iff_mod`: valuation exactly `j` is the single residue
+class `2^j` mod `2^(j+1)`, so `residue_class_card` finishes it.
+-/
+
+/-- Valuation exactly `j` (for `j ≥ 1`) is the residue class `2^j` mod `2^(j+1)`.
+
+`j ≥ 1` is load-bearing and not cosmetic: Mathlib's `padicValNat 2 0 = 0`, so at `j = 0` the
+left-hand side would also collect `s = 0`, which is even and in range. -/
+theorem evenResidues_v2_eq {k j : ℕ} (hj : 1 ≤ j) (hjk : j + 1 ≤ k) :
+    (evenResidues k).filter (fun s => v2 s = j)
+      = (range (2 ^ k)).filter (fun s => s % 2 ^ (j + 1) = 2 ^ j) := by
+  classical
+  have hj1 : (0 : ℕ) < 2 ^ j := Nat.two_pow_pos j
+  ext s
+  rw [mem_filter, mem_filter, mem_evenResidues, mem_range]
+  constructor
+  · rintro ⟨⟨hlt, _⟩, hv⟩
+    have hs0 : s ≠ 0 := by
+      intro hc; rw [hc] at hv; simp [v2] at hv; omega
+    exact ⟨hlt, (v2_eq_iff_mod hs0).1 hv⟩
+  · rintro ⟨hlt, hmod⟩
+    have hs0 : s ≠ 0 := by
+      intro hc; rw [hc, Nat.zero_mod] at hmod; omega
+    refine ⟨⟨hlt, ?_⟩, (v2_eq_iff_mod hs0).2 hmod⟩
+    -- `s ≡ 2^j (mod 2^(j+1))` with `j ≥ 1` forces `s` even
+    have hdvd : (2 : ℕ) ∣ 2 ^ (j + 1) := dvd_pow_self 2 (by omega)
+    have h2 : s % 2 = (2 ^ j) % 2 := by
+      rw [← Nat.mod_mod_of_dvd s hdvd, hmod]
+    have : (2 : ℕ) ^ j % 2 = 0 := by
+      have : (2 : ℕ) ^ j = 2 * 2 ^ (j - 1) := by rw [← pow_succ']; congr 1; omega
+      omega
+    omega
+
+/-- **The explicit one-step count.**  For every odd shift `c`, exactly `2^(k-j-1)` of the odd
+residues mod `2^k` have `v₂(3r + c) = j`.
+
+This strictly strengthens `valuation_count_sign_blind`, which only said two such counts are
+equal to each other. -/
+theorem valuation_count_explicit {k c j : ℕ} (hk : 1 ≤ k) (hc : c % 2 = 1)
+    (hj : 1 ≤ j) (hjk : j + 1 ≤ k) :
+    ((oddResidues k).filter (fun r => v2 (shiftMap k c r) = j)).card = 2 ^ (k - j - 1) := by
+  classical
+  rw [count_comp_shiftMap_indep hk hc (fun s => v2 s = j), evenResidues_v2_eq hj hjk,
+    residue_class_card hjk (Nat.pow_lt_pow_right (by norm_num) (by omega))]
+  congr 1
+
+/-!
+--------------------------------------------------------------------------------
 ## §4. Non-vacuity
 --------------------------------------------------------------------------------
 
@@ -217,6 +270,8 @@ example : (2 ^ 6 - 1) % 2 = 1 := sub_one_odd (by norm_num)
 | N2 | `shiftMap_image`: conclusion `= evenResidues k` → `= oddResidues k` | fails |
 | N3 | `evenResidues_card`: `2 ^ (m - 1)` → `2 ^ m` | fails |
 | N4 | `sub_one_odd`: `(2 ^ k - 1) % 2 = 1` → `= 0` | fails |
+| N5 | `valuation_count_explicit`: `2 ^ (k-j-1)` → `2 ^ (k-j)` | fails |
+| N6 | `evenResidues_v2_eq`: neuter `hj : 1 ≤ j` to `1 ≤ 1` (the `padicValNat 2 0 = 0` trap) | fails |
 
 N1 is the one that matters: it is the check that the **parity of the shift** is what makes
 the image shift-independent, rather than some accident of `3`.
@@ -233,6 +288,8 @@ the image shift-independent, rather than some accident of `3`.
 #print axioms shiftMap_image
 #print axioms sum_comp_shiftMap_indep
 #print axioms count_comp_shiftMap_indep
+#print axioms evenResidues_v2_eq
+#print axioms valuation_count_explicit
 #print axioms valuation_count_sign_blind
 #print axioms sub_one_odd
 #print axioms plus_minus_agree
