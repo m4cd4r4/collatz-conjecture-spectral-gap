@@ -560,8 +560,8 @@ example {μ : ℂ} (hμ : μ ≠ 1) {x : Fsp 6} (hx0 : x ≠ 0) (hx : Tend 6 x =
 /-!
 ### Mutation tests (failure mode 1: a theorem a tactic closes on its own)
 
-Ten single-token mutations were applied to the load-bearing statements and the build was run
-on each.  **All ten failed to compile.**  The build was restored and re-run green afterwards.
+Fourteen single-token mutations were applied to the load-bearing statements and the build was run
+on each.  **All fourteen failed to compile.**  The build was restored and re-run green afterwards.
 
 | # | mutation | result |
 |---|---|---|
@@ -575,6 +575,10 @@ on each.  **All ten failed to compile.**  The build was restored and re-run gree
 | M8 | `norm_sq_clean_block`: `‖P k b x‖` → `‖P k a x‖` (the orientation trap) | fails |
 | M9 | `norm_sq_clean_block`: `(1/2)^(b-a)` → `(1/2)^(b-a) / 2` | fails |
 | M10 | `clean_bound`: hypothesis `(a:ℕ) < (b:ℕ)` → `(b:ℕ) < (a:ℕ)` (the regime) | fails |
+| M11 | `norm_cleanBlockCLM_eq`: `s^(b-a)` → `s^(b-a+1)` (§11) | fails |
+| M12 | `norm_cleanBlockCLM_apply_chiVec`: `s^(b-a)` → `s^(b-a)/2` (§11) | fails |
+| M13 | `P_chiVec_self`: conclusion `= chiVec k η` → `= 0` (§11) | fails |
+| M14 | `levelSet_nonempty_nat`: `b + 2 ≤ k` → `b + 1 ≤ k` (the truncated level range) | fails |
 
 M1, M8 and M10 are three independent shots at the orientation trap that has already cost
 this project a defect.  M6 is the one that would matter most if it passed: it is the check
@@ -648,5 +652,95 @@ Several use strictly fewer; that is expected and is not a violation.
 #print axioms hQupper_holds
 #print axioms uinv_congr_43
 #print axioms hyp_satisfiable_gram
+
+/-!
+--------------------------------------------------------------------------------
+## §11. Sharpness: the bound is an EQUALITY
+--------------------------------------------------------------------------------
+
+`clean_bound` gives `‖P_a U_clean P_b‖ ≤ s^d`, which is all (CLEAN) needs. §1 gate 3
+*measures* the same quantity as an equality to `1.0e-14`, and `CleanBlock` §6 records that
+the bound is sharp — but as a measurement, i.e. **DATA** sitting beside a **PROVEN** claim.
+
+This section closes that gap. No new mathematics is required: `norm_sq_clean_block` is
+already stated as an **equality**, so the reverse inequality needs only a witness vector,
+and a level-`b` character is one.
+
+That upgrade matters beyond tidiness. The 2025-26 literature now attaches at least four
+inequivalent meanings to "a spectral gap for the Collatz transfer operator", and two of them
+carry headline numbers near `0.85` that mean opposite things. A development that can say
+*exactly* what its block norms are, rather than bounding them, is the one that can be
+compared against the others without ambiguity.
+-/
+
+/-- A character is a unit vector. -/
+theorem norm_chiVec {k : ℕ} (hk : 1 ≤ k) (η : Fin (2 ^ (k - 1))) : ‖chiVec k η‖ = 1 :=
+  (chiVec_orthonormal hk).1 η
+
+/-- A level-`b` character is fixed by `P_b`. -/
+theorem P_chiVec_self {k : ℕ} (hk : 1 ≤ k) {b : ℕ} {η : Fin (2 ^ (k - 1))}
+    (hη : η ∈ levelSet k b) : P k b (chiVec k η) = chiVec k η := by
+  classical
+  have hon := chiVec_orthonormal hk
+  rw [P_apply, Finset.sum_eq_single η]
+  · rw [orthonormal_iff_ite.1 hon η η, if_pos rfl, one_smul]
+  · intro ξ _ hne
+    rw [orthonormal_iff_ite.1 hon ξ η, if_neg hne, zero_smul]
+  · intro hc; exact absurd hη hc
+
+/-- Every level in range is inhabited, so §11's witness exists.
+
+`ManifestInstance.levelSet_nonempty` is the same fact indexed by `Fin (k-1)`; this file's
+indices are plain naturals carrying `b + 2 ≤ k` directly, so the hypothesis shape differs and
+the two are stated separately rather than one derived from the other.  Named apart because
+`ManifestInstance` is opened here and an unqualified clash would be unreadable. -/
+theorem levelSet_nonempty_nat {k b : ℕ} (hbk : b + 2 ≤ k) : (levelSet k b).Nonempty := by
+  rw [← Finset.card_pos, DefectSplit.levelSet_card hbk]
+  positivity
+
+/-- **(CLEAN) with the `Fin` wrapper removed**, so §11 can pair it with the lower bound. -/
+theorem norm_cleanBlockCLM_le {k a b : ℕ} (hk : 2 ≤ k) (hab : a < b) (hbk : b + 2 ≤ k) :
+    ‖cleanBlockCLM k a b‖ ≤ Assembly.s ^ (b - a) := by
+  refine ContinuousLinearMap.opNorm_le_bound _ (pow_nonneg Assembly.s_pos.le _) fun x => ?_
+  rw [cleanBlockCLM_apply]
+  exact norm_clean_block_le hk hab hbk x
+
+/-- **The block attains its bound at a single character.**  This is where the equality comes
+from: `norm_sq_clean_block` is an identity, and `P_b` fixes `χ_η` for `η` of level `b`, so the
+`‖P_b x‖` on its right-hand side is exactly `1`. -/
+theorem norm_cleanBlockCLM_apply_chiVec {k a b : ℕ} (hk : 2 ≤ k) (hab : a < b) (hbk : b + 2 ≤ k)
+    {η : Fin (2 ^ (k - 1))} (hη : η ∈ levelSet k b) :
+    ‖cleanBlockCLM k a b (chiVec k η)‖ = Assembly.s ^ (b - a) := by
+  have hk1 : 1 ≤ k := by omega
+  have hfix : P k b (chiVec k η) = chiVec k η := P_chiVec_self hk1 hη
+  have hsq := norm_sq_clean_block hk hab hbk (chiVec k η)
+  rw [hfix, norm_chiVec hk1] at hsq
+  have hs : (Assembly.s ^ (b - a)) ^ 2 = (1 / 2 : ℝ) ^ (b - a) := by
+    rw [← pow_mul, mul_comm, pow_mul, Assembly.s_sq]
+  refine DefectSplit.sq_eq_of_nonneg (norm_nonneg _) (pow_nonneg Assembly.s_pos.le _) ?_
+  rw [hs, cleanBlockCLM_apply, hfix]
+  simpa using hsq
+
+/-- **SHARPNESS.**  `‖P_a U_clean P_b‖ = Assembly.s^(b-a)` exactly, for every `a < b` in
+range — not merely `≤`.
+
+So the certificate's clean factor is `2^{-(b-a)/2}` **on the nose**, and no route through this
+block can recover any constant. `CleanBlock` §6 stated this as a numerical observation; here
+it is a theorem. -/
+theorem norm_cleanBlockCLM_eq {k a b : ℕ} (hk : 2 ≤ k) (hab : a < b) (hbk : b + 2 ≤ k) :
+    ‖cleanBlockCLM k a b‖ = Assembly.s ^ (b - a) := by
+  obtain ⟨η, hη⟩ := levelSet_nonempty_nat hbk
+  refine le_antisymm (norm_cleanBlockCLM_le hk hab hbk) ?_
+  have hle := (cleanBlockCLM k a b).le_opNorm (chiVec k η)
+  rw [norm_cleanBlockCLM_apply_chiVec hk hab hbk hη, norm_chiVec (by omega : 1 ≤ k),
+    mul_one] at hle
+  exact hle
+
+#print axioms norm_chiVec
+#print axioms P_chiVec_self
+#print axioms levelSet_nonempty_nat
+#print axioms norm_cleanBlockCLM_le
+#print axioms norm_cleanBlockCLM_apply_chiVec
+#print axioms norm_cleanBlockCLM_eq
 
 end GramIdentity
