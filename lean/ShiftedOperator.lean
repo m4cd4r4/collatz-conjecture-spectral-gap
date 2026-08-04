@@ -47,7 +47,7 @@ this file is `c`-uniform.
 
 Sorry-free.  Specialisation lemmas throughout, mutation table below, axiom audit `§6`.
 
-## MUTATIONS (16, all fail)
+## MUTATIONS (20, all fail)
 
 | # | mutation | result |
 |---|---|---|
@@ -67,6 +67,10 @@ Sorry-free.  Specialisation lemmas throughout, mutation table below, axiom audit
 | S14 | `oddPart_mul_odd`: drop `n ≠ 0` | fails |
 | S15 | `oddPart_three_add`: drop the factor `3` on the right | fails |
 | S16 | `oddPart_three_add`: `m + 1` → `m` (the off-by-one) | fails |
+| S17 | `pair_count_closed`: base `P 1 = 4` → `5` | fails |
+| S18 | `pair_count_closed`: recurrence `+ 3·2^j` → `+ 2·2^j` | fails |
+| S19 | `pair_count_closed`: conclusion `P k + 2` → `P k + 1` | fails |
+| S20 | `pair_count_closed`: drop `1 ≤ k` | fails |
 
 S3 and S8 are the ones that matter.  S3: `rstarS` would otherwise be a definition with no
 verified spec, and the formula came from Euler's theorem rather than being derived here — it was
@@ -290,14 +294,39 @@ already covers the cases arising at `c = 1`.  The one new case is `a = 3`, and t
 so the constant `3` is **sharp** — margin exactly `2` at every scale.  A proof that leans on
 the *growing* margin available at `c = 1` will fail here.
 
-The reduction that makes `a = 3` tractable is the lemma below.  Since `oddPart(3 + 3m) =
-3·oddPart(m+1)` and multiplication by `3` is a bijection mod `2^k`, the `a = 3` collision count
-is just the odd-part fibre count of `[1, 2^k]` — an elementary object with fibre sizes
-`#{j : 2^j q ≤ 2^k}`, giving `coll(k,3) = (k+1)^2 + Σ_{i=2}^{k} 2^{i-2}(k-i+1)^2` and the
-recurrence `coll(k+1,3) = 2·coll(k,3) + 2`.  All five steps verified numerically before any of
-this was written.
+### The route, in the sharpened form
 
-**Only the first step is formalised here.**  The fibre count and the recurrence are not.
+`coll(k,3)` counts *ordered pairs* of lifts with equal image.  Two reductions kill the shift and
+then the modulus:
+
+1. `oddPart(3 + 3m) = 3·oddPart(m+1)`, because `3` is odd  — **`oddPart_mul_odd` below**;
+2. multiplication by `3` is a bijection mod `2^k`, so it drops out of a count.
+
+What is left, after `n = m+1`, is
+
+```
+    coll(k,3) = #{ (n, n') ∈ [1, 2^k]² : oddPart n = oddPart n' }
+```
+
+with **no modulus anywhere** — `oddPart n < 2^k` for `n ≤ 2^k`, so the reduction is vacuous.  The
+shifted problem has become a shift-free one.
+
+Counting that by odd part, with `c_q = #{ j : q·2^j ≤ 2^k }`, the induction step splits into
+three pieces that are each immediate:
+
+```
+    P(k+1) = P(k) + 2·(Σ_q c_q) + #{odd q ≤ 2^k} + #{odd q ∈ (2^k, 2^{k+1})}
+           = P(k) + 2·2^k + 2^{k-1} + 2^{k-1}
+           = P(k) + 3·2^k
+```
+
+with `P(1) = 4`.  That telescopes straight to `P(k) + 2 = 3·2^k`.
+
+Every line above was verified numerically (`k = 1..13`) before being written down.
+
+**Formalised here:** reduction 1, and the final telescoping (`pair_count_closed`).
+**Not formalised:** reduction 2, the fibre count `c_q`, and the recurrence itself — i.e. the
+combinatorial middle.  Those are the remaining work for `a = 3`.
 -/
 
 /-- **An odd multiplier passes through the odd part.**  For odd `d` and `n ≠ 0`,
@@ -321,6 +350,36 @@ theorem oddPart_three_add {m : ℕ} :
   have h : 3 + 3 * m = 3 * (m + 1) := by ring
   rw [h]
   exact oddPart_mul_odd (by norm_num) (by omega)
+
+/-- **The telescoping step of the `a = 3` argument.**  Any `P` satisfying the pair-count
+recurrence `P(k+1) = P(k) + 3·2^k` with `P 1 = 4` is `3·2^k − 2`.
+
+Stated as `P k + 2 = 3 * 2 ^ k` rather than with a truncated subtraction, which is both cleaner
+and avoids the `Nat` subtraction trap entirely.
+
+This is the *last* step of the `a = 3` case; what remains is to prove that the actual collision
+count satisfies this recurrence. -/
+theorem pair_count_closed {P : ℕ → ℕ} (hbase : P 1 = 4)
+    (hrec : ∀ j, 1 ≤ j → P (j + 1) = P j + 3 * 2 ^ j) :
+    ∀ k, 1 ≤ k → P k + 2 = 3 * 2 ^ k := by
+  intro k hk
+  induction k with
+  | zero => omega
+  | succ n ih =>
+    rcases Nat.eq_or_lt_of_le hk with h | h
+    · -- n + 1 = 1
+      have hn : n = 0 := by omega
+      subst hn
+      rw [hbase]; norm_num
+    · have hn : 1 ≤ n := by omega
+      have := ih hn
+      rw [hrec n hn, pow_succ]
+      omega
+
+/-- Sanity: the closed form does give the measured values `4, 10, 22, 46, 94`. -/
+example : (3 : ℕ) * 2 ^ 1 - 2 = 4 := by norm_num
+example : (3 : ℕ) * 2 ^ 3 - 2 = 22 := by norm_num
+example : (3 : ℕ) * 2 ^ 6 - 2 = 190 := by norm_num
 
 /-!
 --------------------------------------------------------------------------------
@@ -442,6 +501,7 @@ example {x K k : ℕ} (hk : 1 ≤ k) (hx : x % 2 = 1)
 #print axioms cu_syracuse_fibre_cardS
 #print axioms oddPart_mul_odd
 #print axioms oddPart_three_add
+#print axioms pair_count_closed
 #print axioms three_coprime_two_pow
 #print axioms three_pow_totient
 #print axioms rstarS_spec
