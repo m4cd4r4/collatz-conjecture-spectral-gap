@@ -47,7 +47,7 @@ this file is `c`-uniform.
 
 Sorry-free.  Specialisation lemmas throughout, mutation table below, axiom audit `§6`.
 
-## MUTATIONS (6, all fail)
+## MUTATIONS (12, all fail)
 
 | # | mutation | result |
 |---|---|---|
@@ -57,10 +57,18 @@ Sorry-free.  Specialisation lemmas throughout, mutation table below, axiom audit
 | S4 | `rstarS_spec`: drop `1 ≤ k` | fails |
 | S5 | `TcountS_one`: shift `1` → shift `3` | fails |
 | S6 | `three_pow_totient`: exponent `2^(k-1)` → `2^k` | fails |
+| S7 | `cu_decompositionS`: `c % 2 = 1` → `c % 2 = 0` | fails |
+| S8 | `cu_decompositionS`: `v₂(3x+c) < K` → `≤ K` | fails |
+| S9 | `cu_valuation_frozenS`: frozen → shifted by one | fails |
+| S10 | `cu_syracuse_affineS`: exponent `K - v` → `K` | fails |
+| S11 | `cu_syracuse_fibre_cardS`: `2^(K-v)` → `2^K` | fails |
+| S12 | `cu_syracuse_fibre_cardS`: drop oddness of `x` | fails |
 
-S3 is the one that matters: `rstarS` would otherwise be a definition with no verified spec,
-and the formula was arrived at by Euler's theorem rather than derived here.  It was checked
-numerically first (255 of 255 `(k, c)` pairs, `k ≤ 12`) and only then proved.
+S3 and S8 are the ones that matter.  S3: `rstarS` would otherwise be a definition with no
+verified spec, and the formula came from Euler's theorem rather than being derived here — it was
+checked numerically first (255 of 255 `(k, c)` pairs, `k ≤ 12`) and only then proved.  S8: the
+strict inequality `v₂(3x+c) < K` is the whole content of coset uniformity; at `v = K` the
+valuation is no longer frozen and the fibre count collapses.
 -/
 
 import TransferOperator
@@ -135,6 +143,131 @@ theorem TkS_one (k : ℕ) : TkS 1 k = Tk k := rfl
 
 theorem TkS_nonneg (c k : ℕ) (u r : Fin (2 ^ (k - 1))) : 0 ≤ TkS c k u r := by
   unfold TkS; positivity
+
+/-!
+--------------------------------------------------------------------------------
+## §2b. Coset uniformity, for a general shift
+--------------------------------------------------------------------------------
+
+This is the engine `THEOREM.md` calls CU, and it is the shared foundation of Lemma A.  The
+originals in `GapCertificate.lean` are stated for `3x + 1`; the proofs below are the same
+arguments with `1` replaced by `c`, and they go through because the only property of the shift
+that is ever used is that `3x + c` is even for odd `x`.
+
+`CountingLemmas.cuMap` is already shift-free, which is why the counting half needs no
+generalisation at all.
+-/
+
+/-- **CU decomposition, general shift.** `3(x + m2^K) + c = 2^v (q₀ + 3m2^{K-v})` with the
+bracket odd, where `v = v₂(3x + c) < K`. -/
+theorem cu_decompositionS {c : ℕ} (hc : c % 2 = 1) (x m K : ℕ) (hx : x % 2 = 1)
+    (hK : v2 (3 * x + c) < K) :
+    3 * (x + m * 2 ^ K) + c =
+      2 ^ v2 (3 * x + c) *
+        ((3 * x + c) / 2 ^ v2 (3 * x + c) + 3 * m * 2 ^ (K - v2 (3 * x + c))) ∧
+    ((3 * x + c) / 2 ^ v2 (3 * x + c) + 3 * m * 2 ^ (K - v2 (3 * x + c))) % 2 = 1 := by
+  set v := v2 (3 * x + c) with hv
+  set q0 := (3 * x + c) / 2 ^ v with hq0
+  have hne : 3 * x + c ≠ 0 := by omega
+  have hdvd : 2 ^ v ∣ 3 * x + c := pow_v2_dvd _ hne
+  have hfac : 3 * x + c = 2 ^ v * q0 := (Nat.mul_div_cancel' hdvd).symm
+  have hpow : (2 : ℕ) ^ K = 2 ^ v * 2 ^ (K - v) := by
+    rw [← pow_add]; congr 1; omega
+  have hsplit : 3 * (x + m * 2 ^ K) + c = 2 ^ v * (q0 + 3 * m * 2 ^ (K - v)) := by
+    calc 3 * (x + m * 2 ^ K) + c
+        = (3 * x + c) + 3 * m * 2 ^ K := by ring
+      _ = 2 ^ v * q0 + 3 * m * (2 ^ v * 2 ^ (K - v)) := by rw [hfac, hpow]
+      _ = 2 ^ v * (q0 + 3 * m * 2 ^ (K - v)) := by ring
+  refine ⟨hsplit, ?_⟩
+  have hq0odd : q0 % 2 = 1 := oddPart_odd hne
+  have heven : (2 : ℕ) ∣ 3 * m * 2 ^ (K - v) :=
+    (dvd_pow_self 2 (by omega : K - v ≠ 0)).mul_left (3 * m)
+  omega
+
+/-- **CU, valuation frozen, general shift.** -/
+theorem cu_valuation_frozenS {c : ℕ} (hc : c % 2 = 1) (x m K : ℕ) (hx : x % 2 = 1)
+    (hK : v2 (3 * x + c) < K) :
+    v2 (3 * (x + m * 2 ^ K) + c) = v2 (3 * x + c) := by
+  obtain ⟨hsplit, hodd⟩ := cu_decompositionS hc x m K hx hK
+  rw [hsplit]
+  exact v2_two_pow_mul_odd _ _ hodd
+
+/-- **CU, the shifted Syracuse step is affine in the lift.** For odd `x` with
+`v₂(3x + c) < K`, `Syr_c(x + m2^K) = (3x+c)/2^v + 3m2^{K-v}`.
+
+This is the statement Lemma A is built on, and `c` appears in it only through `v` and `q₀`. -/
+theorem cu_syracuse_affineS {c : ℕ} (hc : c % 2 = 1) (x m K : ℕ) (hx : x % 2 = 1)
+    (hK : v2 (3 * x + c) < K) :
+    syracuseS c (x + m * 2 ^ K) =
+      (3 * x + c) / 2 ^ v2 (3 * x + c) + 3 * m * 2 ^ (K - v2 (3 * x + c)) := by
+  obtain ⟨hsplit, hodd⟩ := cu_decompositionS hc x m K hx hK
+  have hK1 : 1 ≤ K := by omega
+  have hlift_odd : (x + m * 2 ^ K) % 2 = 1 := by
+    have h2 : (2 : ℕ) ∣ m * 2 ^ K := (dvd_pow_self 2 (by omega : K ≠ 0)).mul_left m
+    omega
+  unfold syracuseS
+  rw [if_neg (by omega)]
+  show (3 * (x + m * 2 ^ K) + c) / 2 ^ v2 (3 * (x + m * 2 ^ K) + c) = _
+  rw [cu_valuation_frozenS hc x m K hx hK, hsplit,
+    Nat.mul_div_cancel_left _ (by positivity : (0:ℕ) < 2 ^ v2 (3 * x + c))]
+
+/-- **Specialisation check.**  At `c = 1` the shifted affine step is exactly
+`GapCertificate.cu_syracuse_affine`, so the generalisation changes nothing at the old shift.
+Stated as an equality of the two right-hand sides, discharged by `syracuseS_one`. -/
+theorem cu_syracuse_affineS_one (x m K : ℕ) (hx : x % 2 = 1) (hK : v2 (3 * x + 1) < K) :
+    syracuseS 1 (x + m * 2 ^ K) = syracuse (x + m * 2 ^ K) := by
+  rw [syracuseS_one]
+
+example (x m K : ℕ) (hx : x % 2 = 1) (hK : v2 (3 * x + 1) < K) :
+    syracuse (x + m * 2 ^ K)
+      = (3 * x + 1) / 2 ^ v2 (3 * x + 1) + 3 * m * 2 ^ (K - v2 (3 * x + 1)) := by
+  rw [← cu_syracuse_affineS_one x m K hx hK]
+  exact cu_syracuse_affineS (by norm_num) x m K hx hK
+
+/-- **THE CU FIBRE COUNT, general shift.**  For odd `x` with `v = v₂(3x + c) < K`, the lifts
+`m < 2^K` sharing a given shifted-Syracuse image mod `2^K` number exactly `2^{K-v}`.
+
+This is the counting form of coset uniformity and the direct input to Lemma A.  Note that
+`CountingLemmas.cu_fibre_card`, which does the actual counting, is shift-free — all the shift
+does is fix `v` and `q₀`. -/
+theorem cu_syracuse_fibre_cardS {c x K : ℕ} (hc : c % 2 = 1) (hx : x % 2 = 1)
+    (hK : v2 (3 * x + c) < K) (m0 : ℕ) :
+    ((range (2 ^ K)).filter
+        (fun m => syracuseS c (x + m * 2 ^ K) % 2 ^ K
+                    = syracuseS c (x + m0 * 2 ^ K) % 2 ^ K)).card
+      = 2 ^ (K - v2 (3 * x + c)) := by
+  set v := v2 (3 * x + c) with hv
+  set q0 := (3 * x + c) / 2 ^ v with hq0
+  have hcond : ∀ m, (syracuseS c (x + m * 2 ^ K) % 2 ^ K
+      = syracuseS c (x + m0 * 2 ^ K) % 2 ^ K) ↔ cuMap K v m = cuMap K v m0 := by
+    intro m
+    rw [cu_syracuse_affineS hc x m K hx hK, cu_syracuse_affineS hc x m0 K hx hK]
+    unfold cuMap
+    constructor
+    · intro h
+      have hmod : Nat.ModEq (2 ^ K) (q0 + 3 * m * 2 ^ (K - v)) (q0 + 3 * m0 * 2 ^ (K - v)) := h
+      have h2 : (3 * m * 2 ^ (K - v)) % 2 ^ K = (3 * m0 * 2 ^ (K - v)) % 2 ^ K :=
+        Nat.ModEq.add_left_cancel' q0 hmod
+      calc (3 * 2 ^ (K - v) * m) % 2 ^ K
+          = (3 * m * 2 ^ (K - v)) % 2 ^ K := by ring_nf
+        _ = (3 * m0 * 2 ^ (K - v)) % 2 ^ K := h2
+        _ = (3 * 2 ^ (K - v) * m0) % 2 ^ K := by ring_nf
+    · intro h
+      have h2 : (3 * m * 2 ^ (K - v)) % 2 ^ K = (3 * m0 * 2 ^ (K - v)) % 2 ^ K := by
+        calc (3 * m * 2 ^ (K - v)) % 2 ^ K
+            = (3 * 2 ^ (K - v) * m) % 2 ^ K := by ring_nf
+          _ = (3 * 2 ^ (K - v) * m0) % 2 ^ K := h
+          _ = (3 * m0 * 2 ^ (K - v)) % 2 ^ K := by ring_nf
+      exact Nat.ModEq.add_left q0 h2
+  have hrw : (range (2 ^ K)).filter
+      (fun m => syracuseS c (x + m * 2 ^ K) % 2 ^ K
+                  = syracuseS c (x + m0 * 2 ^ K) % 2 ^ K)
+      = (range (2 ^ K)).filter (fun m => cuMap K v m = cuMap K v m0) := by
+    apply filter_congr
+    intro m _
+    exact hcond m
+  rw [hrw]
+  exact cu_fibre_card (le_of_lt hK) m0
 
 /-!
 --------------------------------------------------------------------------------
@@ -226,6 +359,17 @@ certificate tree that is about the `3x−1` operator rather than about `3x+1`. -
 example {k n : ℕ} (hk : 1 ≤ k) (hn : n % 2 = 1) : syracuseS (2 ^ k - 1) n % 2 = 1 :=
   syracuseS_odd (sub_one_odd hk) hn
 
+/-- **Non-vacuity for `3x−1`.**  The fibre count holds for the shift the control experiment
+cares about, not merely for a hypothetical odd `c`. -/
+example {x K k : ℕ} (hk : 1 ≤ k) (hx : x % 2 = 1)
+    (hK : v2 (3 * x + (2 ^ k - 1)) < K) (m0 : ℕ) :
+    ((range (2 ^ K)).filter
+        (fun m => syracuseS (2 ^ k - 1) (x + m * 2 ^ K) % 2 ^ K
+                    = syracuseS (2 ^ k - 1) (x + m0 * 2 ^ K) % 2 ^ K)).card
+      = 2 ^ (K - v2 (3 * x + (2 ^ k - 1))) :=
+  cu_syracuse_fibre_cardS (sub_one_odd hk) hx hK m0
+
+
 /-!
 --------------------------------------------------------------------------------
 ## §5. Axiom audit
@@ -238,6 +382,11 @@ example {k n : ℕ} (hk : 1 ≤ k) (hn : n % 2 = 1) : syracuseS (2 ^ k - 1) n % 
 #print axioms TcountS_one
 #print axioms TkS_one
 #print axioms TkS_nonneg
+#print axioms cu_decompositionS
+#print axioms cu_valuation_frozenS
+#print axioms cu_syracuse_affineS
+#print axioms cu_syracuse_affineS_one
+#print axioms cu_syracuse_fibre_cardS
 #print axioms three_coprime_two_pow
 #print axioms three_pow_totient
 #print axioms rstarS_spec
