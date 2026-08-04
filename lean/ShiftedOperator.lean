@@ -26,7 +26,10 @@ Two things ARE finished, and the boundary between them and the rest is the point
 1. **Coset uniformity for a general odd shift** (§2b) — the engine Lemma A runs on, `c`-uniform.
 2. **Lemma B's `a = 3` case, complete and sorry-free** (§2c, 2026-08-05):
    `coll3_closed : coll3 k + 2 = 3 * 2 ^ k`.  `a = 3` was the one offset case a general odd
-   shift produces that `CollisionBound.lean` did not already cover.
+   shift produces that `CollisionBound.lean` did not already cover.  **Read the caveat at the
+   end of §2c before citing this**: it is a complete theorem about the `a = 3` AP model, and the
+   theorem tying that model to the actual `3x+c` defect fibre — the general-`c` analogue of
+   `CollisionBound.syracuse_defect_fibre` — is not proved here.
 
 Still open for general `c`: **Lemma A's clean block norms** (calibrated to `1e-14`, not proved)
 and the assembly.  Until both land, the `3x-1` control experiment remains a Python observation.
@@ -397,11 +400,27 @@ Every line above was verified numerically (`k = 1..13`) before being written dow
 `coll3` is computable and its `#eval`s reproduce the calibration values `4, 10, 22, 46, 94, 190`
 exactly, so the theorem is about the object the Python measured and not a convenient proxy.
 
-**What this does NOT mean.**  `a = 3` is *one of the three* offset cases, and it is the only one
-that was open — `CollisionBound.lean` covers the cases arising at `c = 1`.  Closing it does not
-give a certificate for general `c`: Lemma A's block norms for general `c` are still only
-calibrated (exactly `2^{-(b-a)/2}` to `1e-14`, every odd `c`, `k = 4..8`), not proved, and the
-assembly is not done.
+**What this does NOT mean, and the one gap to name precisely.**  `a = 3` is *one of the three*
+offset cases, and it is the only one that was open — `CollisionBound.lean` covers the cases
+arising at `c = 1`.  Closing it does not give a certificate for general `c`:
+
+* **`fibVal3` is not yet linked to the shifted Syracuse map by a theorem.**  At `c = 1`,
+  `CollisionBound.syracuse_defect_fibre` *proves* that the AP model `oddPart(a + 3m) mod 2^k` is
+  the true fibre of `syracuse` over the true `r*` — the model is a theorem there, not a
+  definition, and that is deliberate: it is the corpus's failure mode (2), the right-looking
+  theorem about the wrong object.  **The general-`c` analogue is not proved here.**  That the
+  offset `a = (3r* + c)/2^k` takes only the values `1, 2, 3` is a *calibration finding*
+  (`calibrate_lemmaB_shift.py`), not a Lean theorem.  Until the analogue of
+  `syracuse_defect_fibre` exists for `rstarS`, `coll3_closed` is a complete theorem about the
+  `a = 3` AP model, and the identification of that model with the `3x+c` defect fibre rests on
+  Python.
+* Lemma A's block norms for general `c` are still only calibrated (exactly `2^{-(b-a)/2}` to
+  `1e-14`, every odd `c`, `k = 4..8`), not proved.
+* The assembly is not done.
+
+`rstarS_spec` gives the ingredient the first bullet needs (`3·rstarS c k + c ≡ 0 mod 2^k`); what
+is missing is the valuation statement — which power of `2` exactly divides `3r* + c` — since it
+is that exponent, not the residue, that pins `a`.
 
 **This file still does not prove the `3x-1` certificate, and nothing in it should be cited as
 doing so.**
