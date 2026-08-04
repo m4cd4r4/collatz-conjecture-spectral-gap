@@ -47,7 +47,7 @@ this file is `c`-uniform.
 
 Sorry-free.  Specialisation lemmas throughout, mutation table below, axiom audit `§6`.
 
-## MUTATIONS (20, all fail)
+## MUTATIONS (25, all fail)
 
 | # | mutation | result |
 |---|---|---|
@@ -71,6 +71,20 @@ Sorry-free.  Specialisation lemmas throughout, mutation table below, axiom audit
 | S18 | `pair_count_closed`: recurrence `+ 3·2^j` → `+ 2·2^j` | fails |
 | S19 | `pair_count_closed`: conclusion `P k + 2` → `P k + 1` | fails |
 | S20 | `pair_count_closed`: drop `1 ≤ k` | fails |
+| S21 | `oddPart_injOn_block`: block `(N, 2N]` → `(N, 3N]` | fails |
+| S22 | `oddPart_injOn_block`: drop the lower bound `N < m` | fails |
+| S23a | `exists_shift_into_block`: strengthen `N <` to `2N <` | fails |
+| S23b | `exists_shift_into_block`: upper bound `2N` → `N` | fails |
+| S23c | `exists_shift_into_block`: drop `0 < q` | fails |
+| S24 | `exists_shift_into_block`: drop `q ≤ 2N` | fails |
+| S25 | `oddPart_factor`: drop `n ≠ 0` | fails |
+
+**A mutation-design note, recorded because it nearly passed as a result.**  The first version of
+S23 *weakened* the conclusion (`N < q·2^j` → `0 < q·2^j`) and of course SURVIVED — a correct
+proof of a stronger statement still proves a weaker one, so a conclusion-weakening mutation
+tests nothing.  It was replaced by S23a–c, which strengthen the conclusion and tighten the
+hypotheses instead.  **Mutations must make the statement harder or the hypotheses weaker, never
+the conclusion weaker.**
 
 S3 and S8 are the ones that matter.  S3: `rstarS` would otherwise be a definition with no
 verified spec, and the formula came from Euler's theorem rather than being derived here — it was
@@ -351,6 +365,90 @@ theorem oddPart_three_add {m : ℕ} :
   rw [h]
   exact oddPart_mul_odd (by norm_num) (by omega)
 
+/-!
+### The recurrence, by a dyadic-block bijection
+
+Expanding `Σ_q c_q^2` is not the way in.  Split `[1, 2^{k+1}]` as `A ∪ B` with `A = [1, 2^k]`
+and `B = (2^k, 2^{k+1}]`, and count the *new* same-odd-part pairs:
+
+```
+    A×B  =  2^k ,      B×A  =  2^k ,      B×B  =  2^k          (measured, k = 1..11)
+```
+
+all three blocks equal, giving `3·2^k` directly.  Every one of them follows from a single fact:
+
+> **`oddPart` is a bijection from the dyadic block `(N, 2N]` onto the odd numbers `≤ 2N`.**
+
+`B×B` is then the diagonal only, so it contributes `|B|`; and `A×B` contributes `1` per element
+of `A`, so it contributes `|A|`.  No fibre-size formula appears anywhere.
+
+The two halves of that fact are `oddPart_injOn_block` (injectivity — the block has ratio exactly
+`2`, so two shifts of one odd number cannot both land in it) and `exists_shift_into_block`
+(surjectivity — take the largest admissible shift).  Both are below.
+-/
+
+/-- `2 ^ v₂ n * oddPart n = n`. -/
+theorem oddPart_factor {n : ℕ} (hn : n ≠ 0) : 2 ^ v2 n * (n / 2 ^ v2 n) = n :=
+  Nat.mul_div_cancel' (pow_v2_dvd n hn)
+
+/-- **Injectivity on a dyadic block.**  Two elements of `(N, 2N]` with the same odd part are
+equal — the block has ratio exactly `2`, so it cannot contain both `q·2^i` and `q·2^j`. -/
+theorem oddPart_injOn_block {N m n : ℕ} (hm1 : N < m) (hm2 : m ≤ 2 * N)
+    (hn1 : N < n) (hn2 : n ≤ 2 * N) (h : m / 2 ^ v2 m = n / 2 ^ v2 n) : m = n := by
+  have hm0 : m ≠ 0 := by omega
+  have hn0 : n ≠ 0 := by omega
+  obtain ⟨q, hq⟩ : ∃ q, m / 2 ^ v2 m = q := ⟨_, rfl⟩
+  have hm : 2 ^ v2 m * q = m := by rw [← hq]; exact oddPart_factor hm0
+  have hn : 2 ^ v2 n * q = n := by rw [← hq, h]; exact oddPart_factor hn0
+  rcases Nat.le_total (v2 m) (v2 n) with hv | hv
+  · rcases Nat.eq_or_lt_of_le hv with he | hlt
+    · rw [← hm, ← hn, he]
+    · exfalso
+      have hp : (2 : ℕ) ^ (v2 m + 1) ≤ 2 ^ v2 n := Nat.pow_le_pow_right (by norm_num) hlt
+      have h2 : 2 * m ≤ n := by
+        calc 2 * m = 2 * (2 ^ v2 m * q) := by rw [hm]
+          _ = 2 ^ (v2 m + 1) * q := by rw [pow_succ]; ring
+          _ ≤ 2 ^ v2 n * q := Nat.mul_le_mul_right _ hp
+          _ = n := hn
+      omega
+  · rcases Nat.eq_or_lt_of_le hv with he | hlt
+    · rw [← hm, ← hn, he]
+    · exfalso
+      have hp : (2 : ℕ) ^ (v2 n + 1) ≤ 2 ^ v2 m := Nat.pow_le_pow_right (by norm_num) hlt
+      have h2 : 2 * n ≤ m := by
+        calc 2 * n = 2 * (2 ^ v2 n * q) := by rw [hn]
+          _ = 2 ^ (v2 n + 1) * q := by rw [pow_succ]; ring
+          _ ≤ 2 ^ v2 m * q := Nat.mul_le_mul_right _ hp
+          _ = m := hm
+      omega
+
+/-- **Surjectivity onto the odds below.**  Every `q` with `0 < q ≤ 2N` has a shift landing in
+the block `(N, 2N]`: take the largest `j` with `q·2^j ≤ 2N`. -/
+theorem exists_shift_into_block {N q : ℕ} (hN : 0 < N) (hq : 0 < q) (hqle : q ≤ 2 * N) :
+    ∃ j, N < q * 2 ^ j ∧ q * 2 ^ j ≤ 2 * N := by
+  classical
+  set S := (Finset.range (2 * N + 1)).filter (fun j => q * 2 ^ j ≤ 2 * N) with hS
+  have hne : S.Nonempty := by
+    refine ⟨0, Finset.mem_filter.mpr ⟨Finset.mem_range.mpr (by omega), ?_⟩⟩
+    simpa using hqle
+  obtain ⟨j, hjmem, hjmax⟩ := S.exists_max_image id hne
+  have hjf := Finset.mem_filter.mp hjmem
+  refine ⟨j, ?_, hjf.2⟩
+  by_contra hle
+  push_neg at hle
+  have hnext : q * 2 ^ (j + 1) ≤ 2 * N := by
+    calc q * 2 ^ (j + 1) = 2 * (q * 2 ^ j) := by ring
+      _ ≤ 2 * N := by omega
+  have hbound : j + 1 < 2 * N + 1 := by
+    have h1 : (2 : ℕ) ^ (j + 1) ≤ q * 2 ^ (j + 1) := Nat.le_mul_of_pos_left _ hq
+    have h2 : j + 1 < 2 ^ (j + 1) := Nat.lt_two_pow_self
+    omega
+  have hj1 : j + 1 ∈ S :=
+    Finset.mem_filter.mpr ⟨Finset.mem_range.mpr hbound, hnext⟩
+  have := hjmax (j + 1) hj1
+  simp only [id] at this
+  omega
+
 /-- **The telescoping step of the `a = 3` argument.**  Any `P` satisfying the pair-count
 recurrence `P(k+1) = P(k) + 3·2^k` with `P 1 = 4` is `3·2^k − 2`.
 
@@ -501,6 +599,9 @@ example {x K k : ℕ} (hk : 1 ≤ k) (hx : x % 2 = 1)
 #print axioms cu_syracuse_fibre_cardS
 #print axioms oddPart_mul_odd
 #print axioms oddPart_three_add
+#print axioms oddPart_factor
+#print axioms oddPart_injOn_block
+#print axioms exists_shift_into_block
 #print axioms pair_count_closed
 #print axioms three_coprime_two_pow
 #print axioms three_pow_totient
