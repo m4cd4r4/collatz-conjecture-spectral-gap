@@ -56,11 +56,12 @@ are $\cert(k) \approx 0.6345$ and $|\lambda_2| \approx 0.27$. The elementary cor
 machine-checked in Lean~4 (Mathlib, sorry-free).
 
 \textbf{What it measures.} The honest 2-adic kernel, conditioned on the full fibre rather than
-on a finite lift window, is nilpotent off its Perron eigenvalue, so the mixing of the averaged
-mod-$2^k$ dynamics is trivial. $T_k$ differs from it by a rank-one but \emph{not small} defect
-($\|T_k - K_k\|_1 \approx 0.4$), and the theorem is the statement that this large rank-one
-truncation defect cannot drive the spectrum to the unit circle at any scale --- a uniform
-stability statement for the finite-window approximation.
+on a finite lift window, is nilpotent off its Perron eigenvalue with index $\approx k$, so the
+mixing of the averaged mod-$2^k$ dynamics is trivial. $T_k$ differs from it by a rank-one defect
+of norm $\approx 0.75 \cdot 2^{-k/2}$, and the theorem is a uniform stability statement for that
+finite-window substitution. The constant proved is of the same order as the naive perturbative
+heuristic predicts ($0.8536$ against $2^{-1/2}$); the point is that the heuristic is not a proof
+for a family whose eigenvector condition number grows like $10^k$.
 
 \textbf{Scope.} This is a theorem about the Markov model, not about Collatz orbits. In
 particular it does \emph{not} rule out Collatz cycles: the analogous $3x{-}1$ operator passes the
@@ -610,34 +611,43 @@ $|\lambda_2(K_k)|$ computed with $2^{18}$ lifts is $\approx 10^{-2}$ and falls s
 fibre is resolved, consistent with $0$.)
 
 So \emph{the mixing of the averaged mod-$2^k$ Collatz dynamics is trivial}, and
-$\cert(k)$ is not measuring it. What $T_k$ differs from $K_k$ by is exactly the substitution of
-the finite lift window for the full fibre, and that difference is supported on one row:
+$\cert(k)$ is not measuring it. Moreover the nilpotency index is small: each Syracuse step
+deletes at least one low bit, so $(K_k - \mathbf{1}\pi^\top)^{\,d} = 0$ with $d \approx k$, not
+$d \approx 2^{k-1}$. Measured, the index is $k-1$ for $k = 4,\dots,7$.
 
+What $T_k$ differs from $K_k$ by is exactly the substitution of the finite lift window for the
+full fibre, and that difference is supported on the single row $r^\ast$, so it has rank one. It is
+also \emph{small in norm}, and shrinks:
 \[
-  \operatorname{rank}(T_k - K_k) = 1 \quad\text{for every } k,
-  \qquad \|T_k - K_k\|_1 \approx 0.25\text{--}0.50 .
+  \|T_k - K_k\|_2 \;\approx\; 0.75 \cdot 2^{-k/2} .
 \]
 
-Both verified for $k = 3, \dots, 8$. \textbf{The defect is rank one but it is not small}, and it
-does not shrink as $k$ grows. A rank-one perturbation of that size can in principle drag an
-eigenvalue to the unit circle and destroy mixing altogether.
+The naive perturbative heuristic for a nilpotent of index $d$ perturbed by $\varepsilon$ predicts
+eigenvalues of modulus $\varepsilon^{1/d}$. With $\varepsilon \approx c\,2^{-k/2}$ and
+$d \approx k$ that is $\varepsilon^{1/d} \to 2^{-1/2} = 0.7071$: a constant, bounded away from
+$1$. Measured, it climbs $0.58, 0.59, 0.63, 0.64, 0.65, 0.65$ for $k = 4,\dots,9$.
 
-\textbf{Theorem~\ref{thm:main} says that it does not, at any scale.} That is the honest content:
-replacing the full 2-adic fibre average by the finite lift window --- which is what every
-computation on the mod-$2^k$ Collatz chain actually does --- perturbs a nilpotent kernel into one
-whose sub-dominant spectrum still sits below $0.853553\ldots$, uniformly in $k$, with the true
-values near $0.27$. It is a \emph{uniform spectral stability statement for the finite-window
-approximation}, and its audience is anyone computing mod-$2^k$ Collatz statistics over a finite
-window and relying, usually silently, on that approximation not degenerating as the window
-refines.
+\textbf{So the honest positioning is this.} Theorem~\ref{thm:main} proves a constant of exactly
+the order the heuristic predicts --- $0.8536$ against a heuristic limit of $0.7071$, with the
+true values near $0.25$. \emph{It does not beat the heuristic, and we do not claim it does.} Its
+value is that the heuristic is not a proof, and for this family the gap between the two is not
+cosmetic: $T_k$ is strongly non-normal with eigenvector condition number growing like $10^k$, and
+this project's own earlier attempt to make a perturbative argument rigorous failed for precisely
+that reason (Section~\ref{sec:intro-history}, item (i)). The present proof is norm-based and
+condition-number-free, which is why it survives.
 
-\textbf{One limit, stated plainly: this is a statement about the spectrum, not about mixing
-times.} $T_k$ is markedly non-normal and its eigenvector condition number grows like $10^k$
-(Section~\ref{sec:intro-history}, item (i)), so $|\lambda_2| \le 0.8536$ does \emph{not} convert
-into a total-variation mixing bound uniform in $k$. Spectrum and mixing come apart for this
-family. Conflating them is precisely the error of the withdrawn March 2026 draft, and it is not
-repaired by the present proof --- only avoided, because the present proof never needs
-eigenvectors.
+The theorem is therefore best read as a \emph{uniform spectral stability result for the
+finite-window approximation}: replacing the full 2-adic fibre average by the window $[0,2^k)$ ---
+which is what every computation on this chain actually does --- cannot drive the sub-dominant
+spectrum to the unit circle at any scale. Anyone computing mod-$2^k$ Collatz statistics over a
+finite window relies on that, usually silently.
+
+\textbf{One limit, stated plainly: this is about the spectrum, not about mixing times.} By the
+same non-normality, $|\lambda_2| \le 0.8536$ does \emph{not} convert into a total-variation
+mixing bound uniform in $k$. Spectrum and mixing come apart for this family, and conflating them
+is the withdrawn March 2026 error.
+
+All numbers in this subsection are reproduced by \texttt{verify\_truncation\_reading.py}.
 
 It says nothing about individual deterministic orbits.
 

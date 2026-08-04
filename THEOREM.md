@@ -221,7 +221,7 @@ python audit_halfshift_s4.py      # CU, S4, and the Lemma A isometry to machine 
 `||mu|| <= envelope s 3 < 0.853554`. There is no hypothesis binder in that statement beyond
 `3 <= k` and the eigenvalue data itself.
 
-Seventeen files, 441 theorem/lemma declarations, all sorry-free on Mathlib v4.27.0, no
+Eighteen files, 449 theorem/lemma declarations, all sorry-free on Mathlib v4.27.0, no
 `native_decide`, and every `#print axioms` set a SUBSET of `{propext, Classical.choice,
 Quot.sound}` (checked as a subset, not by string-matching the triple - several declarations
 legitimately use fewer, and a naive grep flags those as violations):

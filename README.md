@@ -88,25 +88,33 @@ Bernstein-Lagarias conjugacy - not proved here. The numerics are consistent with
 [`verify_truncation_reading.py`](verify_truncation_reading.py).)
 
 **So what is `T_k`?** It is `K_k` with the full-fibre average replaced by the finite lift window
-`[0, 2^k)`. That substitution touches **exactly one row**:
+`[0, 2^k)`. That substitution touches exactly one row, so the defect has rank one - and it is
+**small in norm, and shrinking**:
 
 ```
-    rank(T_k - K_k) = 1        for every k
-    ||T_k - K_k||_1  ~ 0.25 - 0.50    and it does NOT shrink as k grows
+    ||T_k - K_k||_2  ~  0.75 * 2^(-k/2)
 ```
 
-Both checked for `k = 3..8`.
+The nilpotency index of `K_k` is also small: each Syracuse step deletes at least one low bit, so
+the index is about `k`, not `2^(k-1)`. Measured: exactly `k-1` for `k = 4..7`.
 
-**The defect is rank one, but it is not small.** A rank-one perturbation of that size can, in
-general, drag an eigenvalue onto the unit circle and destroy mixing completely. **The theorem is
-the statement that it never does, at any scale**: `|lambda_2(T_k)| <= 0.853553...` for every
-`k >= 3`, with the true values near `0.27`.
+**What the naive heuristic predicts, and what the theorem actually adds.** Perturbing a nilpotent
+of index `d` by `eps` generically gives eigenvalues of modulus `eps^(1/d)`. Here that is
+`(2^(-k/2))^(1/k) -> 2^(-1/2) = 0.7071` - a constant, bounded away from 1. Measured, it climbs
+`0.58, 0.59, 0.63, 0.64, 0.65, 0.65` for `k = 4..9`.
 
-So the honest description is: **a uniform spectral stability result for the finite-window
-approximation.** Anyone computing mod-`2^k` Collatz statistics over a finite window of lifts -
-which is essentially everyone who computes with this chain - is using `T_k` and not `K_k`, and is
-relying, usually silently, on that approximation not degenerating as the window refines. This is
-the theorem that says it doesn't.
+So the proven bound `0.853553...` is **the same order as the heuristic**, with true values near
+`0.25`. **The theorem does not beat the heuristic, and this repository does not claim it does.**
+
+Its value is that a heuristic is not a proof, and here the gap is not cosmetic: `T_k` is strongly
+non-normal with eigenvector condition number growing like `10^k`, and **this project's own
+earlier attempt to make a perturbative argument rigorous failed for exactly that reason** (the
+March 2026 draft, withdrawn). The current proof is norm-based and never touches eigenvectors,
+which is why it survives.
+
+Read it as a **uniform spectral stability result for the finite-window approximation**: swapping
+the full 2-adic fibre average for the window `[0,2^k)` - which is what every computation on this
+chain actually does - cannot drive the sub-dominant spectrum to the unit circle at any scale.
 
 **One limit, stated plainly.** This is about the *spectrum*, not about *mixing times*. `T_k` is
 strongly non-normal and its eigenvector condition number grows like `10^k`, so a bound on
@@ -201,7 +209,7 @@ part of) the Collatz conjecture.
 | Lemmas A, B + Coset-Uniformity foundation + row-sum assembly | **PROVEN** (all-`k`) |
 | Lemma C as *proved*: `g_b < sqrt(3/4) = 0.8660`, giving `cert <= 0.6826775358` | **PROVEN** (all-`k`) |
 | Lemma C in its *sharp* form `g_b <= 3/4`, giving `cert <= 0.6553300859` | **DATA** - machine-verified `k <= 26`, no proof |
-| Lean 4: the headline chain end-to-end, from `T_k`'s definition to `\|\|mu\|\| < 0.853554` | **Machine-checked, sorry-free, UNCONDITIONAL** (2026-08-03; 17 files, 441 decls, Mathlib v4.27.0) |
+| Lean 4: the headline chain end-to-end, from `T_k`'s definition to `\|\|mu\|\| < 0.853554` | **Machine-checked, sorry-free, UNCONDITIONAL** (2026-08-03; 18 files, 449 decls, Mathlib v4.27.0) |
 | Lean 4: Lemma C's sharpening (`0.6827` / `0.6553`); the non-degeneracy `gc != 0` | Paper-only - and neither is an input to the headline |
 | Paper write-up, 10 pp | **Done** - [`paper/syracuse_spectral_gap.pdf`](paper/syracuse_spectral_gap.pdf) |
 | Cycle elimination (`gap => no cycles`) | **Retracted, false** - [why](CYCLE_CLAIM_REFUTED.md) |
@@ -316,7 +324,7 @@ false ([CYCLE_CLAIM_REFUTED.md](CYCLE_CLAIM_REFUTED.md)). Ruling out non-trivial
 require an instrument sensitive to the deterministic orbit (e.g. linear-forms-in-logs / height bounds,
 as in classical cycle-length results), not this transfer-operator spectral gap.
 
-**The Lean formalisation of the gap is complete as of 2026-08-03.** Seventeen files, 441
+**The Lean formalisation of the gap is complete as of 2026-08-03.** Eighteen files, 449
 theorem/lemma declarations, sorry-free, no `native_decide`, every `#print axioms` set a subset of
 `{propext, Classical.choice, Quot.sound}`. The end of the chain is
 `GramIdentity.gap_certificate_unconditional`: for every `k >= 3`, every eigenvalue `mu != 1` of
@@ -389,7 +397,7 @@ python probe_cycle_recovery.py      # cycle-detector tests: spectrum/traces are 
 | `probe_cycle_link.py`, `probe_cycle_recovery.py` | the 3x+1 vs 3x-1 control + cycle-detector tests |
 | `paper/syracuse_spectral_gap.pdf` | **the paper** (10 pp): the theorem, all proofs, the Lean section, and the scope/retraction statement |
 | `THEOREM.md` | **the consolidated theorem**: full spectral reduction + assembly, `cert(k) <= 0.8536` from A + B alone |
-| `lean/` | **Lean 4 formalisation, complete and unconditional** - 17 files, 441 theorem/lemma declarations, sorry-free on Mathlib v4.27.0. `lake build` from `lean/`. Chain and file-by-file breakdown in [THEOREM.md](THEOREM.md). |
+| `lean/` | **Lean 4 formalisation, complete and unconditional** - 18 files, 449 theorem/lemma declarations, sorry-free on Mathlib v4.27.0. `lake build` from `lean/`. Chain and file-by-file breakdown in [THEOREM.md](THEOREM.md). |
 | `lean/GramIdentity.lean` | the end of the chain: the upper-block entry theorem, the Gram identity `B*B = 2^{-d} I`, (CLEAN), and `gap_certificate_unconditional` |
 | `lean/TransferOperator.lean` | `T_k` itself, defined from the lift window by `Tcount` - what the certificate is *about* |
 | `lean/GapCertificate.lean` | the elementary core (FACT 1, SB, CU, envelope, Cauchy-Schwarz assembly) |
