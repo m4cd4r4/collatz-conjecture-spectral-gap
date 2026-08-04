@@ -21,6 +21,16 @@ the chain (`CountingLemmas`, `CollisionBound`, `BlockVanishing`, `OperatorBlock`
 `ManifestInstance`) generalised too, which is a larger job.  **Do not cite this file as
 "the 3x-1 certificate is formalised".  It is not, yet.**
 
+Two things ARE finished, and the boundary between them and the rest is the point of this note:
+
+1. **Coset uniformity for a general odd shift** (§2b) — the engine Lemma A runs on, `c`-uniform.
+2. **Lemma B's `a = 3` case, complete and sorry-free** (§2c, 2026-08-05):
+   `coll3_closed : coll3 k + 2 = 3 * 2 ^ k`.  `a = 3` was the one offset case a general odd
+   shift produces that `CollisionBound.lean` did not already cover.
+
+Still open for general `c`: **Lemma A's clean block norms** (calibrated to `1e-14`, not proved)
+and the assembly.  Until both land, the `3x-1` control experiment remains a Python observation.
+
 ## THE CALIBRATION THAT JUSTIFIED STARTING
 
 Run before writing any of this (`calibrate_general_shift.py`, public repo).  Four gates, every
@@ -84,6 +94,33 @@ Sorry-free.  Specialisation lemmas throughout, mutation table below, axiom audit
 | S28 | `block_fibre_card`: block `Ioc N (2N)` → `Ioc N (3N)` | fails |
 | S29 | `block_fibre_card_lower`: `n ≤ N` → `n ≤ 3N` | fails |
 | S30 | `existsUnique_in_block`: drop `n ≠ 0` | fails |
+
+The `a = 3` closure, added 2026-08-05:
+
+| # | mutation | result |
+|---|---|---|
+| S31 | `pairCount_double`: recurrence `+ 3N` → `+ 2N` | fails |
+| S32 | `pairCount_two`: base `4` → `3` | fails |
+| S33 | `sameOddPartCount_lower_block`: `= N` → `= N + 1` | fails |
+| S34 | `sameOddPartCount_lower_block`: block `(N,2N]` → `(N,3N]` | fails |
+| S35 | `oddPart_lt_two_pow`: drop `1 ≤ k` | fails |
+| S36 | `oddPart_lt_two_pow`: conclusion `< 2^k` → `< 2^(k-1)` | fails |
+| S37 | `mul_three_mod_cancel`: cancel `2` instead of `3` | fails |
+| S38 | `fibVal3_eq_iff`: drop both range hypotheses | fails |
+| S39 | `coll3_closed`: margin `+ 2` → `+ 1` | fails |
+| S40 | `coll3_eq_pairCount`: `pairCount (2^k)` → `pairCount (2^k − 1)` | fails |
+| S41 | `coll3_closed`: drop `1 ≤ k` | fails — see the note |
+
+S34 and S37 are the ones that matter.  S34: the dyadic block having ratio *exactly* `2` is what
+makes the fibre a singleton; widening it to `(N,3N]` breaks the count at `N = 4`, `n = 3`
+(partners `6` and `12`).  S37: without coprimality the `×3` does not drop out, and `decide`
+refutes `Coprime 2 (2^k)` on the spot.
+
+**S41 is recorded honestly and is weaker than it looks.**  Dropping `1 ≤ k` makes the *proof*
+fail, but the *statement* happens to be true at `k = 0` as well (`coll3 0 = 1`, and
+`1 + 2 = 3 = 3·2^0`).  So S41 shows only that this proof route uses `hk`; it is not evidence
+that the hypothesis is necessary.  Left in the table labelled as such rather than deleted,
+because a mutation table that silently drops its weak entries overstates the rest.
 
 **A mutation-design note, recorded because it nearly passed as a result.**  The first version of
 S23 *weakened* the conclusion (`N < q·2^j` → `0 < q·2^j`) and of course SURVIVED — a correct
@@ -344,18 +381,29 @@ with `P(1) = 4`.  That telescopes straight to `P(k) + 2 = 3·2^k`.
 
 Every line above was verified numerically (`k = 1..13`) before being written down.
 
-**Formalised here:** reduction 1 (`oddPart_mul_odd`); the dyadic-block bijection in both
-directions (`oddPart_injOn_block`, `exists_shift_into_block`); the `∃!` bridge those combine to
-(`existsUnique_in_block`) and its `Finset` form, the singleton fibre (`block_fibre_card`, with
-the two specialisations that give the `A×B` and `B×B` counts); and the final telescoping
-(`pair_count_closed`).
+**The `a = 3` case is complete as of 2026-08-05**, end to end and sorry-free:
 
-**Not formalised:** reduction 2 (that `×3` drops out of the count mod `2^k`), the definition of
-the pair count itself as a `Finset` cardinality, and the summation of the three block counts
-into the recurrence.  So both ENDS of the `a = 3` argument are machine-checked and the
-structural core is too; what is missing is the bookkeeping that joins them.
+* reduction 1 — `oddPart_mul_odd`, `oddPart_three_add`;
+* reduction 2 — `mul_three_mod_cancel`, plus `oddPart_lt_two_pow` making the modulus vacuous;
+  together, `fibVal3_eq_iff`;
+* the pair count as a `Finset` cardinality — `sameOddPartCount`, `pairCount`;
+* the dyadic-block bijection and the singleton fibre — `oddPart_injOn_block`,
+  `exists_shift_into_block`, `existsUnique_in_block`, `block_fibre_card`;
+* the three block counts summed into the recurrence — `pairCount_double`;
+* the telescoping — `pair_count_closed`, `pairCount_pow_closed`;
+* the conclusion — **`coll3_closed : coll3 k + 2 = 3 * 2 ^ k`** for `k ≥ 1`, with `coll3_le` in
+  the form Lemma B consumes.
 
-**This file does not prove the `3x-1` certificate, and nothing in it should be cited as
+`coll3` is computable and its `#eval`s reproduce the calibration values `4, 10, 22, 46, 94, 190`
+exactly, so the theorem is about the object the Python measured and not a convenient proxy.
+
+**What this does NOT mean.**  `a = 3` is *one of the three* offset cases, and it is the only one
+that was open — `CollisionBound.lean` covers the cases arising at `c = 1`.  Closing it does not
+give a certificate for general `c`: Lemma A's block norms for general `c` are still only
+calibrated (exactly `2^{-(b-a)/2}` to `1e-14`, every odd `c`, `k = 4..8`), not proved, and the
+assembly is not done.
+
+**This file still does not prove the `3x-1` certificate, and nothing in it should be cited as
 doing so.**
 -/
 
@@ -561,6 +609,238 @@ example : (3 : ℕ) * 2 ^ 3 - 2 = 22 := by norm_num
 example : (3 : ℕ) * 2 ^ 6 - 2 = 190 := by norm_num
 
 /-!
+### The pair count itself, and the recurrence it satisfies
+
+The three block lemmas above are pointwise fibre statements; the count they are summed into is
+defined here.  `sameOddPartCount S T` is the number of *ordered* pairs in `S × T` with equal odd
+part, and the whole recurrence is three applications of the block lemmas plus one commutation.
+
+The recurrence `pairCount (2N) = pairCount N + 3N` is proved for **every** `N ≥ 1`, not only for
+powers of two — the dyadic block `(N, 2N]` never needed `N` to be a power of `2`.  Calibrated for
+`N = 1..399` before being stated.
+-/
+
+/-- **The ordered-pair count with equal odd parts**, over a product of two finite sets. -/
+def sameOddPartCount (S T : Finset ℕ) : ℕ :=
+  ((S ×ˢ T).filter (fun p => p.1 / 2 ^ v2 p.1 = p.2 / 2 ^ v2 p.2)).card
+
+/-- The pair count as a sum of fibre cardinalities — the form the block lemmas plug into. -/
+theorem sameOddPartCount_eq_sum (S T : Finset ℕ) :
+    sameOddPartCount S T
+      = ∑ a ∈ S, (T.filter (fun b => b / 2 ^ v2 b = a / 2 ^ v2 a)).card := by
+  classical
+  unfold sameOddPartCount
+  rw [Finset.card_filter, Finset.sum_product]
+  refine Finset.sum_congr rfl fun a _ => ?_
+  rw [Finset.card_filter]
+  exact Finset.sum_congr rfl fun b _ => by simp [eq_comm]
+
+/-- Equal-odd-part is symmetric, so the count is.  This is what gives `B×A` from `A×B` — there
+is no pointwise fibre statement for `B×A` (an element of `B` whose odd part exceeds `N` has *no*
+partner in `A`, and one whose odd part is small has several). -/
+theorem sameOddPartCount_comm (S T : Finset ℕ) :
+    sameOddPartCount S T = sameOddPartCount T S := by
+  classical
+  rw [sameOddPartCount_eq_sum, sameOddPartCount_eq_sum]
+  simp only [Finset.card_filter]
+  rw [Finset.sum_comm]
+  exact Finset.sum_congr rfl fun b _ => Finset.sum_congr rfl fun a _ => by simp [eq_comm]
+
+/-- Splitting the *first* argument along a disjoint union.  With `sameOddPartCount_comm` this is
+the only splitting lemma needed. -/
+theorem sameOddPartCount_union_left {S T : Finset ℕ} (U : Finset ℕ) (h : Disjoint S T) :
+    sameOddPartCount (S ∪ T) U = sameOddPartCount S U + sameOddPartCount T U := by
+  simp only [sameOddPartCount_eq_sum]
+  exact Finset.sum_union h
+
+/-- **The pair count `P(N)`**: ordered pairs in `[1,N]²` with equal odd part.  At `N = 2^k` this
+is exactly the `a = 3` collision count; see `coll3_eq_pairCount`. -/
+def pairCount (N : ℕ) : ℕ := sameOddPartCount (Finset.Icc 1 N) (Finset.Icc 1 N)
+
+theorem Icc_split_block (N : ℕ) :
+    Finset.Icc 1 (2 * N) = Finset.Icc 1 N ∪ Finset.Ioc N (2 * N) := by
+  ext x
+  simp only [Finset.mem_Icc, Finset.mem_union, Finset.mem_Ioc]
+  omega
+
+theorem Icc_disjoint_block (N : ℕ) : Disjoint (Finset.Icc 1 N) (Finset.Ioc N (2 * N)) := by
+  rw [Finset.disjoint_left]
+  intro a ha hb
+  simp only [Finset.mem_Icc] at ha
+  simp only [Finset.mem_Ioc] at hb
+  omega
+
+/-- **The `A×B` block has `|A| = N` pairs.**  Each `n ∈ [1,N]` has exactly one partner in the
+block `(N, 2N]` — `block_fibre_card_lower`, summed. -/
+theorem sameOddPartCount_lower_block {N : ℕ} (hN : 0 < N) :
+    sameOddPartCount (Finset.Icc 1 N) (Finset.Ioc N (2 * N)) = N := by
+  rw [sameOddPartCount_eq_sum,
+    Finset.sum_congr rfl (fun a ha => block_fibre_card_lower hN
+      (Finset.mem_Icc.mp ha).1 (Finset.mem_Icc.mp ha).2)]
+  simp
+
+/-- **The `B×B` block is the diagonal, `|B| = N` pairs.**  `block_fibre_card_self`, summed. -/
+theorem sameOddPartCount_block_block {N : ℕ} (hN : 0 < N) :
+    sameOddPartCount (Finset.Ioc N (2 * N)) (Finset.Ioc N (2 * N)) = N := by
+  rw [sameOddPartCount_eq_sum,
+    Finset.sum_congr rfl (fun a ha => block_fibre_card_self hN
+      (Finset.mem_Ioc.mp ha).1 (Finset.mem_Ioc.mp ha).2)]
+  simp
+  omega
+
+/-- **THE RECURRENCE.**  `P(2N) = P(N) + 3N` — the `A×B`, `B×A` and `B×B` blocks each contribute
+exactly `N`.  Holds for every `N ≥ 1`; nothing here needs `N` to be a power of two. -/
+theorem pairCount_double {N : ℕ} (hN : 0 < N) :
+    pairCount (2 * N) = pairCount N + 3 * N := by
+  classical
+  unfold pairCount
+  rw [Icc_split_block N, sameOddPartCount_union_left _ (Icc_disjoint_block N)]
+  rw [sameOddPartCount_comm (Finset.Icc 1 N) (Finset.Icc 1 N ∪ Finset.Ioc N (2 * N)),
+    sameOddPartCount_comm (Finset.Ioc N (2 * N)) (Finset.Icc 1 N ∪ Finset.Ioc N (2 * N)),
+    sameOddPartCount_union_left _ (Icc_disjoint_block N),
+    sameOddPartCount_union_left _ (Icc_disjoint_block N)]
+  rw [sameOddPartCount_comm (Finset.Ioc N (2 * N)) (Finset.Icc 1 N),
+    sameOddPartCount_lower_block hN, sameOddPartCount_block_block hN]
+  ring
+
+/-- The base case `P(2) = 4`: on `{1,2}` every ordered pair collides, both odd parts being `1`. -/
+theorem pairCount_two : pairCount 2 = 4 := by
+  classical
+  have hv1 : v2 1 = 0 := v2_odd_mod 1 (by norm_num)
+  have hv2 : v2 2 = 1 := by
+    have h := v2_two_pow_mul_odd 1 1 (by norm_num)
+    simpa using h
+  unfold pairCount sameOddPartCount
+  have hall : (Finset.Icc 1 2 ×ˢ Finset.Icc 1 2).filter
+      (fun p => p.1 / 2 ^ v2 p.1 = p.2 / 2 ^ v2 p.2) = Finset.Icc 1 2 ×ˢ Finset.Icc 1 2 := by
+    apply Finset.filter_true_of_mem
+    rintro ⟨a, b⟩ hp
+    simp only [Finset.mem_product, Finset.mem_Icc] at hp
+    obtain ⟨⟨ha1, ha2⟩, hb1, hb2⟩ := hp
+    interval_cases a <;> interval_cases b <;> simp [hv1, hv2]
+  rw [hall, Finset.card_product]
+  simp
+
+/-- **The closed form of the pair count at powers of two**: `P(2^k) + 2 = 3·2^k`.
+Base `pairCount_two`, step `pairCount_double`, telescoped by `pair_count_closed`. -/
+theorem pairCount_pow_closed {k : ℕ} (hk : 1 ≤ k) : pairCount (2 ^ k) + 2 = 3 * 2 ^ k := by
+  refine pair_count_closed (P := fun j => pairCount (2 ^ j)) ?_ ?_ k hk
+  · simpa using pairCount_two
+  · intro j _
+    show pairCount (2 ^ (j + 1)) = pairCount (2 ^ j) + 3 * 2 ^ j
+    have hp : (2 : ℕ) ^ (j + 1) = 2 * 2 ^ j := by rw [pow_succ]; ring
+    rw [hp, pairCount_double (Nat.two_pow_pos j)]
+
+/-!
+### Reduction 2: the `×3` drops out, and the `a = 3` collision count in closed form
+
+`fibVal3` is the `a = 3` fibre value, in exactly the shape `CollisionBound.fibVal` has at
+`a ∈ {1,2}`: the odd part of `a + 3m`, reduced mod `2^k`.  Two facts collapse it:
+
+* `oddPart (3 + 3m) = 3 · oddPart (m+1)` — `oddPart_three_add`, reduction 1;
+* `×3` is injective mod `2^k` — `mul_three_mod_cancel`, reduction 2;
+
+and then the modulus is vacuous, because the odd part of anything in `[1, 2^k]` is *strictly*
+below `2^k` (`oddPart_lt_two_pow`: it is odd and at most `2^k`, and `2^k` is even for `k ≥ 1`).
+So the shifted, moduled count is literally the shift-free, modulus-free `pairCount`.
+-/
+
+/-- The odd part of anything in `[1, 2^k]` is strictly below `2^k`, for `k ≥ 1` — so reducing an
+odd part mod `2^k` does nothing.  This is what makes the modulus vacuous. -/
+theorem oddPart_lt_two_pow {k n : ℕ} (hk : 1 ≤ k) (hn : n ≠ 0) (hle : n ≤ 2 ^ k) :
+    n / 2 ^ v2 n < 2 ^ k := by
+  have hq : (n / 2 ^ v2 n) % 2 = 1 := oddPart_odd hn
+  have h1 : n / 2 ^ v2 n ≤ 2 ^ k := le_trans (Nat.div_le_self _ _) hle
+  have h2 : (2 : ℕ) ^ k = 2 * 2 ^ (k - 1) := by rw [← pow_succ']; congr 1; omega
+  omega
+
+/-- **Reduction 2.**  Multiplication by `3` is injective mod `2^k`, so it drops out of the
+count.  The only arithmetic input is `gcd 3 (2^k) = 1`. -/
+theorem mul_three_mod_cancel {k x y : ℕ} (h : (3 * x) % 2 ^ k = (3 * y) % 2 ^ k) :
+    x % 2 ^ k = y % 2 ^ k := by
+  have hcop : Nat.Coprime 3 (2 ^ k) := Nat.Coprime.pow_right k (by decide)
+  exact Nat.ModEq.cancel_left_of_coprime hcop.symm h
+
+/-- **The `a = 3` fibre value**, in the same shape `CollisionBound.fibVal` has at `a ∈ {1,2}`:
+`Syr(r* + m·2^k) = oddPart (a + 3m) mod 2^k`. -/
+def fibVal3 (k m : ℕ) : ℕ := ((3 + 3 * m) / 2 ^ v2 (3 + 3 * m)) % 2 ^ k
+
+/-- **The collision pairs at `a = 3`**, in the same shape as `CollisionBound.collPairs`. -/
+def collPairs3 (k : ℕ) : Finset (ℕ × ℕ) :=
+  ((range (2 ^ k)) ×ˢ (range (2 ^ k))).filter (fun p => fibVal3 k p.1 = fibVal3 k p.2)
+
+/-- **`coll(k, 3)`** — the ordered collision count of the `a = 3` defect fibre. -/
+def coll3 (k : ℕ) : ℕ := (collPairs3 k).card
+
+/-- **Both reductions, in one step.**  Two lifts collide at `a = 3` iff `m+1` and `m'+1` have the
+same odd part — no shift, no modulus. -/
+theorem fibVal3_eq_iff {k m m' : ℕ} (hk : 1 ≤ k) (hm : m < 2 ^ k) (hm' : m' < 2 ^ k) :
+    fibVal3 k m = fibVal3 k m'
+      ↔ (m + 1) / 2 ^ v2 (m + 1) = (m' + 1) / 2 ^ v2 (m' + 1) := by
+  unfold fibVal3
+  rw [oddPart_three_add, oddPart_three_add]
+  constructor
+  · intro h
+    have hc := mul_three_mod_cancel h
+    rwa [Nat.mod_eq_of_lt (oddPart_lt_two_pow hk (by omega) (by omega)),
+      Nat.mod_eq_of_lt (oddPart_lt_two_pow hk (by omega) (by omega))] at hc
+  · intro h; rw [h]
+
+/-- **The `a = 3` collision count IS the shift-free pair count**, via `m ↦ m + 1`. -/
+theorem coll3_eq_pairCount {k : ℕ} (hk : 1 ≤ k) : coll3 k = pairCount (2 ^ k) := by
+  classical
+  have hinj : Function.Injective (fun p : ℕ × ℕ => (p.1 + 1, p.2 + 1)) := by
+    rintro ⟨a, b⟩ ⟨c, d⟩ h
+    simp only [Prod.mk.injEq] at h ⊢
+    omega
+  unfold coll3 collPairs3 pairCount sameOddPartCount
+  rw [← Finset.card_image_of_injective _ hinj]
+  congr 1
+  ext p
+  obtain ⟨x, y⟩ := p
+  simp only [Finset.mem_image, Finset.mem_filter, Finset.mem_product, Finset.mem_range,
+    Finset.mem_Icc, Prod.mk.injEq, Prod.exists]
+  constructor
+  · rintro ⟨a, b, ⟨⟨ha, hb⟩, hab⟩, rfl, rfl⟩
+    exact ⟨⟨⟨by omega, by omega⟩, by omega, by omega⟩, (fibVal3_eq_iff hk ha hb).mp hab⟩
+  · rintro ⟨⟨⟨hx1, hx2⟩, hy1, hy2⟩, hxy⟩
+    refine ⟨x - 1, y - 1, ⟨⟨by omega, by omega⟩, ?_⟩, by omega, by omega⟩
+    refine (fibVal3_eq_iff hk (by omega) (by omega)).mpr ?_
+    have hx : x - 1 + 1 = x := by omega
+    have hy : y - 1 + 1 = y := by omega
+    rw [hx, hy]
+    exact hxy
+
+/-- **THE `a = 3` CASE OF LEMMA B, CLOSED.**  `coll(k,3) + 2 = 3·2^k` — exactly, for every
+`k ≥ 1`.  The constant `3` is therefore **sharp** at `a = 3`: the margin is exactly `2` at every
+scale, and no later step may lean on slack that grows. -/
+theorem coll3_closed {k : ℕ} (hk : 1 ≤ k) : coll3 k + 2 = 3 * 2 ^ k := by
+  rw [coll3_eq_pairCount hk]
+  exact pairCount_pow_closed hk
+
+/-- The bound in the form Lemma B consumes. -/
+theorem coll3_le {k : ℕ} (hk : 1 ≤ k) : coll3 k ≤ 3 * 2 ^ k := by
+  have := coll3_closed hk
+  omega
+
+/-!
+**Satisfiability witnesses.**  `coll3` is computable, so these evaluate the very definition the
+theorem above is about — proof that it is not vacuous and not a convenient proxy.  The values are
+`3·2^k − 2` and match `calibrate_lemmaB_shift.py` exactly.  Deliberately `#eval` and not
+`theorem`: a `decide` on these would be a slow re-run of the same computation, not evidence.
+-/
+
+#eval coll3 1   -- 4    = 3·2 − 2
+#eval coll3 2   -- 10   = 3·4 − 2
+#eval coll3 3   -- 22   = 3·8 − 2
+#eval coll3 4   -- 46   = 3·16 − 2
+#eval coll3 5   -- 94   = 3·32 − 2
+#eval coll3 6   -- 190  = 3·64 − 2
+
+#eval pairCount 12   -- 32: the recurrence needs no power of two (P 24 = 32 + 36 = 68)
+#eval pairCount 24   -- 68
+
+/-!
 --------------------------------------------------------------------------------
 ## §3. The defect residue, for a general shift
 --------------------------------------------------------------------------------
@@ -689,6 +969,22 @@ example {x K k : ℕ} (hk : 1 ≤ k) (hx : x % 2 = 1)
 #print axioms block_fibre_card_self
 #print axioms block_fibre_card_lower
 #print axioms pair_count_closed
+#print axioms sameOddPartCount_eq_sum
+#print axioms sameOddPartCount_comm
+#print axioms sameOddPartCount_union_left
+#print axioms Icc_split_block
+#print axioms Icc_disjoint_block
+#print axioms sameOddPartCount_lower_block
+#print axioms sameOddPartCount_block_block
+#print axioms pairCount_double
+#print axioms pairCount_two
+#print axioms pairCount_pow_closed
+#print axioms oddPart_lt_two_pow
+#print axioms mul_three_mod_cancel
+#print axioms fibVal3_eq_iff
+#print axioms coll3_eq_pairCount
+#print axioms coll3_closed
+#print axioms coll3_le
 #print axioms three_coprime_two_pow
 #print axioms three_pow_totient
 #print axioms rstarS_spec
