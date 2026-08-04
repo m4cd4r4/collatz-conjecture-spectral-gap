@@ -47,7 +47,7 @@ this file is `c`-uniform.
 
 Sorry-free.  Specialisation lemmas throughout, mutation table below, axiom audit `§6`.
 
-## MUTATIONS (25, all fail)
+## MUTATIONS (30, all fail)
 
 | # | mutation | result |
 |---|---|---|
@@ -78,6 +78,12 @@ Sorry-free.  Specialisation lemmas throughout, mutation table below, axiom audit
 | S23c | `exists_shift_into_block`: drop `0 < q` | fails |
 | S24 | `exists_shift_into_block`: drop `q ≤ 2N` | fails |
 | S25 | `oddPart_factor`: drop `n ≠ 0` | fails |
+
+| S26 | `block_fibre_card`: singleton → `card = 2` | fails |
+| S27 | `block_fibre_card`: drop `oddPart n ≤ 2N` | fails |
+| S28 | `block_fibre_card`: block `Ioc N (2N)` → `Ioc N (3N)` | fails |
+| S29 | `block_fibre_card_lower`: `n ≤ N` → `n ≤ 3N` | fails |
+| S30 | `existsUnique_in_block`: drop `n ≠ 0` | fails |
 
 **A mutation-design note, recorded because it nearly passed as a result.**  The first version of
 S23 *weakened* the conclusion (`N < q·2^j` → `0 < q·2^j`) and of course SURVIVED — a correct
@@ -338,9 +344,19 @@ with `P(1) = 4`.  That telescopes straight to `P(k) + 2 = 3·2^k`.
 
 Every line above was verified numerically (`k = 1..13`) before being written down.
 
-**Formalised here:** reduction 1, and the final telescoping (`pair_count_closed`).
-**Not formalised:** reduction 2, the fibre count `c_q`, and the recurrence itself — i.e. the
-combinatorial middle.  Those are the remaining work for `a = 3`.
+**Formalised here:** reduction 1 (`oddPart_mul_odd`); the dyadic-block bijection in both
+directions (`oddPart_injOn_block`, `exists_shift_into_block`); the `∃!` bridge those combine to
+(`existsUnique_in_block`) and its `Finset` form, the singleton fibre (`block_fibre_card`, with
+the two specialisations that give the `A×B` and `B×B` counts); and the final telescoping
+(`pair_count_closed`).
+
+**Not formalised:** reduction 2 (that `×3` drops out of the count mod `2^k`), the definition of
+the pair count itself as a `Finset` cardinality, and the summation of the three block counts
+into the recurrence.  So both ENDS of the `a = 3` argument are machine-checked and the
+structural core is too; what is missing is the bookkeeping that joins them.
+
+**This file does not prove the `3x-1` certificate, and nothing in it should be cited as
+doing so.**
 -/
 
 /-- **An odd multiplier passes through the odd part.**  For odd `d` and `n ≠ 0`,
@@ -448,6 +464,71 @@ theorem exists_shift_into_block {N q : ℕ} (hN : 0 < N) (hq : 0 < q) (hqle : q 
   have := hjmax (j + 1) hj1
   simp only [id] at this
   omega
+
+/-- The odd part of `2^j * q` is `q`, for odd `q`. -/
+theorem oddPart_two_pow_mul {q j : ℕ} (hq : q % 2 = 1) :
+    (2 ^ j * q) / 2 ^ v2 (2 ^ j * q) = q := by
+  rw [v2_two_pow_mul_odd j q hq]
+  exact Nat.mul_div_cancel_left q (Nat.two_pow_pos j)
+
+/-- **THE BRIDGE.**  Every positive `n` whose odd part is at most `2N` has *exactly one*
+partner in the dyadic block `(N, 2N]` sharing its odd part.
+
+This single statement gives both block counts the recurrence needs: applied to `n` in `A` it says
+each element of `A` has exactly one partner in `B`, so the `A×B` block has `|A|` pairs; applied
+to `n \in B` it says the only partner of `n` in `B` is `n` itself, so `B×B` is the diagonal and
+has `|B|` pairs. -/
+theorem existsUnique_in_block {N n : ℕ} (hN : 0 < N) (hn : n ≠ 0)
+    (hle : n / 2 ^ v2 n ≤ 2 * N) :
+    ∃! n', (N < n' ∧ n' ≤ 2 * N) ∧ n' / 2 ^ v2 n' = n / 2 ^ v2 n := by
+  have hq : (n / 2 ^ v2 n) % 2 = 1 := oddPart_odd hn
+  have hqpos : 0 < n / 2 ^ v2 n :=
+    Nat.pos_of_ne_zero (by intro hz; rw [hz] at hq; simp at hq)
+  obtain ⟨j, hj1, hj2⟩ := exists_shift_into_block hN hqpos hle
+  refine ⟨(n / 2 ^ v2 n) * 2 ^ j, ⟨⟨hj1, hj2⟩, ?_⟩, ?_⟩
+  · rw [mul_comm]; exact oddPart_two_pow_mul hq
+  · rintro y ⟨⟨hy1, hy2⟩, hy3⟩
+    refine oddPart_injOn_block hy1 hy2 hj1 hj2 ?_
+    rw [hy3, mul_comm, oddPart_two_pow_mul hq]
+
+/-- **The block fibre is a singleton.**  The `Finset` form of `existsUnique_in_block`, and the
+statement the two block counts are summed from.
+
+For any positive `n` whose odd part is at most `2N`, exactly one element of the dyadic block
+`(N, 2N]` shares its odd part. -/
+theorem block_fibre_card {N n : ℕ} (hN : 0 < N) (hn : n ≠ 0)
+    (hle : n / 2 ^ v2 n ≤ 2 * N) :
+    ((Finset.Ioc N (2 * N)).filter
+        (fun b => b / 2 ^ v2 b = n / 2 ^ v2 n)).card = 1 := by
+  classical
+  obtain ⟨b, hb, huniq⟩ := existsUnique_in_block hN hn hle
+  rw [Finset.card_eq_one]
+  refine ⟨b, ?_⟩
+  ext x
+  simp only [Finset.mem_filter, Finset.mem_Ioc, Finset.mem_singleton]
+  constructor
+  · rintro ⟨⟨hx1, hx2⟩, hx3⟩
+    exact huniq x ⟨⟨hx1, hx2⟩, hx3⟩
+  · rintro rfl
+    exact ⟨⟨hb.1.1, hb.1.2⟩, hb.2⟩
+
+/-- **The `B×B` block is the diagonal.**  Specialising `block_fibre_card` to `n` already in the
+block: its only partner there is itself.  Summed over the block this gives `|B|` pairs. -/
+theorem block_fibre_card_self {N n : ℕ} (hN : 0 < N) (hn1 : N < n) (hn2 : n ≤ 2 * N) :
+    ((Finset.Ioc N (2 * N)).filter
+        (fun b => b / 2 ^ v2 b = n / 2 ^ v2 n)).card = 1 := by
+  refine block_fibre_card hN (by omega) ?_
+  calc n / 2 ^ v2 n ≤ n := Nat.div_le_self _ _
+    _ ≤ 2 * N := hn2
+
+/-- **The `A×B` fibre.**  Every `n` in `[1, N]` has exactly one partner in the block, because
+its odd part is at most `n ≤ N ≤ 2N`.  Summed over `[1, N]` this gives `|A|` pairs. -/
+theorem block_fibre_card_lower {N n : ℕ} (hN : 0 < N) (hn1 : 1 ≤ n) (hn2 : n ≤ N) :
+    ((Finset.Ioc N (2 * N)).filter
+        (fun b => b / 2 ^ v2 b = n / 2 ^ v2 n)).card = 1 := by
+  refine block_fibre_card hN (by omega) ?_
+  calc n / 2 ^ v2 n ≤ n := Nat.div_le_self _ _
+    _ ≤ 2 * N := by omega
 
 /-- **The telescoping step of the `a = 3` argument.**  Any `P` satisfying the pair-count
 recurrence `P(k+1) = P(k) + 3·2^k` with `P 1 = 4` is `3·2^k − 2`.
@@ -602,6 +683,11 @@ example {x K k : ℕ} (hk : 1 ≤ k) (hx : x % 2 = 1)
 #print axioms oddPart_factor
 #print axioms oddPart_injOn_block
 #print axioms exists_shift_into_block
+#print axioms oddPart_two_pow_mul
+#print axioms existsUnique_in_block
+#print axioms block_fibre_card
+#print axioms block_fibre_card_self
+#print axioms block_fibre_card_lower
 #print axioms pair_count_closed
 #print axioms three_coprime_two_pow
 #print axioms three_pow_totient
