@@ -21,7 +21,7 @@ the chain (`CountingLemmas`, `CollisionBound`, `BlockVanishing`, `OperatorBlock`
 `ManifestInstance`) generalised too, which is a larger job.  **Do not cite this file as
 "the 3x-1 certificate is formalised".  It is not, yet.**
 
-Two things ARE finished, and the boundary between them and the rest is the point of this note:
+Four things ARE finished, and the boundary between them and the rest is the point of this note:
 
 1. **Coset uniformity for a general odd shift** (§2b) — the engine Lemma A runs on, `c`-uniform.
 2. **Lemma B's `a = 3` case, complete and sorry-free** (§2c, 2026-08-05):
@@ -31,8 +31,19 @@ Two things ARE finished, and the boundary between them and the rest is the point
    theorem tying that model to the actual `3x+c` defect fibre — the general-`c` analogue of
    `CollisionBound.syracuse_defect_fibre` — is not proved here.
 
-Still open for general `c`: **Lemma A's clean block norms** (calibrated to `1e-14`, not proved)
-and the assembly.  Until both land, the `3x-1` control experiment remains a Python observation.
+3. **Lemma SB for a general odd shift** (§2e, 2026-08-05): `sbS_bijective`.
+4. **Lemma A's shifted ENTRY theorem** (§5–§7, 2026-08-05): `upper_entry_eqS`, with the shifted
+   clean operator `UcleanS` and the shifted character pairing `inner_chiVec_UendS`.  In the
+   upper regime the shifted clean entry is
+   `w^{ξuc} · Sodd (resJ k η ξ u d) (k − d)`, `d = b − a` — the **same `Sodd`, the same
+   `resJ`, the same `alphaJ`** as `c = 1`, with the shift confined to a unimodular prefactor.
+   **Read the boundary in §7 before citing this**: it is the entry theorem, NOT the block
+   norms.  The substitution of it through `Bent_eq_zero_of_not_owned`, `norm_Bent_of_owned`,
+   `gram_upper`, `norm_sq_clean_block`, `norm_clean_block_le` and `clean_bound` is not done.
+
+Still open for general `c`: **Lemma A's clean block norms** (calibrated to `1e-14`; the entry
+theorem they are derived from is now proved, the derivation itself is not) and the assembly.
+Until both land, the `3x-1` control experiment remains a Python observation.
 
 ## THE CALIBRATION THAT JUSTIFIED STARTING
 
@@ -65,9 +76,9 @@ is specific to the shift `1`.  For general `c` the defect residue is the solutio
 `3r + c ≡ 0 (mod 2^k)`, given here as `rstarS c k` via the inverse of `3`.  Everything else in
 this file is `c`-uniform.
 
-Sorry-free.  Specialisation lemmas throughout, mutation table below, axiom audit `§6`.
+Sorry-free.  Specialisation lemmas throughout, mutation table below, axiom audit `§8`.
 
-## MUTATIONS (30, all fail)
+## MUTATIONS (67, all fail)
 
 | # | mutation | result |
 |---|---|---|
@@ -161,9 +172,59 @@ verified spec, and the formula came from Euler's theorem rather than being deriv
 checked numerically first (255 of 255 `(k, c)` pairs, `k ≤ 12`) and only then proved.  S8: the
 strict inequality `v₂(3x+c) < K` is the whole content of coset uniformity; at `v = K` the
 valuation is no longer frozen and the fibre count collapses.
+
+Lemma A's shifted entry theorem, added 2026-08-05 (§5, §6, §7).  All 18 fail:
+
+| # | mutation | result |
+|---|---|---|
+| S48 | `TcountS_even_zero`: parity gate `u % 2 = 0` → `u % 2 = 1` | fails |
+| S49 | `sum_targetsS`: target reindex `od s` → `2s` (even targets) | fails |
+| S50 | `inner_chiVec_UendS`: normalisation `(2^{k-1})⁻¹` → `(2^k)⁻¹` | fails |
+| S51 | `inner_chiVec_UendS`: pairing `(η,ξ)` → `(ξ,η)` | fails |
+| S52 | `shell_character_sumS`: **phase `w^{ξuc}` → `w^{ξu}`** (the `c = 1` phase) | fails |
+| S53 | `shell_character_sumS`: `Sodd` range `k−j` → `k−j+1` | fails |
+| S54 | `shell_character_sumS`: hypothesis weakened `1 ≤ j` → `0 ≤ j` | fails |
+| S55 | `shell_character_sumS`: periodicity weakened `2^j ∣ alpha_j` → `2^0 ∣ alpha_j` | fails |
+| S56 | `phase_congrS`: **constant `ξ·u·c` → `ξ·u`** | fails |
+| S57 | `gauss_collapseS`: CU hypothesis weakened `v₂ < k` → `v₂ ≤ k` | fails |
+| S58 | `gauss_collapseS`: Gauss gate `2^v ∣ η` → `2^{v+1} ∣ η` | fails |
+| S59 | `cleanEntryS_eq_masked`: mask `maskedOddsS c k b` → `maskedOddsS c k (b+1)` | fails |
+| S60 | `upper_entry_eqS`: surviving shell `d = b−a` → `b−a+1` | fails |
+| S61 | `upper_entry_eqS`: **phase `w^{ξuc}` → `w^{ξu}`** | fails |
+| S62 | `upper_entry_eqS`: regime weakened `a < b` → `a ≤ b` | fails |
+| S63 | `cleanOddsS_eq_erase`: erase `rstarS c k` → `rstarS c (k+1)` | fails |
+| S64 | `defectSetS_eq_singleton`: level weakened `1 ≤ k` → `0 ≤ k` | fails |
+| S65 | `oddsS_partition`: shell range `Icc 1 (k−1)` → `Icc 1 (k−2)` | fails |
+| S66 | `UcleanS`: **drop the transpose** (propagated to `UcleanS_apply`, `_clean_row`) | fails |
+| S67 | `UcleanS`: zeroed row `idx (rstarS c k)` → `+ 1` (propagated to all three) | fails |
+
+**S52, S56 and S61 are the ones that matter, and they are the reason this section is not
+cosmetic.**  All three delete the shift from the phase, i.e. assert that the shifted shell sum
+carries the *same* prefactor `w^{ξu}` as `c = 1`.  S52 and S56 fail inside `ring` — the phase
+congruence `η·q − ξ·r ≡ alphaJ·q + ξ·u·c` genuinely does not close without the `c`.  So the
+constant `ξ·u·c` is load-bearing arithmetic, not decoration, and the claim these sections rest
+on ("only the constant changes; `alphaJ` does not") is checked in both directions: S52/S56/S61
+show the constant *must* change, and `shell_character_sumS_one` shows it degenerates correctly
+at `c = 1`.
+
+S54, S55, S57, S62 and S64 are the hypothesis-weakening half: `1 ≤ j`, `2^j ∣ alpha_j`,
+`v₂ < k`, `a < b` and `1 ≤ k` are each shown to be used, not decorative.
+
+**S66 and S67 are the orientation trap**, the one that shipped a defect in this corpus before:
+the transpose itself, and which index is zeroed.  They cannot be tested from a scratch file —
+that file imports the real definition — so they were applied to this file in place and the
+whole tree rebuilt on each.
+
+**Both had to be propagated to be worth anything.**  Applied to the definition alone, each
+fails one line later at `UcleanS_apply`, which is a `rfl` restatement of the definition and
+therefore detects nothing but itself.  Propagated through `UcleanS_apply`, `UcleanS_defect_row`
+and `UcleanS_clean_row`, they fail where it counts: inside `inner_chiVec_UendS` (S66 at the
+`show`, S67 at the application of `sum_fin_cleanS`), and at `UcleanS_one`, the `c = 1`
+specialisation check.  The unpropagated runs are recorded here rather than dropped, because
+"the mutation failed" was true of them too and it meant nothing.
 -/
 
-import TransferOperator
+import GramIdentity
 
 set_option autoImplicit false
 
@@ -1244,7 +1305,701 @@ example {x K k : ℕ} (hk : 1 ≤ k) (hx : x % 2 = 1)
 
 /-!
 --------------------------------------------------------------------------------
-## §5. Axiom audit
+## §5. The shifted clean operator  (Lemma A at a general shift, brief step 1)
+--------------------------------------------------------------------------------
+
+`OperatorBlock.Uclean` is `(TkC k)ᵀ` with the row `idx (rstar k)` zeroed.  The shifted
+analogue needs three ingredients, and only the third is not immediate:
+
+* a complexified shifted matrix — `TkSC`;
+* the defect index, `idx (rstarS c k)`.  §3's `rstarS_spec` already proves that `rstarS c k`
+  solves `3r + c ≡ 0 (mod 2^k)`, which is what makes it the right row to zero;
+* the identification of the shifted shell union with *"every odd residue but `rstarS c k`"*
+  (`cleanOddsS_eq_erase`).  At `c = 1` `OperatorBlock` gets this from
+  `CountingLemmas.odds_partition` and `defect_card`; both are re-proved here for a general odd
+  shift.  Both proofs are the `c = 1` arguments with `1` replaced by `c`, and they go through
+  for the same reason everything else in this file does: the only property of the shift ever
+  used is that `3r + c` is even for odd `r`.
+
+**Numbering.**  The brief calls this material "§2f".  It is numbered §5 instead because it
+consumes `rstarS`, which is §3 — it cannot sit before its own input.
+
+**Scope, unchanged from §4.**  `c : ℕ`, so nothing here is about `3x − 1`.
+-/
+
+section CleanShifted
+
+open LemmaA CharacterBasis BlockVanishing OperatorBlock CollisionBound
+
+/-- The shifted defect set: odd `r < 2^k` with `2^k ∣ 3r + c`.  Mirror of
+`CountingLemmas.defectSet`, and note the same INEQUALITY `k ≤ v₂` rather than an equality. -/
+def defectSetS (c k : ℕ) : Finset ℕ :=
+  (range (2 ^ k)).filter (fun r => 0 < r ∧ r % 2 = 1 ∧ k ≤ v2 (3 * r + c))
+
+/-- At `c = 1` the shifted defect set is `CountingLemmas.defectSet`. -/
+theorem defectSetS_one (k : ℕ) : defectSetS 1 k = defectSet k := rfl
+
+/-- `k ≤ v₂(3r+c)` is exactly `(3r+c) ≡ 0 (mod 2^k)`.  Stated in divisibility form on the
+right-hand side, per the project's standing rule about `v₂`. -/
+theorem defectS_iff {c k r : ℕ} (hc : c % 2 = 1) :
+    k ≤ v2 (3 * r + c) ↔ (3 * r + c) % 2 ^ k = 0 := by
+  have hne : 3 * r + c ≠ 0 := by omega
+  constructor
+  · intro h
+    obtain ⟨d, hd⟩ := (padicValNat_dvd_iff_le hne).2 h
+    rw [hd, Nat.mul_mod_right]
+  · intro h
+    exact (padicValNat_dvd_iff_le hne).1 (Nat.dvd_of_mod_eq_zero h)
+
+/-- `rstarS c k` is a residue mod `2^k`, by construction. -/
+theorem rstarS_lt {c k : ℕ} : rstarS c k < 2 ^ k := Nat.mod_lt _ (Nat.two_pow_pos k)
+
+/-- `rstarS c k` is odd — forced by `3r + c ≡ 0` with `c` odd, not assumed. -/
+theorem rstarS_odd {c k : ℕ} (hc : c % 2 = 1) (hk : 1 ≤ k) : rstarS c k % 2 = 1 := by
+  have h := rstarS_spec (c := c) (k := k) hk
+  have h2 : (2 : ℕ) ∣ 2 ^ k := dvd_pow_self 2 (by omega)
+  have hmm := Nat.mod_mod_of_dvd (3 * rstarS c k + c) h2
+  rw [h, Nat.zero_mod] at hmm
+  omega
+
+theorem rstarS_mem_defectSetS {c k : ℕ} (hc : c % 2 = 1) (hk : 1 ≤ k) :
+    rstarS c k ∈ defectSetS c k := by
+  have hodd := rstarS_odd hc hk
+  rw [defectSetS, mem_filter, mem_range]
+  exact ⟨rstarS_lt, by omega, hodd, (defectS_iff hc).2 (rstarS_spec hk)⟩
+
+/-- **The shifted defect set is the singleton `{rstarS c k}`.**  Existence is `rstarS_spec`;
+uniqueness is `mul_three_mod_cancel` (the coprimality of `3` with `2^k`), and the shift
+cancels before that argument starts — exactly as it does in `sbS_injOn`. -/
+theorem defectSetS_eq_singleton {c k : ℕ} (hc : c % 2 = 1) (hk : 1 ≤ k) :
+    defectSetS c k = {rstarS c k} := by
+  refine Finset.eq_singleton_iff_unique_mem.2 ⟨rstarS_mem_defectSetS hc hk, ?_⟩
+  intro r hr
+  rw [defectSetS, mem_filter, mem_range] at hr
+  have h1 : (3 * r + c) % 2 ^ k = 0 := (defectS_iff hc).1 hr.2.2.2
+  have h2 : (3 * rstarS c k + c) % 2 ^ k = 0 := rstarS_spec hk
+  have hme : Nat.ModEq (2 ^ k) (3 * r + c) (3 * rstarS c k + c) := by
+    unfold Nat.ModEq; rw [h1, h2]
+  have h4 := mul_three_mod_cancel (Nat.ModEq.add_right_cancel' c hme)
+  rwa [Nat.mod_eq_of_lt hr.1, Nat.mod_eq_of_lt rstarS_lt] at h4
+
+/-- At `c = 1` the two defect residues agree.  They are *not* definitionally equal —
+`CollisionBound.rstar` is the repunit closed form `(2^{ek k} − 1)/3` and `rstarS` is written
+with an explicit inverse of `3` — so this is a theorem, proved by uniqueness. -/
+theorem rstarS_one {k : ℕ} (hk : 1 ≤ k) : rstarS 1 k = rstar k := by
+  have h : rstarS 1 k ∈ defectSet k := by
+    rw [← defectSetS_one]; exact rstarS_mem_defectSetS (by norm_num) hk
+  rw [defectSet_eq_singleton hk, mem_singleton] at h
+  exact h
+
+/-- **Every odd `r < 2^k` lies in exactly one shifted shell, or is `rstarS c k`.**  Mirror of
+`CountingLemmas.odds_partition`; the `1 ≤ v₂(3r+c)` step is where the oddness of `c` is used. -/
+theorem oddsS_partition {c k : ℕ} (hc : c % 2 = 1) (hk : 1 ≤ k) :
+    oddResidues k = ((Icc 1 (k - 1)).biUnion (shellS c k)) ∪ defectSetS c k := by
+  ext r
+  constructor
+  · intro hr
+    simp only [oddResidues, mem_filter, mem_range] at hr
+    obtain ⟨hrk, hodd⟩ := hr
+    have hne : 3 * r + c ≠ 0 := by omega
+    rw [mem_union]
+    by_cases hcase : k ≤ v2 (3 * r + c)
+    · right
+      simp only [defectSetS, mem_filter, mem_range]
+      exact ⟨hrk, by omega, hodd, hcase⟩
+    · left
+      push_neg at hcase
+      have hj1 : 1 ≤ v2 (3 * r + c) := by
+        by_contra hcon
+        push_neg at hcon
+        have hz : v2 (3 * r + c) = 0 := by omega
+        have h0 := ((v2_eq_iff_dvd hne).1 hz).2
+        rw [zero_add, pow_one] at h0
+        exact h0 (by omega)
+      rw [mem_biUnion]
+      refine ⟨v2 (3 * r + c), by rw [mem_Icc]; omega, ?_⟩
+      simp only [shellS, mem_filter, mem_range]
+      exact ⟨hrk, by omega, hodd, trivial⟩
+  · intro hr
+    rw [mem_union] at hr
+    simp only [oddResidues, mem_filter, mem_range]
+    rcases hr with h | h
+    · rw [mem_biUnion] at h
+      obtain ⟨j, _, hmem⟩ := h
+      simp only [shellS, mem_filter, mem_range] at hmem
+      exact ⟨hmem.1, hmem.2.2.1⟩
+    · simp only [defectSetS, mem_filter, mem_range] at h
+      exact ⟨h.1, h.2.2.1⟩
+
+/-- **The shifted clean sources ARE the odd residues minus `rstarS c k`.**  This is the
+statement that makes `idx (rstarS c k)` the correct row to zero, rather than a plausible one. -/
+theorem cleanOddsS_eq_erase {c k : ℕ} (hc : c % 2 = 1) (hk : 1 ≤ k) :
+    (Icc 1 (k - 1)).biUnion (shellS c k) = (oddResidues k).erase (rstarS c k) := by
+  ext r
+  constructor
+  · intro h
+    have hmem : r ∈ oddResidues k := by
+      rw [oddsS_partition hc hk]; exact mem_union_left _ h
+    refine mem_erase.2 ⟨?_, hmem⟩
+    rw [mem_biUnion] at h
+    obtain ⟨j, hj, hrj⟩ := h
+    rw [mem_Icc] at hj
+    simp only [shellS, mem_filter, mem_range] at hrj
+    intro hcon
+    subst hcon
+    have hdvd : (2 : ℕ) ^ k ∣ 3 * rstarS c k + c := Nat.dvd_of_mod_eq_zero (rstarS_spec hk)
+    have hne : 3 * rstarS c k + c ≠ 0 := by omega
+    exact ((v2_eq_iff_dvd hne).1 hrj.2.2.2).2
+      (dvd_trans (pow_dvd_pow 2 (by omega)) hdvd)
+  · intro h
+    rw [mem_erase] at h
+    have h2 := h.2
+    rw [oddsS_partition hc hk, mem_union] at h2
+    rcases h2 with h1 | h2
+    · exact h1
+    · rw [defectSetS_eq_singleton hc hk, mem_singleton] at h2
+      exact absurd h2 h.1
+
+/-- `T_k^{(c)}` complexified. -/
+noncomputable def TkSC (c k : ℕ) : Matrix (Fin (2 ^ (k - 1))) (Fin (2 ^ (k - 1))) ℂ :=
+  fun u r => (TcountS c k (od u) (od r) : ℂ) / 2 ^ k
+
+theorem TkSC_one (k : ℕ) : TkSC 1 k = TkC k := rfl
+
+/-- **The shifted `U_clean`**: the transpose of `T_k^{(c)}` with the defect row removed.
+The orientation — transpose, and the `r*` row rather than the `r*` column — is the one
+`OperatorBlock` §0.1 checks numerically at `c = 1`; it is inherited here, not re-derived. -/
+noncomputable def UcleanS (c k : ℕ) : Matrix (Fin (2 ^ (k - 1))) (Fin (2 ^ (k - 1))) ℂ :=
+  fun r u => if (r : ℕ) = idx (rstarS c k) then 0 else Matrix.transpose (TkSC c k) r u
+
+theorem UcleanS_apply (c k : ℕ) (r u : Fin (2 ^ (k - 1))) :
+    UcleanS c k r u = if (r : ℕ) = idx (rstarS c k) then 0 else TkSC c k u r := rfl
+
+/-- The zeroed row is exactly the row `rstarS_spec` identifies. -/
+theorem UcleanS_defect_row (c k : ℕ) {r : Fin (2 ^ (k - 1))} (hr : (r : ℕ) = idx (rstarS c k))
+    (u : Fin (2 ^ (k - 1))) : UcleanS c k r u = 0 := by
+  rw [UcleanS_apply, if_pos hr]
+
+/-- Off the defect row, the shifted `U_clean` is the transpose of `T_k^{(c)}`. -/
+theorem UcleanS_clean_row (c k : ℕ) {r : Fin (2 ^ (k - 1))} (hr : (r : ℕ) ≠ idx (rstarS c k))
+    (u : Fin (2 ^ (k - 1))) : UcleanS c k r u = TkSC c k u r := by
+  rw [UcleanS_apply, if_neg hr]
+
+/-- **Specialisation check.**  At `c = 1` the shifted clean operator is `OperatorBlock.Uclean`.
+Not `rfl`: it needs `rstarS_one`, since the two closed forms for `r*` differ. -/
+theorem UcleanS_one {k : ℕ} (hk : 1 ≤ k) : UcleanS 1 k = Uclean k := by
+  funext r u
+  rw [UcleanS_apply, Uclean_apply, rstarS_one hk]
+  rfl
+
+/-- The shifted `U_clean` as an endomorphism of `ℓ²`. -/
+noncomputable def UendS (c k : ℕ) : Module.End ℂ (EuclideanSpace ℂ (Fin (2 ^ (k - 1)))) :=
+  Matrix.toEuclideanLin (UcleanS c k)
+
+@[simp] theorem UendS_apply (c k : ℕ) (x : EuclideanSpace ℂ (Fin (2 ^ (k - 1))))
+    (r : Fin (2 ^ (k - 1))) : (UendS c k x) r = ∑ u, UcleanS c k r u * x u := rfl
+
+/-- `od s = rstarS c k` exactly when `s` is the shifted defect index. -/
+theorem od_eq_rstarS_iff {c k : ℕ} (hc : c % 2 = 1) (hk : 1 ≤ k) (s : Fin (2 ^ (k - 1))) :
+    od (s : ℕ) = rstarS c k ↔ (s : ℕ) = idx (rstarS c k) := by
+  constructor
+  · intro h
+    have hid : idx (od (s : ℕ)) = idx (rstarS c k) := by rw [h]
+    rwa [show idx (od (s : ℕ)) = (s : ℕ) by unfold od idx; omega] at hid
+  · intro h
+    rw [h, od_idx (rstarS_odd hc hk)]
+
+/-- A sum over `Fin (2^(k-1))` with the shifted defect index killed IS a sum over the shifted
+clean sources.  This is where `cleanOddsS_eq_erase` is consumed. -/
+theorem sum_fin_cleanS {c k : ℕ} (hc : c % 2 = 1) (hk : 1 ≤ k) (F : ℕ → ℂ) :
+    ∑ s : Fin (2 ^ (k - 1)), (if (s : ℕ) = idx (rstarS c k) then (0 : ℂ) else F (od (s : ℕ)))
+      = ∑ r ∈ (Icc 1 (k - 1)).biUnion (shellS c k), F r := by
+  have hstep : ∀ s : Fin (2 ^ (k - 1)),
+      (if (s : ℕ) = idx (rstarS c k) then (0 : ℂ) else F (od (s : ℕ)))
+        = (if od (s : ℕ) = rstarS c k then (0 : ℂ) else F (od (s : ℕ))) := by
+    intro s
+    by_cases h : (s : ℕ) = idx (rstarS c k)
+    · rw [if_pos h, if_pos ((od_eq_rstarS_iff hc hk s).2 h)]
+    · rw [if_neg h, if_neg (fun hcon => h ((od_eq_rstarS_iff hc hk s).1 hcon))]
+  have key : ∑ s : Fin (2 ^ (k - 1)),
+        (if od (s : ℕ) = rstarS c k then (0 : ℂ) else F (od (s : ℕ)))
+      = ∑ r ∈ oddResidues k, (if r = rstarS c k then (0 : ℂ) else F r) :=
+    sum_fin_od hk (fun r => if r = rstarS c k then (0 : ℂ) else F r)
+  rw [Finset.sum_congr rfl (fun s _ => hstep s), key, cleanOddsS_eq_erase hc hk]
+  rw [← Finset.sum_subset (Finset.erase_subset (rstarS c k) (oddResidues k))
+    (fun x hx hnx => by
+      have hxr : x = rstarS c k := by
+        by_contra hcon
+        exact hnx (mem_erase.2 ⟨hcon, hx⟩)
+      rw [if_pos hxr])]
+  exact Finset.sum_congr rfl (fun x hx => if_neg (mem_erase.1 hx).1)
+
+end CleanShifted
+
+/-!
+**Satisfiability witnesses for §5.**  `rstarS` and `defectSetS` are computable.  The defect
+set is a singleton at every shift, and its element is `rstarS` — the content of
+`defectSetS_eq_singleton`, evaluated here rather than only asserted.  `#eval`, not `decide`:
+`v2` is `padicValNat`, which the kernel does not reduce.
+-/
+
+#eval (defectSetS 1 6).card              -- 1
+#eval (defectSetS 5 6).card              -- 1
+#eval (defectSetS 63 6).card             -- 1
+#eval decide (defectSetS 5 6 = {rstarS 5 6})   -- true
+#eval decide (rstarS 1 6 = CollisionBound.rstar 6)   -- true
+#eval decide (rstarS 1 6 = rstarS 5 6)         -- false: the defect row MOVES with the shift
+
+-- the clean sources are 2^{k-1} - 1 of the 2^{k-1} odd residues, at every shift
+#eval ((Finset.Icc 1 5).biUnion (shellS 7 6)).card   -- 31 = 2^5 - 1
+
+/-!
+--------------------------------------------------------------------------------
+## §6. The shifted character pairing  (brief step 2)
+--------------------------------------------------------------------------------
+
+`OperatorBlock.inner_chiVec_Uend` says the matrix element of `U_clean` between two characters
+is `cleanEntry` divided by `N = 2^{k-1}`.  This section is that statement at a general odd
+shift, and the `c = 1` proof transfers line for line: it uses the shift only through
+
+* `syracuse_odd` — here `syracuseS_odd`, which holds for **every** odd `c` (§1); and
+* the clean-source index set — here `sum_fin_cleanS` (§5).
+
+Nothing about `3x + 1` enters.  The two `1/√N` of `chiVec` compose to the `1/N`, exactly as
+at `c = 1`.
+-/
+
+section PairingShifted
+
+open LemmaA CharacterBasis BlockVanishing OperatorBlock CollisionBound
+
+/-- Even targets are unreachable from an odd source, at any odd shift.  This is the arithmetic
+twin of the orientation trap: if `Syr_c` did not preserve oddness the target index would leave
+range and `sum_targetsS` would be false. -/
+theorem TcountS_even_zero {c k u r : ℕ} (hc : c % 2 = 1) (hk : 1 ≤ k) (hr : r % 2 = 1)
+    (hu : u % 2 = 0) : TcountS c k u r = 0 := by
+  unfold TcountS
+  rw [Finset.card_eq_zero, Finset.filter_eq_empty_iff]
+  intro m _ hcon
+  have h2 : (2 : ℕ) ∣ 2 ^ k := dvd_pow_self 2 (by omega)
+  have hodd : syracuseS c (r + m * 2 ^ k) % 2 ^ k % 2 = 1 := by
+    rw [Nat.mod_mod_of_dvd _ h2]
+    exact syracuseS_odd hc (lift_odd hk hr)
+  rw [hcon] at hodd
+  omega
+
+/-- The shifted target sum over `range (2^k)` collapses to the odd targets. -/
+theorem sum_targetsS {c k : ℕ} (hc : c % 2 = 1) (hk : 1 ≤ k) {r : ℕ} (hr : r % 2 = 1)
+    (g : ℕ → ℂ) :
+    ∑ u ∈ range (2 ^ k), (TcountS c k u r : ℂ) * g u
+      = ∑ s : Fin (2 ^ (k - 1)), (TcountS c k (od (s : ℕ)) r : ℂ) * g (od (s : ℕ)) := by
+  have key : ∑ s : Fin (2 ^ (k - 1)), (TcountS c k (od (s : ℕ)) r : ℂ) * g (od (s : ℕ))
+      = ∑ u ∈ oddResidues k, (TcountS c k u r : ℂ) * g u :=
+    sum_fin_od hk (fun u => (TcountS c k u r : ℂ) * g u)
+  rw [key]
+  refine (Finset.sum_subset (fun x hx => by
+    simp only [oddResidues, mem_filter] at hx; exact hx.1) ?_).symm
+  intro x hx hnx
+  have hx2 : x % 2 ≠ 1 := by
+    intro h
+    exact hnx (by
+      simp only [oddResidues, mem_filter, mem_range]
+      exact ⟨mem_range.1 hx, h⟩)
+  rw [TcountS_even_zero hc hk hr (by omega), Nat.cast_zero, zero_mul]
+
+/-- **The shifted clean character-basis entry**, built from `TcountS` alone.  Mirror of
+`BlockVanishing.cleanEntry`, with the shifted shells as the source index set. -/
+noncomputable def cleanEntryS (c k η : ℕ) (ξ : ℤ) : ℂ :=
+  ∑ r ∈ (Icc 1 (k - 1)).biUnion (shellS c k),
+    (((2 : ℂ) ^ k)⁻¹ * ∑ u ∈ range (2 ^ k), (TcountS c k u r : ℂ) * w k ^ (η * u))
+      * wz k (-(ξ * (r : ℤ)))
+
+/-- At `c = 1` the shifted clean entry is `BlockVanishing.cleanEntry`. -/
+theorem cleanEntryS_one (k η : ℕ) (ξ : ℤ) : cleanEntryS 1 k η ξ = cleanEntry k η ξ := rfl
+
+/-- **THE SHIFTED NORMALISATION.**  The matrix element of the shifted `U_clean` between two
+characters is `cleanEntryS`, divided by `N = 2^{k-1}`. -/
+theorem inner_chiVec_UendS {c k : ℕ} (hc : c % 2 = 1) (hk : 1 ≤ k) (ξ η : Fin (2 ^ (k - 1))) :
+    (@inner ℂ _ _ (chiVec k ξ) (UendS c k (chiVec k η)) : ℂ)
+      = (((2 ^ (k - 1) : ℕ) : ℂ))⁻¹ * cleanEntryS c k (η : ℕ) ((ξ : ℕ) : ℤ) := by
+  have hpow : ((2 : ℂ) ^ k) ≠ 0 := pow_ne_zero k two_ne_zero
+  set F : ℕ → ℂ := fun r =>
+    (((2 : ℂ) ^ k)⁻¹ * ∑ u ∈ range (2 ^ k), (TcountS c k u r : ℂ) * w k ^ ((η : ℕ) * u))
+      * wz k (-(((ξ : ℕ) : ℤ) * (r : ℤ))) with hF
+  have hpt : ∀ s : Fin (2 ^ (k - 1)),
+      (inner ℂ ((chiVec k ξ).ofLp s) ((UendS c k (chiVec k η)).ofLp s) : ℂ)
+        = (((2 ^ (k - 1) : ℕ) : ℂ))⁻¹
+            * (if (s : ℕ) = idx (rstarS c k) then (0 : ℂ) else F (od (s : ℕ))) := by
+    intro s
+    rw [RCLike.inner_apply]
+    show (UendS c k (chiVec k η)) s * (starRingEnd ℂ) (chi k (ξ : ℕ) (s : ℕ) / (rt k : ℂ)) = _
+    rw [map_div₀, Complex.conj_ofReal, chi, conj_w_pow]
+    by_cases hs : (s : ℕ) = idx (rstarS c k)
+    · rw [if_pos hs]
+      have hz : (UendS c k (chiVec k η)) s = 0 := by
+        rw [UendS_apply]
+        exact Finset.sum_eq_zero fun u _ => by rw [UcleanS_defect_row c k hs u, zero_mul]
+      rw [hz, zero_mul, mul_zero]
+    · rw [if_neg hs]
+      have hval : (UendS c k (chiVec k η)) s
+          = (rt k : ℂ)⁻¹ * (((2 : ℂ) ^ k)⁻¹
+              * ∑ u ∈ range (2 ^ k), (TcountS c k u (od (s : ℕ)) : ℂ)
+                  * w k ^ ((η : ℕ) * u)) := by
+        rw [UendS_apply]
+        rw [sum_targetsS hc hk (od_odd s) (fun u => w k ^ ((η : ℕ) * u))]
+        rw [Finset.mul_sum, Finset.mul_sum]
+        refine Finset.sum_congr rfl fun u _ => ?_
+        rw [UcleanS_clean_row c k hs u]
+        show (TcountS c k (od (u : ℕ)) (od (s : ℕ)) : ℂ) / 2 ^ k
+            * (chi k (η : ℕ) (u : ℕ) / (rt k : ℂ)) = _
+        rw [chi]
+        field_simp
+      rw [hval, hF]
+      rw [show -(((ξ : ℕ) * od (s : ℕ) : ℕ) : ℤ) = -(((ξ : ℕ) : ℤ) * ((od (s : ℕ) : ℕ) : ℤ)) by
+        push_cast; ring]
+      have hrt : ((2 ^ (k - 1) : ℕ) : ℂ)⁻¹ = (rt k : ℂ)⁻¹ * (rt k : ℂ)⁻¹ := by
+        rw [← mul_inv, rt_mul_rt]
+      rw [hrt]
+      ring
+  rw [PiLp.inner_apply, Fintype.sum_congr _ _ hpt, ← Finset.mul_sum,
+    sum_fin_cleanS hc hk F, cleanEntryS, hF]
+
+end PairingShifted
+
+/-!
+--------------------------------------------------------------------------------
+## §7. The shifted entry theorem  (brief step 3 — the only new mathematics)
+--------------------------------------------------------------------------------
+
+### What is actually new, and what is not
+
+`BRIEF_LEMMA_A_GENERAL_SHIFT.md` §0 establishes, **by measurement before any Lean was
+written** (`calibrate_lemmaA_shift_structure.py`, H1/H2), that the shift enters the clean
+operator only as a per-entry phase: the support of the clean block is the same set for every
+odd `c`, and the entrywise moduli agree to `1.5e-14`.  That is why this section is one entry
+theorem rather than a five-file refactor.
+
+The arithmetic content is a single line.  On the shifted shell `3r + c = 2^j q`, so with
+`u = 3⁻¹ (mod 2^k)` we have `r ≡ u(2^j q − c)`, and
+
+```
+    η·q − ξ·r  ≡  (η − ξ·u·2^j)·q + ξ·u·c  =  alphaJ η ξ u j · q + ξ·u·c   (mod 2^k)
+```
+
+**`alphaJ` is identical to the `c = 1` case — it never mentions the shift.**  Only the
+constant changes: `ξ·u` at `c = 1` becomes `ξ·u·c`.  Since the downstream Gram argument
+consumes the first factor only through `‖wz‖ = 1` (`GramIdentity.norm_wz`) and the second
+through `alphaJ`, everything above this theorem transfers unchanged.  That is brief step 4,
+and it is not done here.
+
+### The wrong turn this section does NOT take
+
+Hypothesis **H3** — that the ratio `B_c / B_1` is a *column* phase, which would have made the
+whole generalisation a two-line diagonal-unitary conjugation — is **measured false**, by a
+deviation of `~2.0`, i.e. as wrong as it can be.  The norm invariance comes from disjoint
+support (H1), not from a factorisation.  Do not try to rescue H3.
+
+### Scope
+
+`c : ℕ`.  Nothing in this section is about `3x − 1`; see §4's correction.
+-/
+
+section EntryShifted
+
+open LemmaA CharacterBasis BlockVanishing OperatorBlock CollisionBound GramIdentity
+
+/-- On a shifted shell, `Syr_c(r)` is the exact quotient `(3r+c)/2^j`. -/
+theorem syracuseS_on_shellS {c k j r : ℕ} (hj : 1 ≤ j) (hr : r ∈ shellS c k j) :
+    syracuseS c r = (3 * r + c) / 2 ^ j := by
+  simp only [shellS, mem_filter] at hr
+  have hodd : r % 2 = 1 := hr.2.2.1
+  unfold syracuseS
+  rw [if_neg (by omega)]
+  simp only [hr.2.2.2]
+
+/-- **Lemma SB, as a change of summation variable at a general shift.**  This is where
+`sbS_bijective` (§2e, brief step 0) is consumed. -/
+theorem shellS_reindex {c k j : ℕ} (hc : c % 2 = 1) (hj : 1 ≤ j) (hjk : j + 1 ≤ k) (α : ℕ) :
+    ∑ r ∈ shellS c k j, w k ^ (α * sbMapS c k j r) = Sodd k α (k - j) := by
+  rw [Sodd_eq_oddResidues, ← sbS_image_eq hc hj hjk, Finset.sum_image (sbS_injOn hc hj hjk)]
+
+/-- **The shifted phase identity**, mod `2^k`: `η·q − ξ·r ≡ alphaJ η ξ u j · q + ξ·u·c`.
+
+Stated on its own because it is the whole arithmetic content of this section, and because it
+makes visible the claim the brief turns on: **`alphaJ` is the `c = 1` `alphaJ`.**  The shift
+appears only in the additive constant `ξ·u·c`. -/
+theorem phase_congrS {c k j r : ℕ} (hc : c % 2 = 1) (hj : 1 ≤ j) (hr : r ∈ shellS c k j)
+    {η ξ u : ℤ} (hu : (2 : ℤ) ^ k ∣ 3 * u - 1) :
+    (2 : ℤ) ^ k ∣
+      (alphaJ η ξ u j * (((3 * r + c) / 2 ^ j : ℕ) : ℤ) + ξ * u * (c : ℤ))
+        - (η * (((3 * r + c) / 2 ^ j : ℕ) : ℤ) - ξ * (r : ℤ)) := by
+  obtain ⟨hq, _⟩ := shellS_oddpart hc hj hr
+  obtain ⟨t, ht⟩ := hu
+  have hqz : (2 : ℤ) ^ j * (((3 * r + c) / 2 ^ j : ℕ) : ℤ) = 3 * (r : ℤ) + (c : ℤ) := by
+    exact_mod_cast congrArg (Nat.cast : ℕ → ℤ) hq.symm
+  refine ⟨-(ξ * (r : ℤ) * t), ?_⟩
+  unfold alphaJ
+  linear_combination (-(ξ * u)) * hqz + (-(ξ * (r : ℤ))) * ht
+
+/-- **S1 AT A GENERAL ODD SHIFT, ONE SHELL.**  The shell-`j` character sum is exactly
+`w^{ξuc} · Sodd(alpha_j, k−j)`.
+
+Compare `BlockVanishing.shell_character_sum`, which is this statement at `c = 1` with the
+phase `w^{ξu}`.  The `Sodd` factor and its argument `alphaJ η ξ u j` are **identical**; the
+shift lives entirely in the unimodular prefactor.  That is the fact brief step 4 will consume,
+and the reason it needs no new mathematics.
+
+`α : ℕ` is any representative of `alpha_j` mod `2^k`; `hvj` is the `2^j ∣ alpha_j`
+prerequisite without which the shell sum does not reduce to a `Sodd` at all. -/
+theorem shell_character_sumS {c k j : ℕ} (hc : c % 2 = 1) (hj : 1 ≤ j) (hjk : j + 1 ≤ k)
+    {η ξ u : ℤ} (hu : (2 : ℤ) ^ k ∣ 3 * u - 1)
+    {α : ℕ} (hres : (2 : ℤ) ^ k ∣ (α : ℤ) - alphaJ η ξ u j)
+    (hvj : (2 : ℤ) ^ j ∣ alphaJ η ξ u j) :
+    ∑ r ∈ shellS c k j, wz k (η * ((syracuseS c r : ℕ) : ℤ) - ξ * (r : ℤ))
+      = wz k (ξ * u * (c : ℤ)) * Sodd k α (k - j) := by
+  have hαj : (2 : ℤ) ^ j ∣ (α : ℤ) := by
+    obtain ⟨d, hd⟩ := hres
+    obtain ⟨e, he⟩ := hvj
+    exact ⟨e + 2 ^ (k - j) * d, by
+      have hsplit : (2 : ℤ) ^ k = 2 ^ j * 2 ^ (k - j) := by
+        rw [← pow_add]; congr 1; omega
+      have hα : (α : ℤ) = alphaJ η ξ u j + 2 ^ k * d := by linarith
+      rw [hα, he, hsplit]; ring⟩
+  have hterm : ∀ r ∈ shellS c k j,
+      wz k (η * ((syracuseS c r : ℕ) : ℤ) - ξ * (r : ℤ))
+        = wz k (ξ * u * (c : ℤ)) * w k ^ (α * sbMapS c k j r) := by
+    intro r hr
+    have h1 : wz k (η * ((syracuseS c r : ℕ) : ℤ) - ξ * (r : ℤ))
+        = wz k ((α : ℤ) * (((3 * r + c) / 2 ^ j : ℕ) : ℤ)) * wz k (ξ * u * (c : ℤ)) := by
+      rw [syracuseS_on_shellS hj hr, ← wz_add]
+      obtain ⟨d, hd⟩ := hres
+      obtain ⟨t, ht⟩ := hu
+      obtain ⟨hq, _⟩ := shellS_oddpart hc hj hr
+      have hqz : (2 : ℤ) ^ j * (((3 * r + c) / 2 ^ j : ℕ) : ℤ) = 3 * (r : ℤ) + (c : ℤ) := by
+        exact_mod_cast congrArg (Nat.cast : ℕ → ℤ) hq.symm
+      unfold alphaJ at hd
+      refine wz_congr ⟨ξ * (r : ℤ) * t - d * (((3 * r + c) / 2 ^ j : ℕ) : ℤ), ?_⟩
+      linear_combination (-(((3 * r + c) / 2 ^ j : ℕ) : ℤ)) * hd + (ξ * u) * hqz
+        + (ξ * (r : ℤ)) * ht
+    have h2 : wz k ((α : ℤ) * (((3 * r + c) / 2 ^ j : ℕ) : ℤ))
+        = w k ^ (α * sbMapS c k j r) := by
+      rw [wz_period (k := k) (j := j) (by omega) hαj ((3 * r + c) / 2 ^ j),
+        show ((α : ℤ) * ((((3 * r + c) / 2 ^ j) % 2 ^ (k - j) : ℕ) : ℤ))
+            = ((α * (((3 * r + c) / 2 ^ j) % 2 ^ (k - j)) : ℕ) : ℤ) by push_cast; ring,
+        wz_natCast]
+      rfl
+    rw [h1, h2, mul_comm]
+  rw [Finset.sum_congr rfl hterm, ← Finset.mul_sum, shellS_reindex hc hj hjk]
+
+/-- **Specialisation check.**  At `c = 1` the shifted shell character sum is
+`BlockVanishing.shell_character_sum`: the prefactor `w^{ξ·u·1}` is `w^{ξ·u}`. -/
+theorem shell_character_sumS_one {k j : ℕ} (hj : 1 ≤ j) (hjk : j + 1 ≤ k)
+    {η ξ u : ℤ} (hu : (2 : ℤ) ^ k ∣ 3 * u - 1)
+    {α : ℕ} (hres : (2 : ℤ) ^ k ∣ (α : ℤ) - alphaJ η ξ u j)
+    (hvj : (2 : ℤ) ^ j ∣ alphaJ η ξ u j) :
+    ∑ r ∈ shellS 1 k j, wz k (η * ((syracuseS 1 r : ℕ) : ℤ) - ξ * (r : ℤ))
+      = wz k (ξ * u) * Sodd k α (k - j) := by
+  rw [shell_character_sumS (by norm_num) hj hjk hu hres hvj]
+  norm_num
+
+/-- The shifted shells are pairwise disjoint: `j` is recoverable from any member. -/
+theorem shellS_disjoint {c k j j' : ℕ} (h : j ≠ j') :
+    Disjoint (shellS c k j) (shellS c k j') := by
+  rw [Finset.disjoint_left]
+  intro r hr hr'
+  simp only [shellS, mem_filter] at hr hr'
+  exact h (by rw [← hr.2.2.2, hr'.2.2.2])
+
+/-- The shifted masked source set: odd `r < 2^k` with `1 ≤ v₂(3r+c) ≤ b`. -/
+def maskedOddsS (c k b : ℕ) : Finset ℕ := (Icc 1 b).biUnion (shellS c k)
+
+theorem maskedOddsS_one (k b : ℕ) : maskedOddsS 1 k b = maskedOdds k b := rfl
+
+/-- The shifted odd part, as a quotient. -/
+theorem syracuseS_eq_quot {c r : ℕ} (hr : r % 2 = 1) :
+    syracuseS c r = (3 * r + c) / 2 ^ v2 (3 * r + c) := by
+  unfold syracuseS
+  rw [if_neg (by omega)]
+
+/-- The shifted target sum against `TcountS` is the lift-window sum.  This is `TcountS`'s
+definition read backwards; no arithmetic is involved and no shift is used. -/
+theorem char_col_as_liftS (c k r η : ℕ) :
+    ∑ u ∈ range (2 ^ k), (TcountS c k u r : ℂ) * w k ^ (η * u)
+      = ∑ m ∈ range (2 ^ k), w k ^ (η * syracuseS c (r + m * 2 ^ k)) := by
+  have hmaps : ∀ m ∈ range (2 ^ k), syracuseS c (r + m * 2 ^ k) % 2 ^ k ∈ range (2 ^ k) :=
+    fun m _ => mem_range.2 (Nat.mod_lt _ (Nat.two_pow_pos k))
+  have hfib := Finset.sum_fiberwise_of_maps_to hmaps
+    (fun m => w k ^ (η * (syracuseS c (r + m * 2 ^ k) % 2 ^ k)))
+  have hstep : ∀ u ∈ range (2 ^ k),
+      (TcountS c k u r : ℂ) * w k ^ (η * u)
+        = ∑ m ∈ (range (2 ^ k)).filter
+              (fun m => syracuseS c (r + m * 2 ^ k) % 2 ^ k = u),
+            w k ^ (η * (syracuseS c (r + m * 2 ^ k) % 2 ^ k)) := by
+    intro u _
+    have hcong : ∀ m ∈ (range (2 ^ k)).filter
+        (fun m => syracuseS c (r + m * 2 ^ k) % 2 ^ k = u),
+        w k ^ (η * (syracuseS c (r + m * 2 ^ k) % 2 ^ k)) = w k ^ (η * u) :=
+      fun m hm => by rw [(mem_filter.1 hm).2]
+    rw [Finset.sum_congr rfl hcong, Finset.sum_const, nsmul_eq_mul, TcountS]
+  rw [Finset.sum_congr rfl hstep, hfib]
+  exact Finset.sum_congr rfl fun m _ => w_pow_mod k η _
+
+/-- **THE GAUSS COLLAPSE AT A GENERAL ODD SHIFT.**  For a clean source `r`
+(`v := v₂(3r+c) < k`), the shifted transfer operator's column sum against the character
+`w^{η·}` collapses to a single phase, gated by `2^v ∣ η`.
+
+The only coset-uniformity input is `cu_syracuse_affineS` (§2b), which is already general.
+`ratio_one_iff` is shift-free and is imported unchanged. -/
+theorem gauss_collapseS {c k r : ℕ} (hc : c % 2 = 1) (hr : r % 2 = 1)
+    (hK : v2 (3 * r + c) < k) (η : ℕ) :
+    ∑ u ∈ range (2 ^ k), (TcountS c k u r : ℂ) * w k ^ (η * u)
+      = if 2 ^ v2 (3 * r + c) ∣ η then ((2 ^ k : ℕ) : ℂ) * w k ^ (η * syracuseS c r) else 0 := by
+  rw [char_col_as_liftS c k r η]
+  have hstep : ∀ m ∈ range (2 ^ k),
+      w k ^ (η * syracuseS c (r + m * 2 ^ k))
+        = w k ^ (η * syracuseS c r) * (w k ^ (η * 3 * 2 ^ (k - v2 (3 * r + c)))) ^ m := by
+    intro m _
+    rw [cu_syracuse_affineS hc r m k hr hK, ← syracuseS_eq_quot (c := c) hr, Nat.mul_add,
+      show η * (3 * m * 2 ^ (k - v2 (3 * r + c)))
+          = (η * 3 * 2 ^ (k - v2 (3 * r + c))) * m by ring,
+      pow_add, pow_mul (w k) (η * 3 * 2 ^ (k - v2 (3 * r + c))) m]
+  rw [Finset.sum_congr rfl hstep, ← Finset.mul_sum]
+  by_cases hcase : 2 ^ v2 (3 * r + c) ∣ η
+  · rw [if_pos hcase, (ratio_one_iff (le_of_lt hK)).2 hcase]
+    simp [mul_comm]
+  · rw [if_neg hcase]
+    have hzero : ∑ m ∈ range (2 ^ k), (w k ^ (η * 3 * 2 ^ (k - v2 (3 * r + c)))) ^ m = 0 := by
+      refine (geomSum_eq_zero_iff (by positivity : (2 : ℕ) ^ k ≠ 0)).2 ⟨?_, ?_⟩
+      · rw [← pow_mul, w_pow_eq_one_iff]
+        exact ⟨η * 3 * 2 ^ (k - v2 (3 * r + c)), by ring⟩
+      · exact fun hcon => hcase ((ratio_one_iff (le_of_lt hK)).1 hcon)
+    rw [hzero, mul_zero]
+
+/-- **The join, shifted.**  The shifted clean entry of `T_k^{(c)}` *is* the shifted masked
+sum.  The `[v(r) ≤ b]` mask is produced by `gauss_collapseS` rather than assumed; `gate_iff`
+is shift-free and is used unchanged. -/
+theorem cleanEntryS_eq_masked {c k b η : ℕ} {η' : ℤ} (hc : c % 2 = 1)
+    (hη : (η : ℤ) = 2 ^ b * η') (hη' : Odd η') (hbk : b + 1 ≤ k) (ξ : ℤ) :
+    cleanEntryS c k η ξ
+      = ∑ r ∈ maskedOddsS c k b, wz k ((η : ℤ) * ((syracuseS c r : ℕ) : ℤ) - ξ * (r : ℤ)) := by
+  have hd1 : (↑(Icc 1 (k - 1)) : Set ℕ).PairwiseDisjoint (shellS c k) := by
+    intro x _ y _ hxy; exact shellS_disjoint hxy
+  have hd2 : (↑(Icc 1 b) : Set ℕ).PairwiseDisjoint (shellS c k) := by
+    intro x _ y _ hxy; exact shellS_disjoint hxy
+  rw [cleanEntryS, Finset.sum_biUnion hd1, maskedOddsS, Finset.sum_biUnion hd2]
+  have hpow : ((2 : ℂ) ^ k) ≠ 0 := pow_ne_zero k two_ne_zero
+  have hshell : ∀ j ∈ Icc 1 (k - 1),
+      (∑ r ∈ shellS c k j,
+        (((2 : ℂ) ^ k)⁻¹ * ∑ u ∈ range (2 ^ k), (TcountS c k u r : ℂ) * w k ^ (η * u))
+          * wz k (-(ξ * (r : ℤ))))
+        = if j ≤ b then
+            ∑ r ∈ shellS c k j,
+              wz k ((η : ℤ) * ((syracuseS c r : ℕ) : ℤ) - ξ * (r : ℤ)) else 0 := by
+    intro j hj
+    rw [mem_Icc] at hj
+    have hterm : ∀ r ∈ shellS c k j,
+        (((2 : ℂ) ^ k)⁻¹ * ∑ u ∈ range (2 ^ k), (TcountS c k u r : ℂ) * w k ^ (η * u))
+            * wz k (-(ξ * (r : ℤ)))
+          = if j ≤ b then
+              wz k ((η : ℤ) * ((syracuseS c r : ℕ) : ℤ) - ξ * (r : ℤ)) else 0 := by
+      intro r hr
+      simp only [shellS, mem_filter] at hr
+      have hrodd : r % 2 = 1 := hr.2.2.1
+      have hvj : v2 (3 * r + c) = j := hr.2.2.2
+      have hclean : v2 (3 * r + c) < k := by omega
+      rw [gauss_collapseS hc hrodd hclean η, hvj]
+      by_cases hcase : (2 : ℕ) ^ j ∣ η
+      · rw [if_pos hcase, if_pos ((gate_iff hη hη').1 hcase)]
+        rw [show (((2 ^ k : ℕ) : ℂ)) = (2 : ℂ) ^ k by push_cast; ring, ← mul_assoc,
+          inv_mul_cancel₀ hpow, one_mul, ← wz_natCast, ← wz_add,
+          show ((η * syracuseS c r : ℕ) : ℤ) + -(ξ * (r : ℤ))
+              = (η : ℤ) * ((syracuseS c r : ℕ) : ℤ) - ξ * (r : ℤ) by push_cast; ring]
+      · rw [if_neg hcase, if_neg (fun hcon => hcase ((gate_iff hη hη').2 hcon)), mul_zero,
+          zero_mul]
+    rw [Finset.sum_congr rfl hterm]
+    by_cases hcase : j ≤ b
+    · simp only [if_pos hcase]
+    · simp only [if_neg hcase, Finset.sum_const, smul_zero]
+  have hsub : Icc 1 b ⊆ Icc 1 (k - 1) := by
+    intro j hj; rw [mem_Icc] at hj ⊢; omega
+  rw [Finset.sum_congr rfl hshell,
+    ← Finset.sum_subset hsub (fun j hj hjn => by
+      rw [mem_Icc] at hj hjn; rw [if_neg (by omega)])]
+  exact Finset.sum_congr rfl (fun j hj => by rw [mem_Icc] at hj; rw [if_pos hj.2])
+
+/-- **THE SHIFTED UPPER-REGIME ENTRY THEOREM.**  For `a < b` the shifted clean entry
+collapses onto the single shell `j = d := b − a`:
+
+```
+    cleanEntryS c k η ξ = w^{ξ·u·c} · Sodd(resJ k η ξ u d, k − d)
+```
+
+Compare `GramIdentity.upper_entry_eq`, which is this at `c = 1` with `w^{ξ·u}`.
+
+**The `Sodd` factor is bit-for-bit the `c = 1` one** — same `resJ`, same `alphaJ`, same
+range — and the first factor is unimodular (`GramIdentity.norm_wz`).  Those are exactly the
+two properties `Bent_eq_zero_of_not_owned` and `norm_Bent_of_owned` consume, so brief step 4
+(the substitution through `gram_upper`, `norm_sq_clean_block`, `norm_clean_block_le`,
+`clean_bound`) introduces no new mathematics.  **Step 4 is not done here.**
+
+Everything the proof needs about the dead band — `shell_dvd_upper` and
+`LemmaA.shell_sum_vanishes` — is already shift-free: neither mentions `c`, because both are
+statements about `alphaJ`, and `alphaJ` does not see the shift. -/
+theorem upper_entry_eqS {c k a b η : ℕ} {ξ η' ξ' u : ℤ} (hc : c % 2 = 1)
+    (hη : (η : ℤ) = 2 ^ b * η') (hη' : Odd η') (hξ : ξ = 2 ^ a * ξ') (hξ' : Odd ξ')
+    (hu : Odd u) (huinv : (2 : ℤ) ^ k ∣ 3 * u - 1) (hab : a < b) (hbk : b + 2 ≤ k) :
+    cleanEntryS c k η ξ
+      = wz k (ξ * u * (c : ℤ)) * Sodd k (resJ k (η : ℤ) ξ u (b - a)) (k - (b - a)) := by
+  rw [cleanEntryS_eq_masked hc hη hη' (by omega) ξ, maskedOddsS,
+    Finset.sum_biUnion (fun x _ y _ hxy => shellS_disjoint hxy)]
+  refine (Finset.sum_eq_single_of_mem (b - a) (mem_Icc.2 ⟨by omega, by omega⟩) ?_).trans ?_
+  · -- every shell other than `j = d` is inside the dead band
+    intro j hj hjd
+    rw [mem_Icc] at hj
+    rw [shell_character_sumS hc hj.1 (by omega) huinv (resJ_spec k (η : ℤ) ξ u j)
+        (shell_dvd_upper hη hη' hξ hξ' hu hab hbk hj.1 hj.2),
+      shell_sum_vanishes hη hη' hξ hξ' hu hab hbk hj.1 hj.2 hjd
+        (resJ_spec k (η : ℤ) ξ u j),
+      mul_zero]
+  · -- the surviving shell
+    exact shell_character_sumS hc (by omega) (by omega) huinv
+      (resJ_spec k (η : ℤ) ξ u (b - a))
+      (shell_dvd_upper (j := b - a) hη hη' hξ hξ' hu hab hbk (by omega) (by omega))
+
+/-- **The shifted prefactor is unimodular** — the only property of it the Gram argument uses,
+and therefore the precise sense in which the shift is invisible above this section. -/
+theorem norm_shift_phase (k : ℕ) (ξ u : ℤ) (c : ℕ) : ‖wz k (ξ * u * (c : ℤ))‖ = 1 :=
+  norm_wz k _
+
+/-- **Off the support the shifted entry is exactly `0`**, by the same dead-band argument as
+`GramIdentity.upper_entry_eq_zero`.  Immediate from `upper_entry_eqS`, because the vanishing
+lives entirely in the `Sodd` factor, which is the unshifted one. -/
+theorem upper_entry_eqS_zero {c k a b η : ℕ} {ξ η' ξ' u : ℤ} (hc : c % 2 = 1)
+    (hη : (η : ℤ) = 2 ^ b * η') (hη' : Odd η') (hξ : ξ = 2 ^ a * ξ') (hξ' : Odd ξ')
+    (hu : Odd u) (huinv : (2 : ℤ) ^ k ∣ 3 * u - 1) (hab : a < b) (hbk : b + 2 ≤ k)
+    (hno : ¬ (2 : ℤ) ^ (k - 1) ∣ alphaJ (η : ℤ) ξ u (b - a)) :
+    cleanEntryS c k η ξ = 0 := by
+  have hz : Sodd k (resJ k (η : ℤ) ξ u (b - a)) (k - (b - a)) = 0 := by
+    have h1 : cleanEntry k η ξ
+        = wz k (ξ * u) * Sodd k (resJ k (η : ℤ) ξ u (b - a)) (k - (b - a)) :=
+      upper_entry_eq hη hη' hξ hξ' hu huinv hab hbk
+    have h2 : cleanEntry k η ξ = 0 :=
+      upper_entry_eq_zero hη hη' hξ hξ' hu huinv hab hbk hno
+    have h3 : wz k (ξ * u) * Sodd k (resJ k (η : ℤ) ξ u (b - a)) (k - (b - a)) = 0 := by
+      rw [← h1, h2]
+    have hne : wz k (ξ * u) ≠ 0 := by
+      intro hcon
+      have := norm_wz k (ξ * u)
+      rw [hcon, norm_zero] at this
+      exact absurd this (by norm_num)
+    exact (mul_eq_zero.1 h3).resolve_left hne
+  rw [upper_entry_eqS hc hη hη' hξ hξ' hu huinv hab hbk, hz, mul_zero]
+
+end EntryShifted
+
+/-!
+--------------------------------------------------------------------------------
+## §8. Axiom audit
 --------------------------------------------------------------------------------
 -/
 
@@ -1298,5 +2053,39 @@ example {x K k : ℕ} (hk : 1 ≤ k) (hx : x % 2 = 1)
 #print axioms three_pow_totient
 #print axioms rstarS_spec
 #print axioms sub_one_odd
+-- §5, the shifted clean operator
+#print axioms defectSetS_one
+#print axioms defectS_iff
+#print axioms rstarS_odd
+#print axioms defectSetS_eq_singleton
+#print axioms rstarS_one
+#print axioms oddsS_partition
+#print axioms cleanOddsS_eq_erase
+#print axioms TkSC_one
+#print axioms UcleanS_defect_row
+#print axioms UcleanS_clean_row
+#print axioms UcleanS_one
+#print axioms od_eq_rstarS_iff
+#print axioms sum_fin_cleanS
+-- §6, the shifted character pairing
+#print axioms TcountS_even_zero
+#print axioms sum_targetsS
+#print axioms cleanEntryS_one
+#print axioms inner_chiVec_UendS
+-- §7, the shifted entry theorem
+#print axioms syracuseS_on_shellS
+#print axioms shellS_reindex
+#print axioms phase_congrS
+#print axioms shell_character_sumS
+#print axioms shell_character_sumS_one
+#print axioms shellS_disjoint
+#print axioms maskedOddsS_one
+#print axioms syracuseS_eq_quot
+#print axioms char_col_as_liftS
+#print axioms gauss_collapseS
+#print axioms cleanEntryS_eq_masked
+#print axioms upper_entry_eqS
+#print axioms norm_shift_phase
+#print axioms upper_entry_eqS_zero
 
 end ShiftedOperator
