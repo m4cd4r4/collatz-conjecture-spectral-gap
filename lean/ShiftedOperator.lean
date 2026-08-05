@@ -21,7 +21,7 @@ the chain (`CountingLemmas`, `CollisionBound`, `BlockVanishing`, `OperatorBlock`
 `ManifestInstance`) generalised too, which is a larger job.  **Do not cite this file as
 "the 3x-1 certificate is formalised".  It is not, yet.**
 
-Five things ARE finished, and the boundary between them and the rest is the point of this note:
+Six things ARE finished, and the boundary between them and the rest is the point of this note:
 
 1. **Coset uniformity for a general odd shift** (§2b) — the engine Lemma A runs on, `c`-uniform.
 2. **Lemma B's `a = 3` case, complete and sorry-free** (§2c, 2026-08-05):
@@ -43,8 +43,23 @@ Five things ARE finished, and the boundary between them and the rest is the poin
    This is `calibrate_general_shift.py`'s gate 2 — measured to `1e-14` for every odd `c` — now
    proved.
 
-Still open for general `c`: **Lemma B, the defect half** (only the `a = 3` AP-model case is
-proved, and it is not tied to the shifted defect fibre), and the assembly.
+6. **The shifted defect fibre is the AP model** (§9, 2026-08-05): `syracuseS_defect_fibre` —
+   `Syr_c(r*_c + m·2^k) ≡ oddPart(apAS c k + 3m) (mod 2^k)`, with `apAS c k ∈ {1,2,3}`
+   (`apAS_mem`) for every odd `c < 2^k`.  This is the theorem §2c's caveat said did not
+   exist, so `coll3_closed` is now tied to the real shifted operator at every shift whose
+   offset is `3`.
+
+Still open for general `c`: **Lemma B's bound itself**, and the assembly.  §9 reduces Lemma B
+to `coll_a(k) ≤ 3·2^k` for the three offsets `a ∈ {1,2,3}` — see §9 and the correction below
+for what that leaves.
+
+> **CORRECTION 2026-08-05, of a claim this file and the private brief both made.**  Both said
+> the missing piece of Lemma B at a general shift was *"the **valuation** — which power of `2`
+> exactly divides `3r* + c`"*.  **It is not.**  `calibrate_lemmaB_general_shift.py` gate B1
+> shows the valuation is never needed: `2^k ∣ 3r*+c` (already proved) plus `r* < 2^k` and
+> `c < 2^k` force `3r*+c = 2^k·A` with `A ∈ {1,2,3}` by a pure size argument.  §9 proves it in
+> three lines.  The wrong diagnosis survived two handovers because the `c = 1` proof makes
+> `3r*+1 = 2^{ek k}` — an exact power of two — look load-bearing, and it is not.
 
 **THE MISREADING THIS FILE MOST INVITES, NOW THAT §8 EXISTS.**  A certificate is
 `clean + defect`.  §8 closes the clean half at every odd shift; the defect half is open.  So
@@ -84,9 +99,9 @@ is specific to the shift `1`.  For general `c` the defect residue is the solutio
 `3r + c ≡ 0 (mod 2^k)`, given here as `rstarS c k` via the inverse of `3`.  Everything else in
 this file is `c`-uniform.
 
-Sorry-free.  Specialisation lemmas throughout, mutation table below, axiom audit `§9`.
+Sorry-free.  Specialisation lemmas throughout, mutation table below, axiom audit `§10`.
 
-## MUTATIONS (77, all fail)
+## MUTATIONS (84, all fail)
 
 | # | mutation | result |
 |---|---|---|
@@ -233,7 +248,27 @@ Lemma A's clean block norms at a general shift, added 2026-08-05 (§8).  All 10 
 | S76 | `norm_clean_block_leS`: bound sharpened `s^d` → `s^{d+1}` | fails |
 | S77 | `clean_boundS`: level weakened `3 ≤ k` → `2 ≤ k` | fails |
 
-**S72 is the one that matters for this section.**  §8 is a substitution, so the live worry is
+The shifted defect fibre, added 2026-08-05 (§9).  All 7 fail:
+
+| # | mutation | result |
+|---|---|---|
+| S78 | `apAS_spec`: level weakened `1 ≤ k` → `0 ≤ k` | fails |
+| S79 | `apAS_mem`: **the size hypothesis dropped**, `c < 2^k` → `c < 2·2^k` | fails |
+| S80 | `apAS_mem`: **trichotomy narrowed** to the `c = 1` dichotomy, `{1,2,3}` → `{1,2}` | fails |
+| S81 | link theorem: AP offset `apAS c k` → `apAS c k + 1` | fails |
+| S82 | link theorem: AP difference `3m` → `2m` | fails |
+| S83 | link theorem: shift oddness weakened to a tautology | fails |
+| S84 | `apAS_one`: the `c = 1` value `apA k` → `apA k + 1` | fails |
+
+**S79 and S80 are the two that carry §9's content, and both fail at `omega`** — the arithmetic
+itself, not a typing accident.  S79: the whole trichotomy is a size argument, so widening the
+range of `c` by a single factor of two destroys it, which is precisely why `c < 2^k` is a
+hypothesis and not decoration.  S80: `{1,2}` — the `c = 1` answer — is *not* enough at a
+general shift; the third offset genuinely occurs, and gate B2 measures it at about a third of
+all shifts.  Between them they pin the exact respect in which a general odd shift differs from
+`c = 1` here.
+
+**S72 is the one that matters for the section before it.**  §8 is a substitution, so the live worry is
 that it might go through *without* the shift being constrained at all — that the `c`-oddness
 hypothesis is inert plumbing.  It is not: replaced by a tautology, `inner_chiVec_UendS` no
 longer applies.  S71, S73, S75 and S76 pin the constant at each of the four levels it passes
@@ -2320,7 +2355,161 @@ end CleanBlockShifted
 
 /-!
 --------------------------------------------------------------------------------
-## §9. Axiom audit
+## §9. The shifted defect fibre: the AP offset, and the link theorem
+--------------------------------------------------------------------------------
+
+### THE CALIBRATION THAT RESHAPED THIS SECTION, AND THE CLAIM IT REFUTED
+
+`BRIEF_LEMMA_A_GENERAL_SHIFT.md` §5 and this file's §2c both recorded the missing piece of
+Lemma B at a general shift as:
+
+> What is missing is the **valuation** — which power of `2` exactly divides `3r* + c` — not
+> the residue, which `rstarS_spec` already gives.
+
+**That was wrong, and `calibrate_lemmaB_general_shift.py` (gate B1) is what showed it.**  No
+valuation argument is needed.  What is needed is a *size* argument, and it is three lines:
+
+```
+    2^k ∣ 3r*_c + c          (rstarS_spec, already proved)
+    r*_c < 2^k               (rstarS_lt, already proved)
+    c    < 2^k               (the natural scope of the operator)
+      ⇒  0 < 3r*_c + c < 4·2^k
+      ⇒  3r*_c + c = 2^k · A  with  A ∈ {1, 2, 3}.
+```
+
+The valuation of `3r* + c` is **not determined** at a general shift — that is exactly what
+made the `c = 1` proof look unrepeatable, since there `3r* + 1 = 2^{ek k}` is a pure power of
+two.  It turns out not to matter.  The AP model needs the *offset*, not the valuation.
+
+Measured before proving, `k = 3..12`, every odd `c < 2^k`: `A ∈ {1,2,3}` always, and all
+three values occur at every `k` (roughly `2^k/3` each).  So the `a = 3` case §2c proved is
+not an exotic corner — it is a third of all shifts.
+
+### WHAT THIS SECTION IS, AND WHAT IT IS NOT
+
+It is the general-`c` analogue of `CollisionBound.syracuse_defect_fibre` — the theorem §2c's
+caveat says does not exist, and which is what makes `coll3_closed` a statement about the real
+shifted Syracuse map rather than about an AP model chosen to resemble it.
+
+It is **not** Lemma B.  Lemma B needs `coll` bounded, and that is §10's problem.
+-/
+
+section DefectFibreShifted
+
+open CollisionBound
+
+/-- **The AP offset of the shifted defect fibre.**  `3r*_c + c = 2^k · apAS c k`.  The
+general-`c` analogue of `CollisionBound.apA`, which at `c = 1` is `2^{ek k - k}`. -/
+def apAS (c k : ℕ) : ℕ := (3 * rstarS c k + c) / 2 ^ k
+
+/-- **The defining property**, so `apAS` is not an unchecked guess.  Immediate from
+`rstarS_spec`. -/
+theorem apAS_spec {c k : ℕ} (hk : 1 ≤ k) : 2 ^ k * apAS c k = 3 * rstarS c k + c := by
+  unfold apAS
+  exact Nat.mul_div_cancel' (Nat.dvd_of_mod_eq_zero (rstarS_spec hk))
+
+/-- **THE OFFSET TRICHOTOMY.**  `apAS c k ∈ {1, 2, 3}` for every odd `c < 2^k`.
+
+This is the general-`c` replacement for `CollisionBound.apA_eq` (`apA k ∈ {1,2}`), and the
+proof is a **size** argument, not a valuation argument — see the section preamble for why
+that distinction cost this project a wrong statement of the open problem. -/
+theorem apAS_mem {c k : ℕ} (hc : c % 2 = 1) (hk : 1 ≤ k) (hck : c < 2 ^ k) :
+    apAS c k = 1 ∨ apAS c k = 2 ∨ apAS c k = 3 := by
+  have hspec := apAS_spec (c := c) (k := k) hk
+  have hlt : rstarS c k < 2 ^ k := rstarS_lt
+  have hpos : 0 < 2 ^ k := Nat.two_pow_pos k
+  -- `2^k · A = 3r* + c < 4 · 2^k`, and `> 0`
+  have hub : 2 ^ k * apAS c k < 2 ^ k * 4 := by omega
+  have hlb : 2 ^ k * 0 < 2 ^ k * apAS c k := by omega
+  have h4 : apAS c k < 4 := Nat.lt_of_mul_lt_mul_left hub
+  have h0 : 0 < apAS c k := Nat.lt_of_mul_lt_mul_left hlb
+  omega
+
+/-- The third offset is genuinely reachable, so `apAS_mem` is not two cases with a dead
+branch — and `coll3_closed` (§2c) is not about an empty class.  `c = 5`, `k = 3`:
+`r* = 1`, `3·1 + 5 = 8 = 2^3 · 1`; `c = 3`, `k = 3`: `r* = 7`, `3·7 + 3 = 24 = 2^3 · 3`. -/
+example : apAS 3 3 = 3 := by native_decide
+
+example : apAS 5 3 = 1 := by native_decide
+
+/-- **THE LINK THEOREM.**  The genuine shifted Syracuse fibre over the genuine shifted defect
+residue **is** the arithmetic progression `apAS c k + 3m`:
+
+```
+    Syr_c(r*_c + m·2^k)  ≡  oddPart(apAS c k + 3m)   (mod 2^k)
+```
+
+This is the general-`c` analogue of `CollisionBound.syracuse_defect_fibre`, and it is what
+§2c's caveat says is missing.  It is what makes any statement about the AP model a statement
+about the real operator rather than about a convenient proxy — this corpus's failure mode (2),
+the right-looking theorem about the wrong object.
+
+The whole proof is `oddPart (2^k · X) = oddPart X`.  No valuation of `3r* + c` is computed
+anywhere, which is the point of the section preamble. -/
+theorem syracuseS_defect_fibre {c k : ℕ} (hc : c % 2 = 1) (hk : 1 ≤ k) (m : ℕ) :
+    syracuseS c (rstarS c k + m * 2 ^ k) % 2 ^ k
+      = oddPart (apAS c k + 3 * m) % 2 ^ k := by
+  have hrodd : rstarS c k % 2 = 1 := rstarS_odd hc hk
+  have hodd : (rstarS c k + m * 2 ^ k) % 2 = 1 := lift_odd hk hrodd
+  have hApos : 0 < apAS c k := by
+    have hspec := apAS_spec (c := c) (k := k) hk
+    have hpos : 0 < 2 ^ k := Nat.two_pow_pos k
+    have hlb : 2 ^ k * 0 < 2 ^ k * apAS c k := by omega
+    exact Nat.lt_of_mul_lt_mul_left hlb
+  have hfac : 3 * (rstarS c k + m * 2 ^ k) + c = 2 ^ k * (apAS c k + 3 * m) := by
+    have hs := apAS_spec (c := c) (k := k) hk
+    calc 3 * (rstarS c k + m * 2 ^ k) + c
+        = (3 * rstarS c k + c) + 2 ^ k * (3 * m) := by ring
+      _ = 2 ^ k * apAS c k + 2 ^ k * (3 * m) := by rw [hs]
+      _ = 2 ^ k * (apAS c k + 3 * m) := by ring
+  unfold syracuseS
+  rw [if_neg (by omega)]
+  show (3 * (rstarS c k + m * 2 ^ k) + c)
+      / 2 ^ v2 (3 * (rstarS c k + m * 2 ^ k) + c) % 2 ^ k = _
+  rw [hfac]
+  -- NB `CollisionBound.` is not optional: `ShiftedOperator.oddPart_two_pow_mul` (§2c) is a
+  -- different theorem with the same name, and the ambient namespace wins.
+  exact congrArg (· % 2 ^ k)
+    (CollisionBound.oddPart_two_pow_mul (by omega : apAS c k + 3 * m ≠ 0))
+
+/-- **Specialisation check.**  At `c = 1` the shifted offset is `CollisionBound.apA`, so §9
+does not change the `c = 1` fibre.  Needs `rstarS_one`, since the two `r*` closed forms
+differ. -/
+theorem apAS_one {k : ℕ} (hk : 1 ≤ k) : apAS 1 k = apA k := by
+  unfold apAS
+  rw [rstarS_one hk, rstar_spec, ← apA_spec k]
+  exact Nat.mul_div_cancel_left _ (Nat.two_pow_pos k)
+
+end DefectFibreShifted
+
+/-!
+**Satisfiability witnesses for §9.**  `apAS` is computable.  All three offsets occur at every
+level, which is gate B2 of `calibrate_lemmaB_general_shift.py` — `a = 3` is about a third of
+all shifts, not a corner case.  `#eval`, not `decide`: `rstarS` is fine for the kernel but the
+fibre evaluations below route through `v2 = padicValNat`, which it does not reduce.
+-/
+
+-- how many odd c < 2^6 give each offset: the k = 6 row of gate B1, which reads 11 / 10 / 11
+#eval ((List.range 32).map (fun i => apAS (2 * i + 1) 6)).count 1   -- 11
+#eval ((List.range 32).map (fun i => apAS (2 * i + 1) 6)).count 2   -- 10
+#eval ((List.range 32).map (fun i => apAS (2 * i + 1) 6)).count 3   -- 11
+
+-- every offset is 1, 2 or 3 (apAS_mem), checked at k = 6 rather than only asserted
+#eval (List.range 32).all (fun i => decide (1 ≤ apAS (2 * i + 1) 6 ∧ apAS (2 * i + 1) 6 ≤ 3))
+  -- true
+
+-- the LINK THEOREM, evaluated: true shifted fibre vs the AP model
+#eval (List.range 32).all (fun m => decide
+    (syracuseS 11 (rstarS 11 5 + m * 32) % 32
+      = CollisionBound.oddPart (apAS 11 5 + 3 * m) % 32))   -- true
+
+#eval (List.range 32).all (fun m => decide
+    (syracuseS 3 (rstarS 3 5 + m * 32) % 32
+      = CollisionBound.oddPart (apAS 3 5 + 3 * m) % 32))    -- true, and an a = 3 shift
+
+/-!
+--------------------------------------------------------------------------------
+## §10. Axiom audit
 --------------------------------------------------------------------------------
 -/
 
@@ -2420,5 +2609,10 @@ end CleanBlockShifted
 #print axioms norm_clean_block_leS
 #print axioms clean_boundS
 #print axioms clean_boundS_one
+-- §9, the shifted defect fibre
+#print axioms apAS_spec
+#print axioms apAS_mem
+#print axioms syracuseS_defect_fibre
+#print axioms apAS_one
 
 end ShiftedOperator
