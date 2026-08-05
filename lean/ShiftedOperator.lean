@@ -21,7 +21,7 @@ the chain (`CountingLemmas`, `CollisionBound`, `BlockVanishing`, `OperatorBlock`
 `ManifestInstance`) generalised too, which is a larger job.  **Do not cite this file as
 "the 3x-1 certificate is formalised".  It is not, yet.**
 
-Four things ARE finished, and the boundary between them and the rest is the point of this note:
+Five things ARE finished, and the boundary between them and the rest is the point of this note:
 
 1. **Coset uniformity for a general odd shift** (§2b) — the engine Lemma A runs on, `c`-uniform.
 2. **Lemma B's `a = 3` case, complete and sorry-free** (§2c, 2026-08-05):
@@ -37,13 +37,21 @@ Four things ARE finished, and the boundary between them and the rest is the poin
    upper regime the shifted clean entry is
    `w^{ξuc} · Sodd (resJ k η ξ u d) (k − d)`, `d = b − a` — the **same `Sodd`, the same
    `resJ`, the same `alphaJ`** as `c = 1`, with the shift confined to a unimodular prefactor.
-   **Read the boundary in §7 before citing this**: it is the entry theorem, NOT the block
-   norms.  The substitution of it through `Bent_eq_zero_of_not_owned`, `norm_Bent_of_owned`,
-   `gram_upper`, `norm_sq_clean_block`, `norm_clean_block_le` and `clean_bound` is not done.
+5. **LEMMA A ITSELF, AT A GENERAL ODD SHIFT** (§8, 2026-08-05): `clean_boundS` —
+   `‖P_a U_clean^{(c)} P_b‖ ≤ s^{b−a}`, `s = √(1/2)`, for every odd `c` and every `a < b`,
+   via the exact identity `norm_sq_clean_blockS` and the shifted Gram identity `gram_upperS`.
+   This is `calibrate_general_shift.py`'s gate 2 — measured to `1e-14` for every odd `c` — now
+   proved.
 
-Still open for general `c`: **Lemma A's clean block norms** (calibrated to `1e-14`; the entry
-theorem they are derived from is now proved, the derivation itself is not) and the assembly.
-Until both land, the `3x-1` control experiment remains a Python observation.
+Still open for general `c`: **Lemma B, the defect half** (only the `a = 3` AP-model case is
+proved, and it is not tied to the shifted defect fibre), and the assembly.
+
+**THE MISREADING THIS FILE MOST INVITES, NOW THAT §8 EXISTS.**  A certificate is
+`clean + defect`.  §8 closes the clean half at every odd shift; the defect half is open.  So
+there is deliberately **no** shifted analogue of `GramIdentity.gap_certificate_unconditional`
+in this file, and none may be inferred from `clean_boundS`.  Until Lemma B lands for general
+`c`, "the `3x+c` certificate" does not exist here — and the `3x−1` control experiment remains
+a Python observation for the separate reason that `c : ℕ` cannot express `3x−1` at all (§4).
 
 ## THE CALIBRATION THAT JUSTIFIED STARTING
 
@@ -76,9 +84,9 @@ is specific to the shift `1`.  For general `c` the defect residue is the solutio
 `3r + c ≡ 0 (mod 2^k)`, given here as `rstarS c k` via the inverse of `3`.  Everything else in
 this file is `c`-uniform.
 
-Sorry-free.  Specialisation lemmas throughout, mutation table below, axiom audit `§8`.
+Sorry-free.  Specialisation lemmas throughout, mutation table below, axiom audit `§9`.
 
-## MUTATIONS (67, all fail)
+## MUTATIONS (77, all fail)
 
 | # | mutation | result |
 |---|---|---|
@@ -209,6 +217,36 @@ at `c = 1`.
 
 S54, S55, S57, S62 and S64 are the hypothesis-weakening half: `1 ≤ j`, `2^j ∣ alpha_j`,
 `v₂ < k`, `a < b` and `1 ≤ k` are each shown to be used, not decorative.
+
+Lemma A's clean block norms at a general shift, added 2026-08-05 (§8).  All 10 fail:
+
+| # | mutation | result |
+|---|---|---|
+| S68 | `norm_upper_entryS`: modulus `2^{k−d−1}` → `2^{k−d}` | fails |
+| S69 | `norm_upper_entryS`: sharp point weakened `2^{k−1} ∣ alpha_d` → `2^{k−2} ∣` | fails |
+| S70 | `BentS_eq_zero_of_not_owned`: conclusion `= 0` → `= 1` | fails |
+| S71 | `norm_BentS_of_owned`: modulus `(1/2)^d` → `(1/2)^{d+1}` | fails |
+| S72 | `norm_BentS_of_owned`: shift oddness weakened `c % 2 = 1` → `c % 2 = c % 2` | fails |
+| S73 | `gram_upperS`: Gram diagonal `(1/2)^d` → `(1/4)^d` | fails |
+| S74 | `gram_upperS`: diagonal and off-diagonal swapped (`η = η'` → `η ≠ η'`) | fails |
+| S75 | `norm_sq_clean_blockS`: the equality sharpened `2^{−d}` → `2^{−(d+1)}` | fails |
+| S76 | `norm_clean_block_leS`: bound sharpened `s^d` → `s^{d+1}` | fails |
+| S77 | `clean_boundS`: level weakened `3 ≤ k` → `2 ≤ k` | fails |
+
+**S72 is the one that matters for this section.**  §8 is a substitution, so the live worry is
+that it might go through *without* the shift being constrained at all — that the `c`-oddness
+hypothesis is inert plumbing.  It is not: replaced by a tautology, `inner_chiVec_UendS` no
+longer applies.  S71, S73, S75 and S76 pin the constant at each of the four levels it passes
+through (`2^{−d}` entry → `4^{−d}` squared → `2^{−d}` Gram → `s^d` operator), so a slip in the
+owner count `2^d` cancelling against `(2^{−d})²` could not pass silently.
+
+**S70 and S74 are recorded with their first, failed attempts.**  S70 was first written by
+flipping `ξ ∉ ownedBy` to `ξ ∈ ownedBy`, and S74 by changing the off-diagonal `0` to `1`.
+Both "failed" — and both failed at *elaboration* (a hypothesis applied as a function; a stuck
+coercion), not at any mathematical claim.  They were replaced by the mutations in the table,
+which fail on unsolved goals and non-matching branches.  Same lesson as S66/S67 below: **a
+mutation that fails for a syntactic reason has tested nothing**, and the only way to know
+which kind you have is to read the error.
 
 **S66 and S67 are the orientation trap**, the one that shipped a defect in this corpus before:
 the transpose itself, and which index is zeroed.  They cannot be tested from a scratch file —
@@ -1999,7 +2037,290 @@ end EntryShifted
 
 /-!
 --------------------------------------------------------------------------------
-## §8. Axiom audit
+## §8. Lemma A's clean block norms at a general shift  (brief step 4)
+--------------------------------------------------------------------------------
+
+**This section is a substitution, and it is worth saying exactly why it is allowed to be.**
+
+`GramIdentity`'s chain from the entry theorem to `(CLEAN)` consumes the operator through
+precisely two facts:
+
+| Fact | Statement | Shifted version |
+|---|---|---|
+| `Bent_eq_zero_of_not_owned` | off the owner set the entry is `0` | `BentS_eq_zero_of_not_owned` |
+| `norm_Bent_of_owned` | on the owner set the modulus is exactly `(1/2)^{b−a}` | `norm_BentS_of_owned` |
+
+**Neither mentions a phase.**  §7's `upper_entry_eqS` produces the shifted entry as
+`(unimodular) · Sodd (the c = 1 argument)`, so the first fact survives because the vanishing
+lives in the `Sodd` factor, and the second because `‖wz‖ = 1` (`norm_shift_phase`).  Every
+step below — `gram_upperS`, `norm_sq_clean_blockS`, `norm_clean_block_leS`, `clean_boundS` —
+is then the `c = 1` proof with `Uend` replaced by `UendS`.
+
+Three pieces of the machinery are reused **unchanged, not re-proved**, because they never
+mentioned the shift in the first place:
+
+* `OwnerPartition.ownedBy` / `ownedBy_card` / `ownedBy_disjoint` / `owner_biUnion` — already
+  abstract in the odd multiplier `u`, which is where `OwnerCount`'s Bezout generalisation
+  went;
+* `GramIdentity.uinv k = −r*_1` — an inverse of `3` mod `2^k`.  It is defined from the `c = 1`
+  defect residue, but nothing about it is `c`-specific: all that is ever used is
+  `2^k ∣ 3u − 1` and `Odd u`.  It is **not** the shifted defect residue and must not be
+  confused with `rstarS`;
+* `CharacterBasis.P`, `ManifestInstance.norm_sq_P`, `Assembly.s` — level projections and the
+  constant `√(1/2)`, all shift-free.
+
+### WHAT THIS DOES **NOT** GIVE, AND THE MISREADING TO AVOID
+
+`clean_boundS` is **(CLEAN) for the shifted operator**: Lemma A's clean block bound
+`‖P_a U_clean^{(c)} P_b‖ ≤ s^{b−a}` at every odd `c`.  That is Lemma A, finished.
+
+**It is NOT a certificate for `3x + c`.**  The certificate is `clean + defect`, and the defect
+half — Lemma B for general `c`, i.e. a bound on `‖D_c‖` — is **open**.  §2c proves only the
+`a = 3` case of the AP model, and even that is not tied to the shifted defect fibre by a
+theorem.  So:
+
+* `gap_certificate_unconditional` has **no shifted analogue here**, and none may be inferred;
+* and `c : ℕ` still, so none of this is about `3x − 1` (§4).
+
+A reader who takes `clean_boundS` as "the `3x+c` certificate is formalised" has made exactly
+the error §4 corrects, one level up.
+-/
+
+section CleanBlockShifted
+
+open LemmaA CharacterBasis BlockVanishing OperatorBlock CollisionBound GramIdentity
+open DefectSplit ManifestInstance OwnerPartition OwnerCount CleanBlock
+
+set_option maxHeartbeats 1000000
+set_option synthInstance.maxHeartbeats 400000
+
+/-- **On the sharp points the shifted entry has modulus exactly `2^{k−d−1}`.**  The shift
+drops out at the first step: `‖wz k (ξ·u·c)‖ = 1`, and what is left is S4's FULL branch
+(`LemmaA.norm_Sodd_full`) applied to the **unshifted** `Sodd`. -/
+theorem norm_upper_entryS {c k a b η : ℕ} {ξ η' ξ' u : ℤ} (hc : c % 2 = 1)
+    (hη : (η : ℤ) = 2 ^ b * η') (hη' : Odd η') (hξ : ξ = 2 ^ a * ξ') (hξ' : Odd ξ')
+    (hu : Odd u) (huinv : (2 : ℤ) ^ k ∣ 3 * u - 1) (hab : a < b) (hbk : b + 2 ≤ k)
+    (how : (2 : ℤ) ^ (k - 1) ∣ alphaJ (η : ℤ) ξ u (b - a)) :
+    ‖cleanEntryS c k η ξ‖ = (2 : ℝ) ^ (k - (b - a) - 1) := by
+  rw [upper_entry_eqS hc hη hη' hξ hξ' hu huinv hab hbk, norm_mul, norm_wz, one_mul,
+    norm_Sodd_full k _ _ (by omega) ((resJ_dvd_iff (by omega) _ _ _ _).2 how)]
+  push_cast
+  ring
+
+/-- `B_c[ξ,η] := ⟪χ_ξ, U_clean^{(c)} χ_η⟫`, the shifted level-block entry. -/
+noncomputable def BentS (c k : ℕ) (ξ η : Fin (2 ^ (k - 1))) : ℂ :=
+  (@inner ℂ _ _ (chiVec k ξ) (UendS c k (chiVec k η)) : ℂ)
+
+/-- At `c = 1` the shifted block entry is `GramIdentity.Bent`.  **Not `rfl`** — it runs through
+`UcleanS_one`, because the two closed forms for `r*` are not definitionally equal. -/
+theorem BentS_one {k : ℕ} (hk : 1 ≤ k) (ξ η : Fin (2 ^ (k - 1))) :
+    BentS 1 k ξ η = Bent k ξ η := by
+  unfold BentS Bent UendS Uend
+  rw [UcleanS_one hk]
+
+/-- **Off the owner set the shifted block entry vanishes.**  The owner predicate is the
+`c = 1` one — `ownedBy k a b (uinv k) η` — because it is a statement about `alphaJ`, and
+`alphaJ` does not see the shift.  That is the whole reason this transfers. -/
+theorem BentS_eq_zero_of_not_owned {c k a b : ℕ} (hc : c % 2 = 1) (hk : 2 ≤ k) (hab : a < b)
+    {ξ η : Fin (2 ^ (k - 1))} (hξ : ξ ∈ levelSet k a) (hη : η ∈ levelSet k b)
+    (hno : ξ ∉ ownedBy k a b (uinv k) η) :
+    BentS c k ξ η = 0 := by
+  have hk1 : 1 ≤ k := by omega
+  obtain ⟨m, hm, hmo⟩ := level_split hη
+  obtain ⟨n, hn, hnodd⟩ := level_split hξ
+  have hdvd : ¬ (2 : ℤ) ^ (k - 1) ∣
+      alphaJ ((η : ℕ) : ℤ) ((ξ : ℕ) : ℤ) (uinv k) (b - a) := by
+    intro hcon
+    exact hno (mem_ownedBy.2 ⟨hξ, hcon⟩)
+  rw [BentS, inner_chiVec_UendS hc hk1 ξ η,
+    upper_entry_eqS_zero (a := a) (b := b) hc hm hmo hn hnodd (uinv_odd hk1) (uinv_spec hk1)
+      hab (level_bound hk hη) hdvd,
+    mul_zero]
+
+/-- **On the owner set the shifted block entry has modulus exactly `2^{−d}`** — the SAME
+number as `c = 1` (`GramIdentity.norm_Bent_of_owned`).  This is H2 of the calibration, which
+measured the entrywise moduli equal across shifts to `1.5e-14`, now proved. -/
+theorem norm_BentS_of_owned {c k a b : ℕ} (hc : c % 2 = 1) (hk : 2 ≤ k) (hab : a < b)
+    {ξ η : Fin (2 ^ (k - 1))} (hη : η ∈ levelSet k b)
+    (how : ξ ∈ ownedBy k a b (uinv k) η) :
+    ‖BentS c k ξ η‖ = (1 / 2 : ℝ) ^ (b - a) := by
+  have hk1 : 1 ≤ k := by omega
+  have hξ : ξ ∈ levelSet k a := ownedBy_subset how
+  have hbk : b + 2 ≤ k := level_bound hk hη
+  obtain ⟨m, hm, hmo⟩ := level_split hη
+  obtain ⟨n, hn, hnodd⟩ := level_split hξ
+  have hd : (2 : ℤ) ^ (k - 1) ∣ alphaJ ((η : ℕ) : ℤ) ((ξ : ℕ) : ℤ) (uinv k) (b - a) :=
+    (mem_ownedBy.1 how).2
+  rw [BentS, inner_chiVec_UendS hc hk1 ξ η, norm_mul, norm_inv, Complex.norm_natCast,
+    norm_upper_entryS (a := a) (b := b) hc hm hmo hn hnodd (uinv_odd hk1) (uinv_spec hk1)
+      hab hbk hd]
+  have hsplit : ((2 ^ (k - 1) : ℕ) : ℝ) = (2 : ℝ) ^ (k - (b - a) - 1) * 2 ^ (b - a) := by
+    push_cast
+    rw [← pow_add]
+    congr 1
+    omega
+  rw [hsplit, one_div, inv_pow]
+  field_simp
+
+/-- **(F3) THE GRAM IDENTITY, SHIFTED.**  `B_c* B_c = 2^{−d} · I`.
+
+This is where the calibration's H1 becomes a theorem: the off-diagonal vanishes by **disjoint
+support** (`ownedBy_disjoint`), not by any cancellation among the phases — which is why H3's
+column-phase factorisation being false costs nothing. -/
+theorem gram_upperS {c k a b : ℕ} (hc : c % 2 = 1) (hk : 2 ≤ k) (hab : a < b)
+    {η η' : Fin (2 ^ (k - 1))} (hη : η ∈ levelSet k b) (hη' : η' ∈ levelSet k b) :
+    ∑ ξ ∈ levelSet k a, (starRingEnd ℂ) (BentS c k ξ η) * BentS c k ξ η'
+      = if η = η' then (((1 / 2 : ℝ) ^ (b - a) : ℝ) : ℂ) else 0 := by
+  classical
+  have hk1 : 1 ≤ k := by omega
+  have hbk : b + 2 ≤ k := level_bound hk hη
+  by_cases hne : η = η'
+  · subst hne
+    rw [if_pos rfl]
+    have hrestrict : ∑ ξ ∈ levelSet k a, (starRingEnd ℂ) (BentS c k ξ η) * BentS c k ξ η
+        = ∑ ξ ∈ ownedBy k a b (uinv k) η,
+            (starRingEnd ℂ) (BentS c k ξ η) * BentS c k ξ η := by
+      refine (Finset.sum_subset ownedBy_subset ?_).symm
+      intro ξ hξ hno
+      rw [BentS_eq_zero_of_not_owned hc hk hab hξ hη hno, map_zero, mul_zero]
+    have hval : ∀ ξ ∈ ownedBy k a b (uinv k) η,
+        (starRingEnd ℂ) (BentS c k ξ η) * BentS c k ξ η
+          = (((1 / 4 : ℝ) ^ (b - a) : ℝ) : ℂ) := by
+      intro ξ hξ
+      rw [RCLike.conj_mul, norm_BentS_of_owned hc hk hab hη hξ]
+      norm_cast
+      rw [← pow_mul, mul_comm (b - a) 2, pow_mul]
+      norm_num
+    rw [hrestrict, Finset.sum_congr rfl hval, Finset.sum_const,
+      ownedBy_card (uinv_odd hk1) (le_of_lt hab) hbk hη, nsmul_eq_mul]
+    push_cast
+    rw [← mul_pow]
+    norm_num
+  · rw [if_neg hne]
+    refine Finset.sum_eq_zero fun ξ hξ => ?_
+    by_cases how : ξ ∈ ownedBy k a b (uinv k) η
+    · have hno : ξ ∉ ownedBy k a b (uinv k) η' :=
+        fun hcon => (disjoint_left.1 (ownedBy_disjoint (Ne.symm hne))) hcon how
+      rw [BentS_eq_zero_of_not_owned hc hk hab hξ hη' hno, mul_zero]
+    · rw [BentS_eq_zero_of_not_owned hc hk hab hξ hη how, map_zero, zero_mul]
+
+/-- The shifted clean level block `P_a U_clean^{(c)} P_b`, as a linear map. -/
+noncomputable def cleanBlockOpS (c k a b : ℕ) : Fsp k →ₗ[ℂ] Fsp k :=
+  (P k a).comp ((UendS c k).comp (P k b))
+
+/-- The same as a continuous linear map, so that it has an operator norm. -/
+noncomputable def cleanBlockCLMS (c k a b : ℕ) : Fsp k →L[ℂ] Fsp k :=
+  LinearMap.toContinuousLinearMap (cleanBlockOpS c k a b)
+
+@[simp] theorem cleanBlockCLMS_apply (c k a b : ℕ) (x : Fsp k) :
+    cleanBlockCLMS c k a b x = P k a (UendS c k (P k b x)) := rfl
+
+/-- At `c = 1` the shifted clean block is `CleanBlock.cleanBlockCLM`.  Again not `rfl`. -/
+theorem cleanBlockCLMS_one {k : ℕ} (hk : 1 ≤ k) (a b : ℕ) :
+    cleanBlockCLMS 1 k a b = cleanBlockCLM k a b := by
+  unfold cleanBlockCLMS cleanBlockCLM cleanBlockOpS cleanBlockOp UendS Uend
+  rw [UcleanS_one hk]
+
+/-- **The shifted clean upper block's norm, squared, exactly.**
+
+`‖P_a U_clean^{(c)} P_b x‖² = 2^{−d}·‖P_b x‖²` — an **equality**, at every odd `c`.  This is
+the statement `calibrate_general_shift.py`'s gate 2 measures (clean block norms exactly
+`2^{-(b-a)/2}` for every `c`, to `1e-14`), now proved rather than calibrated. -/
+theorem norm_sq_clean_blockS {c k a b : ℕ} (hc : c % 2 = 1) (hk : 2 ≤ k) (hab : a < b)
+    (hbk : b + 2 ≤ k) (x : Fsp k) :
+    ‖P k a (UendS c k (P k b x))‖ ^ 2 = (1 / 2 : ℝ) ^ (b - a) * ‖P k b x‖ ^ 2 := by
+  classical
+  have hk1 : 1 ≤ k := by omega
+  have hu : Odd (uinv k) := uinv_odd hk1
+  have hcoef : ∀ ξ : Fin (2 ^ (k - 1)),
+      (@inner ℂ _ _ (chiVec k ξ) (UendS c k (P k b x)) : ℂ)
+        = ∑ η ∈ levelSet k b,
+            (@inner ℂ _ _ (chiVec k η) x : ℂ) * BentS c k ξ η := by
+    intro ξ
+    rw [P_apply, map_sum, inner_sum]
+    exact Finset.sum_congr rfl fun η _ => by rw [map_smul, inner_smul_right, BentS]
+  rw [norm_sq_P hk1 a, norm_sq_P hk1 b,
+    ← owner_biUnion (k := k) (a := a) (b := b) (u := uinv k) hu (le_of_lt hab) hbk,
+    Finset.sum_biUnion owner_pairwiseDisjoint, Finset.mul_sum]
+  refine Finset.sum_congr rfl fun η hη => ?_
+  have hterm : ∀ ξ ∈ ownedBy k a b (uinv k) η,
+      ‖(@inner ℂ _ _ (chiVec k ξ) (UendS c k (P k b x)) : ℂ)‖ ^ 2
+        = (1 / 4 : ℝ) ^ (b - a) * ‖(@inner ℂ _ _ (chiVec k η) x : ℂ)‖ ^ 2 := by
+    intro ξ hξ
+    have hξa : ξ ∈ levelSet k a := ownedBy_subset hξ
+    have hsingle : (@inner ℂ _ _ (chiVec k ξ) (UendS c k (P k b x)) : ℂ)
+        = (@inner ℂ _ _ (chiVec k η) x : ℂ) * BentS c k ξ η := by
+      rw [hcoef ξ]
+      refine Finset.sum_eq_single_of_mem η hη ?_
+      intro η' hη' hne
+      have hno : ξ ∉ ownedBy k a b (uinv k) η' :=
+        fun hcon => (disjoint_left.1 (ownedBy_disjoint hne)) hcon hξ
+      rw [BentS_eq_zero_of_not_owned hc hk hab hξa hη' hno, mul_zero]
+    rw [hsingle, norm_mul, mul_pow, norm_BentS_of_owned hc hk hab hη hξ, ← pow_mul,
+      show (b - a) * 2 = 2 * (b - a) by ring, pow_mul]
+    norm_num
+    ring
+  rw [Finset.sum_congr rfl hterm, Finset.sum_const,
+    ownedBy_card hu (le_of_lt hab) hbk hη, nsmul_eq_mul]
+  push_cast
+  rw [← mul_assoc, ← mul_pow]
+  norm_num
+
+/-- **(CLEAN) at a general shift, pointwise.** -/
+theorem norm_clean_block_leS {c k a b : ℕ} (hc : c % 2 = 1) (hk : 2 ≤ k) (hab : a < b)
+    (hbk : b + 2 ≤ k) (x : Fsp k) :
+    ‖P k a (UendS c k (P k b x))‖ ≤ Assembly.s ^ (b - a) * ‖x‖ := by
+  have hk1 : 1 ≤ k := by omega
+  have hsq := norm_sq_clean_blockS hc hk hab hbk x
+  have hs : (Assembly.s ^ (b - a)) ^ 2 = (1 / 2 : ℝ) ^ (b - a) := by
+    rw [← pow_mul, mul_comm, pow_mul, Assembly.s_sq]
+  have hPb : ‖P k b x‖ ≤ ‖x‖ := norm_P_le hk1 b x
+  have hpos : (0 : ℝ) ≤ (1 / 2 : ℝ) ^ (b - a) := by positivity
+  refine le_of_sq_le_sq (norm_nonneg _)
+    (mul_nonneg (pow_nonneg Assembly.s_pos.le _) (norm_nonneg _)) ?_
+  rw [hsq, mul_pow, hs]
+  exact mul_le_mul_of_nonneg_left
+    (by nlinarith [norm_nonneg (P k b x), norm_nonneg x]) hpos
+
+/-- **LEMMA A AT A GENERAL ODD SHIFT.**  `‖P_a U_clean^{(c)} P_b‖ ≤ s^{b−a}`, `s = √(1/2)`,
+for every odd `c` and every `a < b`.  This is brief step 4, and it closes Lemma A's clean
+block norms for the shifted operator.
+
+**Read the section preamble before citing this.**  It is Lemma A, not a certificate: the
+defect half (Lemma B for general `c`) is open, so there is deliberately no shifted analogue of
+`GramIdentity.gap_certificate_unconditional` in this file. -/
+theorem clean_boundS {c k : ℕ} (hc : c % 2 = 1) (hk : 3 ≤ k) (a b : Fin (k - 1))
+    (hab : (a : ℕ) < (b : ℕ)) :
+    ‖cleanBlockCLMS c k (a : ℕ) (b : ℕ)‖ ≤ Assembly.s ^ ((b : ℕ) - (a : ℕ)) := by
+  refine ContinuousLinearMap.opNorm_le_bound _ (pow_nonneg Assembly.s_pos.le _) fun x => ?_
+  rw [cleanBlockCLMS_apply]
+  have hb := b.isLt
+  exact norm_clean_block_leS hc (two_le hk) hab (by omega) x
+
+/-- **Specialisation check.**  At `c = 1` the shifted clean bound is
+`GramIdentity.clean_bound`, via `cleanBlockCLMS_one`. -/
+theorem clean_boundS_one {k : ℕ} (hk : 3 ≤ k) (a b : Fin (k - 1))
+    (hab : (a : ℕ) < (b : ℕ)) :
+    ‖cleanBlockCLMS 1 k (a : ℕ) (b : ℕ)‖ ≤ Assembly.s ^ ((b : ℕ) - (a : ℕ)) := by
+  rw [cleanBlockCLMS_one (by omega : 1 ≤ k)]
+  exact clean_bound hk a b hab
+
+/-- **Non-vacuity.**  The shifted clean bound at a concrete second shift, so the theorem above
+is not a statement about an empty hypothesis class.  `c = 5` is odd and is not `1`. -/
+example {k : ℕ} (hk : 3 ≤ k) (a b : Fin (k - 1)) (hab : (a : ℕ) < (b : ℕ)) :
+    ‖cleanBlockCLMS 5 k (a : ℕ) (b : ℕ)‖ ≤ Assembly.s ^ ((b : ℕ) - (a : ℕ)) :=
+  clean_boundS (by norm_num) hk a b hab
+
+/-- And at `c = 2^m − 1`, the legitimate odd shift §4 discusses.  Still **not** `3x − 1`. -/
+example {k m : ℕ} (hm : 1 ≤ m) (hk : 3 ≤ k) (a b : Fin (k - 1)) (hab : (a : ℕ) < (b : ℕ)) :
+    ‖cleanBlockCLMS (2 ^ m - 1) k (a : ℕ) (b : ℕ)‖ ≤ Assembly.s ^ ((b : ℕ) - (a : ℕ)) :=
+  clean_boundS (sub_one_odd hm) hk a b hab
+
+end CleanBlockShifted
+
+/-!
+--------------------------------------------------------------------------------
+## §9. Axiom audit
 --------------------------------------------------------------------------------
 -/
 
@@ -2087,5 +2408,17 @@ end EntryShifted
 #print axioms upper_entry_eqS
 #print axioms norm_shift_phase
 #print axioms upper_entry_eqS_zero
+-- §8, Lemma A's clean block norms at a general shift
+#print axioms norm_upper_entryS
+#print axioms BentS_one
+#print axioms BentS_eq_zero_of_not_owned
+#print axioms norm_BentS_of_owned
+#print axioms gram_upperS
+#print axioms cleanBlockCLMS_apply
+#print axioms cleanBlockCLMS_one
+#print axioms norm_sq_clean_blockS
+#print axioms norm_clean_block_leS
+#print axioms clean_boundS
+#print axioms clean_boundS_one
 
 end ShiftedOperator
