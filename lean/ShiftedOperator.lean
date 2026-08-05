@@ -121,6 +121,23 @@ The `a = 3` closure, added 2026-08-05:
 | S40 | `coll3_eq_pairCount`: `pairCount (2^k)` → `pairCount (2^k − 1)` | fails |
 | S41 | `coll3_closed`: drop `1 ≤ k` | fails — see the note |
 
+The shifted SB bijection, added 2026-08-05 (§2e):
+
+| # | mutation | result |
+|---|---|---|
+| S42 | `shellS_card`: `2^(k-1-j)` → `2^(k-j)` | fails |
+| S43 | `shellS_card`: drop `c` odd | fails |
+| S44 | `sbS_injOn`: drop `j + 1 ≤ k` | fails |
+| S45 | `shellS_oddpart`: `q` odd → `q` even | fails |
+| S46 | `shellS_eq`: drop `1 ≤ j` | fails |
+| S47 | `sbS_image_eq`: target `oddResidues (k-j)` → `oddResidues (k-j-1)` | fails |
+
+S43 and S44 are the ones that matter.  S43: at even `c` the shell is **empty** (for odd `r`,
+`3r + c` is odd, so `v₂ = 0 ≠ j`), and an empty shell cannot biject onto a nonempty set of odd
+residues — oddness of the shift is what makes the whole construction non-vacuous.  S44: without
+`j + 1 ≤ k` the modulus `2^{k-j}` degenerates to `1` and every residue collapses to `0`, so
+injectivity is lost.
+
 S34 and S37 are the ones that matter.  S34: the dyadic block having ratio *exactly* `2` is what
 makes the fibre a singleton; widening it to `(N,3N]` breaks the count at `N = 4`, `n = 3`
 (partners `6` and `12`).  S37: without coprimality the `×3` does not drop out, and `decide`
@@ -868,6 +885,222 @@ theorem above is about — proof that it is not vacuous and not a convenient pro
 
 /-!
 --------------------------------------------------------------------------------
+## §2e. The SB bijection is shift-independent
+--------------------------------------------------------------------------------
+
+Step 1 of `BRIEF_LEMMA_A_GENERAL_SHIFT.md` (private repo): the foundation the shifted shell
+character sum needs.  **Lemma SB — `ψ(r) = (3r+c)/2^j mod 2^{k-j}` is a bijection from the
+valuation shell onto the odd residues mod `2^{k-j}` — holds for every odd shift `c`**, with the
+same two-line arithmetic as at `c = 1`.
+
+Two things make this cheap, and both were checked before any of it was written:
+
+* **injectivity is shift-free by cancellation.**  `3r + c = 2^j q` and `3r' + c = 2^j q'` give
+  `3(r − r') = 2^j (q − q')`; the shift is gone before the argument starts.  This is why
+  `GapCertificate.sb_injective`'s proof survives verbatim at a general shift.
+* **`CountingLemmas.three_mul_add_surj` is already general in its additive constant** — it is
+  stated for `3r + a` with `a` arbitrary, not for `3r + 1`.  So the modular solver surjectivity
+  needs is shift-ready as it stands.
+
+Surjectivity is proved **directly** here rather than through a cardinality argument, which is
+what `sb_image_eq` does at `c = 1` (`shell_card` → `residue_class_card`).  The direct route
+avoids needing a shifted `shell_eq_residue_class`, and it gives `shellS_card` as a corollary
+instead of requiring it as an input — a strictly shorter dependency chain than the `c = 1` file
+has.
+-/
+
+/-- The shifted valuation shell `S_j^{(c)} = { r < 2^k : r odd, v₂(3r+c) = j }`. -/
+def shellS (c k j : ℕ) : Finset ℕ :=
+  (range (2 ^ k)).filter (fun r => 0 < r ∧ r % 2 = 1 ∧ v2 (3 * r + c) = j)
+
+/-- At `c = 1` the shifted shell is `CountingLemmas.shell`. -/
+theorem shellS_one (k j : ℕ) : shellS 1 k j = shell k j := rfl
+
+/-- For `j ≥ 1` the side conditions are automatic: an even `r` (including `0`) makes `3r + c`
+odd, so its valuation is `0 ≠ j`. -/
+theorem shellS_eq {c k j : ℕ} (hc : c % 2 = 1) (hj : 1 ≤ j) :
+    shellS c k j = (range (2 ^ k)).filter (fun r => v2 (3 * r + c) = j) := by
+  unfold shellS
+  apply filter_congr
+  intro r _
+  constructor
+  · rintro ⟨_, _, h⟩; exact h
+  · intro h
+    have hodd : r % 2 = 1 := by
+      by_contra hev
+      have : (3 * r + c) % 2 = 1 := by omega
+      rw [v2_odd_mod _ this] at h
+      omega
+    exact ⟨by omega, hodd, h⟩
+
+/-- On a shifted shell, `3r + c = 2^j q` with `q` odd. -/
+theorem shellS_oddpart {c k j r : ℕ} (hc : c % 2 = 1) (hj : 1 ≤ j) (hr : r ∈ shellS c k j) :
+    3 * r + c = 2 ^ j * ((3 * r + c) / 2 ^ j) ∧ ((3 * r + c) / 2 ^ j) % 2 = 1 := by
+  rw [shellS_eq hc hj, mem_filter] at hr
+  have hne : 3 * r + c ≠ 0 := by omega
+  obtain ⟨hdvd, hndvd⟩ := (v2_eq_iff_dvd hne).1 hr.2
+  obtain ⟨q, hq⟩ := hdvd
+  have hqv : (3 * r + c) / 2 ^ j = q := by
+    rw [hq, Nat.mul_div_cancel_left _ (Nat.two_pow_pos j)]
+  refine ⟨by rw [hqv]; exact hq, ?_⟩
+  rw [hqv]
+  rcases Nat.even_or_odd q with he | ho
+  · exfalso
+    obtain ⟨t, ht⟩ := he
+    exact hndvd ⟨t, by rw [hq, ht, pow_succ]; ring⟩
+  · exact Nat.odd_iff.1 ho
+
+/-- The shifted SB map. -/
+def sbMapS (c k j r : ℕ) : ℕ := ((3 * r + c) / 2 ^ j) % 2 ^ (k - j)
+
+theorem sbMapS_one (k j r : ℕ) : sbMapS 1 k j r = sbMap k j r := rfl
+
+/-- **SB injectivity, general shift.**  The shift cancels in the difference, so this is
+`GapCertificate.sb_injective`'s argument with `1` replaced by `c` and nothing else changed. -/
+theorem sbS_injOn {c k j : ℕ} (hc : c % 2 = 1) (hj : 1 ≤ j) (hjk : j + 1 ≤ k) :
+    Set.InjOn (sbMapS c k j) (↑(shellS c k j) : Set ℕ) := by
+  intro r hr r' hr' hEq
+  simp only [mem_coe] at hr hr'
+  obtain ⟨hq, _⟩ := shellS_oddpart hc hj hr
+  obtain ⟨hq', _⟩ := shellS_oddpart hc hj hr'
+  have hrk : r < 2 ^ k := by
+    rw [shellS_eq hc hj, mem_filter, mem_range] at hr; exact hr.1
+  have hr'k : r' < 2 ^ k := by
+    rw [shellS_eq hc hj, mem_filter, mem_range] at hr'; exact hr'.1
+  unfold sbMapS at hEq
+  -- `2^{k-j} ∣ q - q'` over ℤ
+  have hcong : ((2 : ℤ) ^ (k - j)) ∣
+      ((((3 * r + c) / 2 ^ j : ℕ) : ℤ) - (((3 * r' + c) / 2 ^ j : ℕ) : ℤ)) := by
+    have hme : Nat.ModEq (2 ^ (k - j)) ((3 * r' + c) / 2 ^ j) ((3 * r + c) / 2 ^ j) := hEq.symm
+    have hd := (Nat.modEq_iff_dvd).1 hme
+    push_cast at hd ⊢
+    exact hd
+  obtain ⟨s, hs⟩ := hcong
+  have hqz : (2 : ℤ) ^ j * (((3 * r + c) / 2 ^ j : ℕ) : ℤ) = 3 * (r : ℤ) + (c : ℤ) := by
+    exact_mod_cast congrArg (Nat.cast : ℕ → ℤ) hq.symm
+  have hqz' : (2 : ℤ) ^ j * (((3 * r' + c) / 2 ^ j : ℕ) : ℤ) = 3 * (r' : ℤ) + (c : ℤ) := by
+    exact_mod_cast congrArg (Nat.cast : ℕ → ℤ) hq'.symm
+  have h2 : (2 : ℤ) ^ j * 2 ^ (k - j) = 2 ^ k := by
+    rw [← pow_add]; congr 1; omega
+  -- the shift cancels here, and only here does it appear at all
+  have key : 3 * ((r : ℤ) - (r' : ℤ)) = 2 ^ k * s := by
+    linear_combination -hqz + hqz' + (2 : ℤ) ^ j * hs + s * h2
+  have hlt : |(r : ℤ) - (r' : ℤ)| < 2 ^ k := by
+    have h1 : ((r : ℤ)) < 2 ^ k := by exact_mod_cast hrk
+    have h1' : ((r' : ℤ)) < 2 ^ k := by exact_mod_cast hr'k
+    rw [abs_lt]
+    constructor <;> [linarith [Int.natCast_nonneg r]; linarith [Int.natCast_nonneg r']]
+  have : (r : ℤ) = (r' : ℤ) :=
+    eq_of_two_pow_dvd_three_mul_sub (N := k) ⟨s, key⟩ hlt
+  exact_mod_cast this
+
+/-- **SB surjectivity, general shift — proved directly.**  Given an odd `q < 2^{k-j}`, solve
+`3r + c ≡ 2^j q (mod 2^k)` with `CountingLemmas.three_mul_add_surj` (already general in its
+additive constant).  Then `3r + c = 2^j (q + 2^{k-j} M)` with the bracket odd, which pins the
+valuation at exactly `j` and sends `r` to `q`.
+
+No cardinality argument, hence no shifted `shell_eq_residue_class` — `shellS_card` comes out as
+a corollary below rather than being needed as an input. -/
+theorem sbS_image_eq {c k j : ℕ} (hc : c % 2 = 1) (hj : 1 ≤ j) (hjk : j + 1 ≤ k) :
+    (shellS c k j).image (sbMapS c k j) = oddResidues (k - j) := by
+  apply Finset.Subset.antisymm
+  · -- the image lands in the odd residues
+    intro y hy
+    simp only [mem_image] at hy
+    obtain ⟨r, hr, rfl⟩ := hy
+    obtain ⟨_, hqodd⟩ := shellS_oddpart hc hj hr
+    unfold sbMapS oddResidues
+    rw [mem_filter, mem_range]
+    refine ⟨Nat.mod_lt _ (Nat.two_pow_pos (k - j)), ?_⟩
+    rw [Nat.mod_mod_of_dvd _ (dvd_pow_self 2 (by omega : k - j ≠ 0))]
+    exact hqodd
+  · -- every odd residue is hit
+    intro q hq
+    rw [oddResidues, mem_filter, mem_range] at hq
+    obtain ⟨hqlt, hqodd⟩ := hq
+    have hsplit : (2 : ℕ) ^ k = 2 ^ j * 2 ^ (k - j) := by
+      rw [← pow_add]; congr 1; omega
+    have htlt : 2 ^ j * q < 2 ^ k := by
+      rw [hsplit]
+      exact Nat.mul_lt_mul_of_pos_left hqlt (Nat.two_pow_pos j)
+    obtain ⟨r, hrlt, hrmod⟩ := three_mul_add_surj k c htlt
+    -- 3r + c = 2^k * M + 2^j q, so the bracket q + 2^{k-j} M is odd
+    obtain ⟨M, hdiv⟩ : ∃ M, 3 * r + c = 2 ^ k * M + 2 ^ j * q :=
+      ⟨(3 * r + c) / 2 ^ k, by
+        conv_lhs => rw [← Nat.div_add_mod (3 * r + c) (2 ^ k)]
+        rw [hrmod]⟩
+    have hfac : 3 * r + c = 2 ^ j * (q + 2 ^ (k - j) * M) := by
+      rw [hdiv, hsplit]; ring
+    have hbracket : (q + 2 ^ (k - j) * M) % 2 = 1 := by
+      have : (2 : ℕ) ∣ 2 ^ (k - j) * M :=
+        (dvd_pow_self 2 (by omega : k - j ≠ 0)).mul_right M
+      omega
+    have hv : v2 (3 * r + c) = j := by
+      rw [hfac]; exact v2_two_pow_mul_odd j _ hbracket
+    have hrodd : r % 2 = 1 := by
+      have h2 : (2 : ℕ) ∣ 2 ^ j * (q + 2 ^ (k - j) * M) :=
+        (dvd_pow_self 2 (by omega : j ≠ 0)).mul_right _
+      omega
+    have hmem : r ∈ shellS c k j := by
+      unfold shellS
+      rw [mem_filter, mem_range]
+      exact ⟨hrlt, by omega, hrodd, hv⟩
+    refine mem_image.2 ⟨r, hmem, ?_⟩
+    unfold sbMapS
+    rw [hfac, Nat.mul_div_cancel_left _ (Nat.two_pow_pos j),
+      Nat.add_mul_mod_self_left, Nat.mod_eq_of_lt hqlt]
+
+/-- **LEMMA SB AT A GENERAL ODD SHIFT.**  `ψ` is a bijection from the shell onto the odd
+residues mod `2^{k-j}`. -/
+theorem sbS_bijective {c k j : ℕ} (hc : c % 2 = 1) (hj : 1 ≤ j) (hjk : j + 1 ≤ k) :
+    Set.BijOn (sbMapS c k j) (↑(shellS c k j) : Set ℕ)
+      (↑(oddResidues (k - j)) : Set ℕ) := by
+  refine ⟨?_, sbS_injOn hc hj hjk, ?_⟩
+  · intro r hr
+    simp only [mem_coe] at hr ⊢
+    rw [← sbS_image_eq hc hj hjk]
+    exact mem_image_of_mem _ hr
+  · intro y hy
+    simp only [mem_coe] at hy
+    rw [← sbS_image_eq hc hj hjk] at hy
+    simp only [mem_image] at hy
+    obtain ⟨r, hr, hrq⟩ := hy
+    exact ⟨r, by simpa using hr, hrq⟩
+
+/-- **The shifted shell count**, `|S_j^{(c)}| = 2^{k-1-j}` — shift-independent, and here a
+corollary of the bijection rather than an input to it. -/
+theorem shellS_card {c k j : ℕ} (hc : c % 2 = 1) (hj : 1 ≤ j) (hjk : j + 1 ≤ k) :
+    (shellS c k j).card = 2 ^ (k - 1 - j) := by
+  rw [← card_image_of_injOn (sbS_injOn hc hj hjk), sbS_image_eq hc hj hjk,
+    oddResidues_card (by omega : 1 ≤ k - j)]
+  congr 1
+  omega
+
+/-!
+**Satisfiability witnesses.**  `shellS` is computable, so these evaluate the definition the
+theorems above are about.  Every value is `2^{k-1-j}`, independent of the shift — which is the
+content of `shellS_card`, and is the reason the SB half of Lemma A needs no shift-specific work.
+-/
+
+#eval (shellS 1 6 2).card    -- 8 = 2^(6-1-2)
+#eval (shellS 5 6 2).card    -- 8, same
+#eval (shellS 63 6 2).card   -- 8, same
+#eval (shellS 1 6 4).card    -- 2 = 2^(6-1-4)
+#eval (shellS 11 6 4).card   -- 2, same
+
+-- the shells at a given shift partition the odd residues except `r*`: 8+4+2+1 = 15 = 2^5 - 1
+#eval ((Finset.Icc 1 5).sum (fun j => (shellS 7 6 j).card))   -- 31 = 2^5 - 1
+
+-- The shifted shell is genuinely a different SET, not merely a different name: equinumerous
+-- but not equal.  The bijection is shift-independent; the shell is not.
+-- Deliberately `#eval` and not `by decide`: `v2` is `padicValNat`, which the kernel does not
+-- reduce, so `decide` gets stuck here even though the compiler evaluates it fine.  Same trap as
+-- `CollisionBound`'s `cf`.
+#eval decide (shellS 1 6 2 = shellS 5 6 2)   -- false
+#eval (shellS 1 6 2).card = (shellS 5 6 2).card   -- true
+
+/-!
+--------------------------------------------------------------------------------
 ## §3. The defect residue, for a general shift
 --------------------------------------------------------------------------------
 
@@ -1053,6 +1286,14 @@ example {x K k : ℕ} (hk : 1 ≤ k) (hx : x % 2 = 1)
 #print axioms coll3_eq_pairCount
 #print axioms coll3_closed
 #print axioms coll3_le
+#print axioms shellS_one
+#print axioms shellS_eq
+#print axioms shellS_oddpart
+#print axioms sbMapS_one
+#print axioms sbS_injOn
+#print axioms sbS_image_eq
+#print axioms sbS_bijective
+#print axioms shellS_card
 #print axioms three_coprime_two_pow
 #print axioms three_pow_totient
 #print axioms rstarS_spec
