@@ -21,7 +21,7 @@ the chain (`CountingLemmas`, `CollisionBound`, `BlockVanishing`, `OperatorBlock`
 `ManifestInstance`) generalised too, which is a larger job.  **Do not cite this file as
 "the 3x-1 certificate is formalised".  It is not, yet.**
 
-Six things ARE finished, and the boundary between them and the rest is the point of this note:
+Seven things ARE finished, and the boundary between them and the rest is the point of this note:
 
 1. **Coset uniformity for a general odd shift** (§2b) — the engine Lemma A runs on, `c`-uniform.
 2. **Lemma B's `a = 3` case, complete and sorry-free** (§2c, 2026-08-05):
@@ -49,9 +49,23 @@ Six things ARE finished, and the boundary between them and the rest is the point
    exist, so `coll3_closed` is now tied to the real shifted operator at every shift whose
    offset is `3`.
 
-Still open for general `c`: **Lemma B's bound itself**, and the assembly.  §9 reduces Lemma B
-to `coll_a(k) ≤ 3·2^k` for the three offsets `a ∈ {1,2,3}` — see §9 and the correction below
-for what that leaves.
+7. **LEMMA B AT A GENERAL ODD SHIFT** (§10, 2026-08-06): `collS_le_sharp` —
+   `collS c k + 2 ≤ 3·2^k` for every odd `c < 2^k`, where `collS` is the collision count of
+   the **genuine** shifted Syracuse fibre over the genuine shifted defect residue (its
+   definition mentions `syracuseS` and `rstarS`, no AP model).  Sharp: at offset `3` it is an
+   equality.  With it `defect_norm_sq_leS`, in exactly the shape
+   `CollisionBound.defect_norm_sq_le` has.
+
+   Nothing here is new mathematics.  §10 is `CollisionBound` §3–§7 with the AP offset made a
+   parameter — its two engines (`fact1_injective`, `three_mul_add_existsUnique`) were already
+   general in that constant, and `collA_eq_coll` proves the parametrised version is
+   definitionally the frozen one.  It had to be done because `CollisionBound.apA k` is `1`
+   for even `k` and `2` for odd `k`, **never both at one `k`**, while a general shift produces
+   all three offsets at every `k`.
+
+Still open for general `c`: **the assembly** — no shifted analogue of `Assembly`,
+`ManifestInstance` or `CleanBlock` exists, so there is no shifted certificate theorem.  See
+the boundary note below.
 
 > **CORRECTION 2026-08-05, of a claim this file and the private brief both made.**  Both said
 > the missing piece of Lemma B at a general shift was *"the **valuation** — which power of `2`
@@ -61,12 +75,27 @@ for what that leaves.
 > three lines.  The wrong diagnosis survived two handovers because the `c = 1` proof makes
 > `3r*+1 = 2^{ek k}` — an exact power of two — look load-bearing, and it is not.
 
-**THE MISREADING THIS FILE MOST INVITES, NOW THAT §8 EXISTS.**  A certificate is
-`clean + defect`.  §8 closes the clean half at every odd shift; the defect half is open.  So
-there is deliberately **no** shifted analogue of `GramIdentity.gap_certificate_unconditional`
-in this file, and none may be inferred from `clean_boundS`.  Until Lemma B lands for general
-`c`, "the `3x+c` certificate" does not exist here — and the `3x−1` control experiment remains
-a Python observation for the separate reason that `c : ℕ` cannot express `3x−1` at all (§4).
+**THE MISREADING THIS FILE MOST INVITES, NOW THAT §8 AND §10 BOTH EXIST.**  Lemma A and
+Lemma B are both closed at a general odd shift.  **That is still not a certificate**, and the
+temptation to say otherwise is now at its strongest.
+
+What is missing is the **assembly**.  At `c = 1` the certificate is not "Lemma A + Lemma B";
+it is `CleanBlock.gap_certificate_of_clean` applied to a `ManifestInstance` — a manifest of
+facts about the concrete operator `Tend k`, including column-stochasticity, the level
+majorisation, and the rank-one defect split.  **None of that is instantiated at `TkS c k`,**
+and none of it is generalised here.  Concretely:
+
+* `GramIdentity.gap_certificate_unconditional` reaches the defect through `DefectSplit`'s
+  rank-one treatment, **not** through `coll`.  So §10 does not feed it, and closing Lemma B
+  does not shorten the distance to a shifted certificate by as much as it looks.
+* §10 feeds the *other* route — `GapCertificate.defect_sum_bound` via `hL2` — which carries
+  an explicit `hParseval` hypothesis that is **an open gap at `c = 1` too**
+  (`CollisionBound` §8 says so).
+
+So: there is deliberately **no** shifted analogue of `gap_certificate_unconditional` in this
+file, and none may be inferred from `clean_boundS` and `collS_le_sharp` together.  The
+`3x−1` control experiment additionally remains a Python observation for the separate reason
+that `c : ℕ` cannot express `3x−1` at all (§4).
 
 ## THE CALIBRATION THAT JUSTIFIED STARTING
 
@@ -99,9 +128,9 @@ is specific to the shift `1`.  For general `c` the defect residue is the solutio
 `3r + c ≡ 0 (mod 2^k)`, given here as `rstarS c k` via the inverse of `3`.  Everything else in
 this file is `c`-uniform.
 
-Sorry-free.  Specialisation lemmas throughout, mutation table below, axiom audit `§10`.
+Sorry-free.  Specialisation lemmas throughout, mutation table below, axiom audit `§11`.
 
-## MUTATIONS (84, all fail)
+## MUTATIONS (94, all fail)
 
 | # | mutation | result |
 |---|---|---|
@@ -247,6 +276,37 @@ Lemma A's clean block norms at a general shift, added 2026-08-05 (§8).  All 10 
 | S75 | `norm_sq_clean_blockS`: the equality sharpened `2^{−d}` → `2^{−(d+1)}` | fails |
 | S76 | `norm_clean_block_leS`: bound sharpened `s^d` → `s^{d+1}` | fails |
 | S77 | `clean_boundS`: level weakened `3 ≤ k` → `2 ≤ k` | fails |
+
+The collision bound at an arbitrary AP offset, and Lemma B for general `c`, added 2026-08-06
+(§10).  All 10 fail:
+
+| # | mutation | result |
+|---|---|---|
+| S85 | `shell_card_ltA`: `2^{k−1−j}` → `2^{k−j}` | fails |
+| S86 | `shell_card_topA`: the top atom `1` → `2` | fails |
+| S87 | `sum_shA`: the shell sum `+1` → `+2` | fails |
+| S88 | `sum_shA`: offset positivity weakened `0 < a` → `0 ≤ a` | fails |
+| S89 | `card_EsetA`: the diagonal `2^k` → `2^k + 1` | fails |
+| S90 | `collA_le_sharp`: the margin `+2` → `+3` | fails |
+| S91 | `collA_le_sharp`: the constant `3·2^k` → `2·2^k` | fails |
+| S92 | `collS_le_sharp`: **the size hypothesis dropped**, `c < 2^k` → `c < 2·2^k` | fails |
+| S93 | `cfS_eq_cfA`: the offset moved `apAS c k` → `apAS c k + 1` | fails |
+| S94 | `defect_norm_sq_leS`: the constant `3` → `2` | fails |
+
+**S88 and S92 are the two hypotheses that carry the generalisation.**  S88: `0 < a` is what
+makes `apTermA a m` nonzero, and without it the valuation `v₂(a + 3m)` is undefined at
+`m = 0` — the whole shell decomposition collapses.  S92: the shift's size bound is what puts
+the offset in `{1,2,3}`, so widening it by one factor of two breaks Lemma B exactly as it
+breaks §9.  **S90 and S91 pin the bound from both sides**: the additive margin cannot be
+raised to `+3`, and the constant cannot be lowered to `2` — which matches gate B6, where the
+offset `a = 3` attains `3·2^k − 2` exactly.
+
+**S85 and S86 are recorded with a failed first attempt, the third instance of this pattern.**
+Both initially "failed" because `shell_as_classA` was `private` and so unreachable from a
+scratch file — a *visibility* error, not a mathematical one, and indistinguishable from a
+real failure if only the exit code is read.  The helper was made public and both were re-run;
+they now fail at `omega` and at unsolved goals respectively.  Same lesson as S66/S67 and
+S70/S74: **read the error, not the exit code.**
 
 The shifted defect fibre, added 2026-08-05 (§9).  All 7 fail:
 
@@ -2509,7 +2569,524 @@ fibre evaluations below route through `v2 = padicValNat`, which it does not redu
 
 /-!
 --------------------------------------------------------------------------------
-## §10. Axiom audit
+## §10. The collision bound at an ARBITRARY AP offset, and Lemma B for general `c`
+--------------------------------------------------------------------------------
+
+### Why this section exists at all
+
+§9 reduces Lemma B at a general odd shift to `coll_a(k) ≤ 3·2^k` for the three offsets
+`a ∈ {1,2,3}` (`apAS_mem`), and gate B5 confirms `coll_c` depends on `c` only through the
+offset.  Of those three:
+
+* `a = 3` is **done** — `coll3_closed` (§2c), and gate B6 says it is the extremal case,
+  `coll_3(k) = 3·2^k − 2`, so the bound is sharp to an additive 2;
+* `a ∈ {1,2}` is what `CollisionBound` proves — **but only at the single offset `apA k`.**
+
+That last point is the whole reason for this section, and it is easy to miss.
+`CollisionBound.apA k = 2^{ek k − k}` is `1` when `k` is even and `2` when `k` is odd — it is
+**never both at one `k`**.  So `CollisionBound.coll_le` gives `coll_1(k) ≤ 3·2^k` only for
+even `k`, and `coll_2(k) ≤ 3·2^k` only for odd `k`, whereas a general odd shift produces all
+three offsets at *every* `k` (gate B1: roughly `2^k/3` shifts each).  There is no way to
+re-instantiate the existing theorem to cover the gap.
+
+### What is actually new here: nothing
+
+`CollisionBound`'s §3–§7 chain touches the offset **only** through `apTerm k m = apA k + 3m`,
+and the two engines it runs on are already parametric in that constant:
+
+| engine | where | already general in the offset? |
+|---|---|---|
+| `GapCertificate.fact1_injective` | FACT 1 | yes — takes `a : ℤ` |
+| `CountingLemmas.three_mul_add_existsUnique` | shell counts | yes — takes `a : ℕ` |
+| `CollisionBound.geom_weighted` | the shell sum | offset-free |
+
+So this section is `CollisionBound` §3–§7 with `apA k` replaced by a parameter `a` and
+`0 < a` carried explicitly.  It is a **parametrisation of an existing proof, not new
+mathematics**, and it is written here rather than by editing `CollisionBound.lean` because
+that file's §0 freezes its definitions deliberately (*"fixed here and never widened
+afterwards"*) and the whole certificate depends on it.  `collA_eq_coll` below ties the
+general version back to the frozen one as a theorem, which is the guarantee that
+re-deriving rather than editing did not quietly change the object.
+-/
+
+section CollisionShifted
+
+open CollisionBound
+
+/-- The AP term at an arbitrary offset.  `CollisionBound.apTerm k m` is `apTermA (apA k) m`. -/
+def apTermA (a m : ℕ) : ℕ := a + 3 * m
+
+theorem apTermA_pos {a : ℕ} (ha : 0 < a) (m : ℕ) : 0 < apTermA a m := by
+  unfold apTermA; omega
+
+theorem apTermA_ne_zero {a : ℕ} (ha : 0 < a) (m : ℕ) : apTermA a m ≠ 0 :=
+  (apTermA_pos ha m).ne'
+
+/-- The fibre value at an arbitrary offset. -/
+def fibValA (a k m : ℕ) : ℕ := oddPart (apTermA a m) % 2 ^ k
+
+theorem fibValA_lt (a k m : ℕ) : fibValA a k m < 2 ^ k :=
+  Nat.mod_lt _ (Nat.two_pow_pos k)
+
+def cfA (a k t : ℕ) : ℕ := ((range (2 ^ k)).filter (fun m => fibValA a k m = t)).card
+
+/-- `coll` at an arbitrary offset. -/
+def collA (a k : ℕ) : ℕ := ∑ t ∈ range (2 ^ k), (cfA a k t) ^ 2
+
+/-- The shell index at an arbitrary offset. -/
+def shA (a k m : ℕ) : ℕ := if apTermA a m % 2 ^ k = 0 then k else v2 (apTermA a m)
+
+theorem shA_le {a : ℕ} (ha : 0 < a) (k m : ℕ) : shA a k m ≤ k := by
+  unfold shA
+  split
+  · exact le_rfl
+  · rename_i hne
+    by_contra hcon
+    push_neg at hcon
+    have hdvd : 2 ^ k ∣ apTermA a m :=
+      dvd_trans (pow_dvd_pow 2 (by omega)) (pow_v2_dvd _ (apTermA_ne_zero ha m))
+    obtain ⟨d, hd⟩ := hdvd
+    exact hne (by simp [hd, Nat.mul_mod_right])
+
+theorem shA_eq_iff_lt {a k j m : ℕ} (ha : 0 < a) (hj : j < k) :
+    shA a k m = j ↔ apTermA a m % 2 ^ (j + 1) = 2 ^ j := by
+  unfold shA
+  split
+  · rename_i htop
+    have hdvd : 2 ^ (j + 1) ∣ apTermA a m :=
+      dvd_trans (pow_dvd_pow 2 (by omega)) (Nat.dvd_of_mod_eq_zero htop)
+    obtain ⟨d, hd⟩ := hdvd
+    have h0 : apTermA a m % 2 ^ (j + 1) = 0 := by simp [hd, Nat.mul_mod_right]
+    have hpos : 0 < 2 ^ j := Nat.two_pow_pos j
+    constructor
+    · intro h; omega
+    · intro h; omega
+  · exact v2_eq_iff_mod (apTermA_ne_zero ha m)
+
+theorem shA_eq_top_iff {a k m : ℕ} (ha : 0 < a) (hk : 1 ≤ k) :
+    shA a k m = k ↔ apTermA a m % 2 ^ k = 0 := by
+  unfold shA
+  split
+  · rename_i h; simp [h]
+  · rename_i hne
+    constructor
+    · intro h
+      exfalso
+      have hdvd : 2 ^ k ∣ apTermA a m := by
+        have hd := pow_v2_dvd (apTermA a m) (apTermA_ne_zero ha m)
+        rwa [h] at hd
+      obtain ⟨d, hd⟩ := hdvd
+      exact hne (by simp [hd, Nat.mul_mod_right])
+    · intro h; exact absurd h hne
+
+/-- The shell condition as a residue class in `m`.  `three_mul_add_existsUnique` is already
+general in the additive constant, so the offset costs nothing here. -/
+theorem shell_as_classA {a k M t : ℕ} (hMk : M ≤ k) (ht : t < 2 ^ M) :
+    ∃ r < 2 ^ M,
+      (range (2 ^ k)).filter (fun m => apTermA a m % 2 ^ M = t)
+        = (range (2 ^ k)).filter (fun m => m % 2 ^ M = r) := by
+  obtain ⟨r, ⟨hr, hrc⟩, _⟩ := three_mul_add_existsUnique M a ht
+  refine ⟨r, hr, ?_⟩
+  ext m
+  simp only [mem_filter, mem_range, and_congr_right_iff]
+  intro _
+  constructor
+  · intro h
+    have h1 : (3 * (m % 2 ^ M) + a) % 2 ^ M = t := by
+      rw [three_mul_add_mod_mod]
+      unfold apTermA at h
+      rw [← h]; ring_nf
+    exact three_mul_add_inj (Nat.mod_lt _ (Nat.two_pow_pos M)) hr (by rw [h1, hrc])
+  · intro h
+    have h1 : (3 * (m % 2 ^ M) + a) % 2 ^ M = t := by rw [h, hrc]
+    rw [three_mul_add_mod_mod] at h1
+    unfold apTermA
+    rw [← h1]; ring_nf
+
+theorem shell_card_ltA {a k j : ℕ} (ha : 0 < a) (hj : j < k) :
+    ((range (2 ^ k)).filter (fun m => shA a k m = j)).card = 2 ^ (k - 1 - j) := by
+  have hset : (range (2 ^ k)).filter (fun m => shA a k m = j)
+      = (range (2 ^ k)).filter (fun m => apTermA a m % 2 ^ (j + 1) = 2 ^ j) := by
+    apply filter_congr
+    intro m _
+    simpa using shA_eq_iff_lt (a := a) (m := m) ha hj
+  rw [hset]
+  obtain ⟨r, hr, hcl⟩ := shell_as_classA (a := a) (k := k) (M := j + 1) (t := 2 ^ j)
+    (by omega) (by exact Nat.pow_lt_pow_right (by norm_num) (by omega))
+  rw [hcl, residue_class_card (by omega) hr]
+  congr 1
+  omega
+
+theorem shell_card_topA {a k : ℕ} (ha : 0 < a) (hk : 1 ≤ k) :
+    ((range (2 ^ k)).filter (fun m => shA a k m = k)).card = 1 := by
+  have hset : (range (2 ^ k)).filter (fun m => shA a k m = k)
+      = (range (2 ^ k)).filter (fun m => apTermA a m % 2 ^ k = 0) := by
+    apply filter_congr
+    intro m _
+    simpa using shA_eq_top_iff (a := a) (m := m) ha hk
+  rw [hset]
+  obtain ⟨r, hr, hcl⟩ := shell_as_classA (a := a) (k := k) (M := k) (t := 0) le_rfl
+    (Nat.two_pow_pos k)
+  rw [hcl, residue_class_card le_rfl hr]
+  simp
+
+theorem shA_mem_range {a : ℕ} (ha : 0 < a) (k m : ℕ) : shA a k m ∈ range (k + 1) := by
+  simp only [mem_range]
+  have := shA_le ha k m
+  omega
+
+/-- **THE SHELL SUM at an arbitrary offset.**  `geom_weighted` is offset-free and is
+imported, not reproved. -/
+theorem sum_shA {a k : ℕ} (ha : 0 < a) (hk : 1 ≤ k) :
+    (∑ m ∈ range (2 ^ k), shA a k m) + 1 = 2 ^ k := by
+  have hfib := Finset.sum_fiberwise_of_maps_to
+    (s := range (2 ^ k)) (t := range (k + 1)) (g := shA a k) (f := shA a k)
+    (fun m _ => shA_mem_range ha k m)
+  have hinner : ∀ j ∈ range (k + 1),
+      (∑ m ∈ (range (2 ^ k)).filter (fun m => shA a k m = j), shA a k m)
+        = j * ((range (2 ^ k)).filter (fun m => shA a k m = j)).card := by
+    intro j _
+    rw [Finset.sum_congr rfl (fun m hm => (mem_filter.mp hm).2)]
+    simp [mul_comm]
+  rw [← hfib, Finset.sum_congr rfl hinner, Finset.sum_range_succ]
+  rw [shell_card_topA ha hk]
+  have hcards : ∀ j ∈ range k,
+      j * ((range (2 ^ k)).filter (fun m => shA a k m = j)).card = j * 2 ^ (k - 1 - j) := by
+    intro j hj
+    simp only [mem_range] at hj
+    rw [shell_card_ltA ha hj]
+  rw [Finset.sum_congr rfl hcards]
+  have := geom_weighted k
+  omega
+
+/-- **FACT 1 at an arbitrary offset.**  `GapCertificate.fact1_injective` already takes the
+additive constant as a parameter, so this is the `c = 1` proof with `apA k` replaced. -/
+theorem fact1_shellA {a k j m m' : ℕ} (ha : 0 < a) (hj : j < k) (hm : m < 2 ^ k)
+    (hm' : m' < 2 ^ k) (h1 : shA a k m = j) (h2 : shA a k m' = j)
+    (hf : fibValA a k m = fibValA a k m') : m = m' := by
+  have hv : v2 (apTermA a m) = j := by
+    unfold shA at h1
+    split at h1
+    · omega
+    · exact h1
+  have hv' : v2 (apTermA a m') = j := by
+    unfold shA at h2
+    split at h2
+    · omega
+    · exact h2
+  have hx : apTermA a m = 2 ^ j * oddPart (apTermA a m) := by
+    rw [← hv]; exact (two_pow_mul_oddPart (apTermA_ne_zero ha m)).symm
+  have hx' : apTermA a m' = 2 ^ j * oddPart (apTermA a m') := by
+    rw [← hv']; exact (two_pow_mul_oddPart (apTermA_ne_zero ha m')).symm
+  have hmod : oddPart (apTermA a m) % 2 ^ k = oddPart (apTermA a m') % 2 ^ k := hf
+  have hdvd : (2 : ℤ) ^ k ∣ (oddPart (apTermA a m) : ℤ) - (oddPart (apTermA a m') : ℤ) := by
+    have hme : Nat.ModEq (2 ^ k) (oddPart (apTermA a m')) (oddPart (apTermA a m)) := hmod.symm
+    have h := (Nat.modEq_iff_dvd).1 hme
+    push_cast at h
+    exact h
+  have hZ : (m : ℤ) = (m' : ℤ) := by
+    refine fact1_injective (k := k) (j := j) (a := (a : ℤ))
+      (u := (oddPart (apTermA a m) : ℤ)) (u' := (oddPart (apTermA a m') : ℤ))
+      (by positivity) (by exact_mod_cast hm) (by positivity) (by exact_mod_cast hm')
+      ?_ ?_ hdvd
+    · have := hx; unfold apTermA at this; exact_mod_cast this
+    · have := hx'; unfold apTermA at this; exact_mod_cast this
+  exact_mod_cast hZ
+
+theorem fact1_allA {a k m m' : ℕ} (ha : 0 < a) (hk : 1 ≤ k) (hm : m < 2 ^ k)
+    (hm' : m' < 2 ^ k) (hsh : shA a k m = shA a k m')
+    (hf : fibValA a k m = fibValA a k m') : m = m' := by
+  rcases Nat.lt_or_ge (shA a k m) k with hlt | hge
+  · exact fact1_shellA ha hlt hm hm' rfl hsh.symm hf
+  · have hmk : shA a k m = k := le_antisymm (shA_le ha k m) hge
+    have hm'k : shA a k m' = k := hsh ▸ hmk
+    have hcard := shell_card_topA (a := a) (k := k) ha hk
+    have hmem : m ∈ (range (2 ^ k)).filter (fun x => shA a k x = k) :=
+      mem_filter.mpr ⟨mem_range.mpr hm, hmk⟩
+    have hmem' : m' ∈ (range (2 ^ k)).filter (fun x => shA a k x = k) :=
+      mem_filter.mpr ⟨mem_range.mpr hm', hm'k⟩
+    exact Finset.card_le_one.mp (le_of_eq hcard) m hmem m' hmem'
+
+def collPairsA (a k : ℕ) : Finset (ℕ × ℕ) :=
+  ((range (2 ^ k)) ×ˢ (range (2 ^ k))).filter (fun p => fibValA a k p.1 = fibValA a k p.2)
+
+theorem mem_collPairsA {a k : ℕ} {p : ℕ × ℕ} :
+    p ∈ collPairsA a k ↔ p.1 < 2 ^ k ∧ p.2 < 2 ^ k ∧ fibValA a k p.1 = fibValA a k p.2 := by
+  simp only [collPairsA, mem_filter, Finset.mem_product, mem_range, and_assoc]
+
+theorem collA_eq_card (a k : ℕ) : collA a k = (collPairsA a k).card := by
+  have hmaps : Set.MapsTo (fun p : ℕ × ℕ => fibValA a k p.1)
+      (↑(collPairsA a k) : Set (ℕ × ℕ)) (↑(range (2 ^ k)) : Set ℕ) := by
+    intro p _
+    simp only [Finset.mem_coe, mem_range]
+    exact fibValA_lt a k p.1
+  rw [Finset.card_eq_sum_card_fiberwise hmaps]
+  unfold collA
+  apply Finset.sum_congr rfl
+  intro t _
+  have hfib : (collPairsA a k).filter (fun p => fibValA a k p.1 = t)
+      = ((range (2 ^ k)).filter (fun m => fibValA a k m = t))
+        ×ˢ ((range (2 ^ k)).filter (fun m => fibValA a k m = t)) := by
+    ext p
+    simp only [mem_filter, mem_collPairsA, Finset.mem_product, mem_range]
+    constructor
+    · rintro ⟨⟨h1, h2, h3⟩, h4⟩
+      exact ⟨⟨h1, h4⟩, h2, by rw [← h3, h4]⟩
+    · rintro ⟨⟨h1, h2⟩, h3, h4⟩
+      exact ⟨⟨h1, h3, by rw [h2, h4]⟩, h2⟩
+  rw [hfib, Finset.card_product]
+  unfold cfA
+  ring
+
+def EsetA (a k : ℕ) : Finset (ℕ × ℕ) :=
+  (collPairsA a k).filter (fun p => shA a k p.1 = shA a k p.2)
+
+def LsetA (a k : ℕ) : Finset (ℕ × ℕ) :=
+  (collPairsA a k).filter (fun p => shA a k p.1 < shA a k p.2)
+
+def GsetA (a k : ℕ) : Finset (ℕ × ℕ) :=
+  (collPairsA a k).filter (fun p => shA a k p.2 < shA a k p.1)
+
+theorem mem_LsetA {a k : ℕ} {p : ℕ × ℕ} :
+    p ∈ LsetA a k ↔ (p.1 < 2 ^ k ∧ p.2 < 2 ^ k ∧ fibValA a k p.1 = fibValA a k p.2)
+      ∧ shA a k p.1 < shA a k p.2 := by
+  simp only [LsetA, mem_filter, mem_collPairsA]
+
+theorem mem_GsetA {a k : ℕ} {p : ℕ × ℕ} :
+    p ∈ GsetA a k ↔ (p.1 < 2 ^ k ∧ p.2 < 2 ^ k ∧ fibValA a k p.1 = fibValA a k p.2)
+      ∧ shA a k p.2 < shA a k p.1 := by
+  simp only [GsetA, mem_filter, mem_collPairsA]
+
+theorem mem_EsetA {a k : ℕ} {p : ℕ × ℕ} :
+    p ∈ EsetA a k ↔ (p.1 < 2 ^ k ∧ p.2 < 2 ^ k ∧ fibValA a k p.1 = fibValA a k p.2)
+      ∧ shA a k p.1 = shA a k p.2 := by
+  simp only [EsetA, mem_filter, mem_collPairsA]
+
+theorem card_splitA (a k : ℕ) :
+    (collPairsA a k).card = (EsetA a k).card + (LsetA a k).card + (GsetA a k).card := by
+  classical
+  have h1 := Finset.filter_card_add_filter_neg_card_eq_card
+    (s := collPairsA a k) (p := fun p => shA a k p.1 = shA a k p.2)
+  have h2 := Finset.filter_card_add_filter_neg_card_eq_card
+    (s := (collPairsA a k).filter (fun p => ¬ shA a k p.1 = shA a k p.2))
+    (p := fun p => shA a k p.1 < shA a k p.2)
+  have hL : ((collPairsA a k).filter (fun p => ¬ shA a k p.1 = shA a k p.2)).filter
+      (fun p => shA a k p.1 < shA a k p.2) = LsetA a k := by
+    unfold LsetA
+    rw [Finset.filter_filter]
+    apply filter_congr
+    intro p _
+    omega
+  have hG : ((collPairsA a k).filter (fun p => ¬ shA a k p.1 = shA a k p.2)).filter
+      (fun p => ¬ shA a k p.1 < shA a k p.2) = GsetA a k := by
+    unfold GsetA
+    rw [Finset.filter_filter]
+    apply filter_congr
+    intro p _
+    omega
+  rw [hL, hG] at h2
+  unfold EsetA
+  omega
+
+/-- **DIAGONAL (exact).**  `|E| = 2^k`, by FACT 1 with the atom included. -/
+theorem card_EsetA {a k : ℕ} (ha : 0 < a) (hk : 1 ≤ k) : (EsetA a k).card = 2 ^ k := by
+  have hinj : Function.Injective (fun m : ℕ => (m, m)) := by
+    intro x y h
+    exact congrArg Prod.fst h
+  have hset : EsetA a k = (range (2 ^ k)).image (fun m => (m, m)) := by
+    ext ⟨x, y⟩
+    simp only [mem_EsetA, mem_image, mem_range, Prod.mk.injEq]
+    constructor
+    · rintro ⟨⟨h1, h2, h3⟩, h4⟩
+      exact ⟨x, h1, rfl, fact1_allA ha hk h1 h2 h4 h3⟩
+    · rintro ⟨m, hm, rfl, rfl⟩
+      exact ⟨⟨hm, hm, rfl⟩, rfl⟩
+  rw [hset, Finset.card_image_of_injective _ hinj, card_range]
+
+theorem card_GsetA_eq (a k : ℕ) : (GsetA a k).card = (LsetA a k).card := by
+  have hinj : Function.Injective (fun p : ℕ × ℕ => (p.2, p.1)) := by
+    intro x y h
+    have h1 : x.2 = y.2 := congrArg Prod.fst h
+    have h2 : x.1 = y.1 := congrArg Prod.snd h
+    exact Prod.ext h2 h1
+  have hset : GsetA a k = (LsetA a k).image (fun p : ℕ × ℕ => (p.2, p.1)) := by
+    ext ⟨x, y⟩
+    simp only [mem_GsetA, mem_image, mem_LsetA, Prod.exists, Prod.mk.injEq]
+    constructor
+    · rintro ⟨⟨h1, h2, h3⟩, h4⟩
+      exact ⟨y, x, ⟨⟨h2, h1, h3.symm⟩, h4⟩, rfl, rfl⟩
+    · rintro ⟨u, v, ⟨⟨h1, h2, h3⟩, h4⟩, rfl, rfl⟩
+      exact ⟨⟨h2, h1, h3.symm⟩, h4⟩
+  rw [hset, Finset.card_image_of_injective _ hinj]
+
+/-- **CROSS (bound).**  For each `m'`, the strictly-lower colliding partners inject into
+`range (shA a k m')` via `shA` — at most one per shell, by FACT 1. -/
+theorem fibre_L_card_leA {a k m' : ℕ} (ha : 0 < a) :
+    ((LsetA a k).filter (fun p => p.2 = m')).card ≤ shA a k m' := by
+  have hcard : (range (shA a k m')).card = shA a k m' := card_range _
+  rw [← hcard]
+  apply Finset.card_le_card_of_injOn (fun p : ℕ × ℕ => shA a k p.1)
+  · intro p hp
+    simp only [Finset.mem_coe, mem_filter, mem_LsetA] at hp
+    simp only [Finset.mem_coe, mem_range]
+    rw [← hp.2]
+    exact hp.1.2
+  · intro p hp q hq hpq
+    simp only [Finset.mem_coe, mem_filter, mem_LsetA] at hp hq
+    have hp2 : p.2 = m' := hp.2
+    have hq2 : q.2 = m' := hq.2
+    have hjk : shA a k p.1 < k := lt_of_lt_of_le hp.1.2 (shA_le ha k p.2)
+    have hfp : fibValA a k p.1 = fibValA a k q.1 := by
+      rw [hp.1.1.2.2, hq.1.1.2.2, hp2, hq2]
+    have h1 : p.1 = q.1 := fact1_shellA ha hjk hp.1.1.1 hq.1.1.1 rfl hpq.symm hfp
+    have h2 : p.2 = q.2 := by rw [hp2, hq2]
+    exact Prod.ext h1 h2
+
+theorem card_LsetA_le {a k : ℕ} (ha : 0 < a) (hk : 1 ≤ k) :
+    (LsetA a k).card + 1 ≤ 2 ^ k := by
+  have hmaps : Set.MapsTo (fun p : ℕ × ℕ => p.2)
+      (↑(LsetA a k) : Set (ℕ × ℕ)) (↑(range (2 ^ k)) : Set ℕ) := by
+    intro p hp
+    simp only [Finset.mem_coe, mem_LsetA] at hp
+    simp only [Finset.mem_coe, mem_range]
+    exact hp.1.2.1
+  have hfib := Finset.card_eq_sum_card_fiberwise hmaps
+  have hle : ∑ m' ∈ range (2 ^ k), ((LsetA a k).filter (fun p => p.2 = m')).card
+      ≤ ∑ m' ∈ range (2 ^ k), shA a k m' :=
+    Finset.sum_le_sum (fun m' _ => fibre_L_card_leA ha)
+  have := sum_shA ha hk
+  omega
+
+/-- **THE COLLISION BOUND AT AN ARBITRARY POSITIVE OFFSET.**  `collA a k + 2 ≤ 3·2^k`.
+
+`diag = 2^k` exactly, plus `2·cross ≤ 2·(2^k − 1)`.  Identical to
+`CollisionBound.coll_le_sharp` with `apA k` replaced by `a`. -/
+theorem collA_le_sharp {a k : ℕ} (ha : 0 < a) (hk : 1 ≤ k) : collA a k + 2 ≤ 3 * 2 ^ k := by
+  rw [collA_eq_card, card_splitA, card_GsetA_eq, card_EsetA ha hk]
+  have := card_LsetA_le ha hk
+  omega
+
+theorem collA_le {a k : ℕ} (ha : 0 < a) (hk : 1 ≤ k) : collA a k ≤ 3 * 2 ^ k := by
+  have := collA_le_sharp ha hk
+  omega
+
+/-- **Specialisation check, and the guarantee that re-deriving did not change the object.**
+At the offset `apA k` this IS `CollisionBound.coll k`, definitionally. -/
+theorem collA_eq_coll (k : ℕ) : collA (apA k) k = coll k := rfl
+
+/-- And the sharp bound specialises to `CollisionBound.coll_le_sharp`. -/
+example {k : ℕ} (hk : 1 ≤ k) : coll k + 2 ≤ 3 * 2 ^ k :=
+  collA_eq_coll k ▸ collA_le_sharp (apA_pos k) hk
+
+/-!
+### Lemma B at a general odd shift
+
+`collS c k` is the collision count of the **genuine** shifted defect fibre — it is defined
+from `syracuseS` and `rstarS`, not from an AP model.  §9's link theorem is what turns it into
+`collA`, and `collA_le_sharp` then bounds it.
+-/
+
+/-- The fibre-value multiplicity of the genuine shifted defect fibre. -/
+def cfS (c k t : ℕ) : ℕ :=
+  ((range (2 ^ k)).filter
+    (fun m => syracuseS c (rstarS c k + m * 2 ^ k) % 2 ^ k = t)).card
+
+/-- **`coll` for the genuine shifted defect fibre.**  Defined from `syracuseS` and `rstarS`
+alone: no AP model appears in the statement. -/
+def collS (c k : ℕ) : ℕ := ∑ t ∈ range (2 ^ k), (cfS c k t) ^ 2
+
+/-- The genuine shifted fibre count IS the AP-model count, at the offset `apAS c k`.  This is
+§9's link theorem, applied under the filter. -/
+theorem cfS_eq_cfA {c k : ℕ} (hc : c % 2 = 1) (hk : 1 ≤ k) (t : ℕ) :
+    cfS c k t = cfA (apAS c k) k t := by
+  unfold cfS cfA
+  congr 1
+  apply filter_congr
+  intro m _
+  rw [syracuseS_defect_fibre hc hk m]
+  rfl
+
+theorem collS_eq_collA {c k : ℕ} (hc : c % 2 = 1) (hk : 1 ≤ k) :
+    collS c k = collA (apAS c k) k := by
+  unfold collS collA
+  exact Finset.sum_congr rfl fun t _ => by rw [cfS_eq_cfA hc hk t]
+
+/-- **LEMMA B AT A GENERAL ODD SHIFT.**  `collS c k + 2 ≤ 3·2^k` for every odd `c < 2^k`.
+
+The statement is about the genuine shifted Syracuse map over the genuine shifted defect
+residue.  The route is §9's link theorem (`syracuseS_defect_fibre`) to move to the AP model,
+`apAS_mem`'s trichotomy to know the offset is positive, and `collA_le_sharp` to bound it.
+
+Sharp to an additive `2`, and gate B6 says that is exactly sharp: at offset `3`,
+`collS c k + 2 = 3·2^k`. -/
+theorem collS_le_sharp {c k : ℕ} (hc : c % 2 = 1) (hk : 1 ≤ k) (hck : c < 2 ^ k) :
+    collS c k + 2 ≤ 3 * 2 ^ k := by
+  have hA : 0 < apAS c k := by
+    rcases apAS_mem hc hk hck with h | h | h <;> omega
+  rw [collS_eq_collA hc hk]
+  exact collA_le_sharp hA hk
+
+/-- **LEMMA B AT A GENERAL ODD SHIFT**, in the form `CollisionBound.coll_le` states it. -/
+theorem collS_le {c k : ℕ} (hc : c % 2 = 1) (hk : 1 ≤ k) (hck : c < 2 ^ k) :
+    collS c k ≤ 3 * 2 ^ k := by
+  have := collS_le_sharp hc hk hck
+  omega
+
+/-- **The real-valued form of the shifted collision bound**, in exactly the shape
+`CollisionBound.defect_norm_sq_le` has — same `s`, same `2*k`, same `3` — so the two are
+directly comparable rather than merely analogous.  `‖c_c‖² = collS c k / 4^k`.
+
+**Where this does and does not go.**  At `c = 1` this feeds `hL2_of_parseval` and
+`defect_sum_bound_of_collision`, both of which carry an explicit `hParseval` hypothesis —
+`CollisionBound` §8 names that Bessel inequality as the remaining gap on that route, and it
+is a gap at `c = 1` too.  The *unconditional* certificate
+(`GramIdentity.gap_certificate_unconditional`) does not use `coll` at all; it reaches the
+defect through `DefectSplit`'s rank-one treatment.  So this theorem closes the shifted
+analogue of the collision route, and closes nothing on the unconditional one. -/
+theorem defect_norm_sq_leS {s : ℝ} (hs : 0 < s) (hsq : s ^ 2 = 1 / 2) {c k : ℕ}
+    (hc : c % 2 = 1) (hk : 1 ≤ k) (hck : c < 2 ^ k) :
+    (collS c k : ℝ) / 4 ^ k ≤ 3 * s ^ (2 * k) := by
+  have hcoll : (collS c k : ℝ) ≤ 3 * 2 ^ k := by exact_mod_cast collS_le hc hk hck
+  have hpos : (0 : ℝ) < 2 ^ k := by positivity
+  have hs2k : s ^ (2 * k) = (1 / 2 : ℝ) ^ k := by rw [pow_mul, hsq]
+  have h4 : (4 : ℝ) ^ k = 2 ^ k * 2 ^ k := by rw [← mul_pow]; norm_num
+  rw [hs2k, h4, div_le_iff₀ (by positivity)]
+  have key : 3 * ((1 / 2 : ℝ) ^ k) * (2 ^ k * 2 ^ k) = 3 * 2 ^ k := by
+    rw [div_pow, one_pow]
+    field_simp
+  rw [key]
+  exact hcoll
+
+/-- **Specialisation check.**  At `c = 1` the shifted collision count is
+`CollisionBound.coll`, so `defect_norm_sq_leS` really is the same statement there. -/
+theorem collS_one {k : ℕ} (hk : 1 ≤ k) : collS 1 k = coll k := by
+  rw [collS_eq_collA (by norm_num) hk, apAS_one hk, collA_eq_coll]
+
+end CollisionShifted
+
+/-!
+**Satisfiability witnesses for §10.**  `collA` and `collS` are computable.  The three offsets,
+at `k = 5`: `3*2^5 = 96`, and gate B4's row reads `74 / 80 / 94`.  The `a = 3` value is
+`3·2^k − 2`, so the bound is attained to an additive 2 — it cannot be lowered to `C·2^k` for
+any `C < 3`.
+-/
+
+#eval collA 1 5    -- 74
+#eval collA 2 5    -- 80
+#eval collA 3 5    -- 94  = 3*2^5 - 2, the extremal offset
+#eval 3 * 2 ^ 5    -- 96
+
+-- collS is computed from the genuine shifted map; these must match collA at the offset
+#eval (collS 11 5, apAS 11 5)   -- (74, 1)
+#eval (collS 3 5,  apAS 3 5)    -- (94, 3)  the a = 3 shift attains the bound
+#eval (collS 13 5, apAS 13 5)   -- (80, 2)
+
+-- and coll3 (§2c) is collA at offset 3, so the two routes to the extremal case agree
+#eval (coll3 5, collA 3 5)      -- (94, 94)
+
+/-!
+--------------------------------------------------------------------------------
+## §11. Axiom audit
 --------------------------------------------------------------------------------
 -/
 
@@ -2614,5 +3191,24 @@ fibre evaluations below route through `v2 = padicValNat`, which it does not redu
 #print axioms apAS_mem
 #print axioms syracuseS_defect_fibre
 #print axioms apAS_one
+-- §10, the collision bound at an arbitrary AP offset, and Lemma B for general c
+#print axioms shell_card_ltA
+#print axioms shell_card_topA
+#print axioms sum_shA
+#print axioms fact1_shellA
+#print axioms fact1_allA
+#print axioms collA_eq_card
+#print axioms card_EsetA
+#print axioms card_GsetA_eq
+#print axioms card_LsetA_le
+#print axioms collA_le_sharp
+#print axioms collA_le
+#print axioms collA_eq_coll
+#print axioms cfS_eq_cfA
+#print axioms collS_eq_collA
+#print axioms collS_le_sharp
+#print axioms collS_le
+#print axioms defect_norm_sq_leS
+#print axioms collS_one
 
 end ShiftedOperator
