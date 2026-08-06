@@ -21,7 +21,7 @@ the chain (`CountingLemmas`, `CollisionBound`, `BlockVanishing`, `OperatorBlock`
 `ManifestInstance`) generalised too, which is a larger job.  **Do not cite this file as
 "the 3x-1 certificate is formalised".  It is not, yet.**
 
-Seven things ARE finished, and the boundary between them and the rest is the point of this note:
+Nine things ARE finished, and the boundary between them and the rest is the point of this note:
 
 1. **Coset uniformity for a general odd shift** (§2b) — the engine Lemma A runs on, `c`-uniform.
 2. **Lemma B's `a = 3` case, complete and sorry-free** (§2c, 2026-08-05):
@@ -63,9 +63,16 @@ Seven things ARE finished, and the boundary between them and the rest is the poi
    for even `k` and `2` for odd `k`, **never both at one `k`**, while a general shift produces
    all three offsets at every `k`.
 
-Still open for general `c`: **the assembly** — no shifted analogue of `Assembly`,
-`ManifestInstance` or `CleanBlock` exists, so there is no shifted certificate theorem.  See
-the boundary note below.
+8. **The shifted LOWER block vanishes** (§11, 2026-08-06): `P_UcleanS_P_eq_zero` —
+   `P_a U_clean^{(c)} P_b = 0` for `b ≤ a`, at every odd shift.  With §8 this is all of
+   Lemma A's operator content, both regimes.
+9. **Column-stochasticity at a general shift** (§12, 2026-08-06): `colStochS_concrete` —
+   `1ᵀ T_c = 1ᵀ`.  The first substantive field of `Assembly.LemmaAFacts`.
+
+Still open for general `c`: **the assembly.**  §12 ends with a field-by-field table of
+`LemmaAFacts`; the blocking object is a shifted `DefectSplit` + `ManifestInstance` (the
+rank-one split `U_full^{(c)} = U_clean^{(c)} + D_c` and the `Qmat` built from it), roughly
+1400 lines of `c = 1` machinery, not started.  See the boundary note below.
 
 > **CORRECTION 2026-08-05, of a claim this file and the private brief both made.**  Both said
 > the missing piece of Lemma B at a general shift was *"the **valuation** — which power of `2`
@@ -128,9 +135,9 @@ is specific to the shift `1`.  For general `c` the defect residue is the solutio
 `3r + c ≡ 0 (mod 2^k)`, given here as `rstarS c k` via the inverse of `3`.  Everything else in
 this file is `c`-uniform.
 
-Sorry-free.  Specialisation lemmas throughout, mutation table below, axiom audit `§11`.
+Sorry-free.  Specialisation lemmas throughout, mutation table below, axiom audit `§13`.
 
-## MUTATIONS (94, all fail)
+## MUTATIONS (102, all fail)
 
 | # | mutation | result |
 |---|---|---|
@@ -276,6 +283,25 @@ Lemma A's clean block norms at a general shift, added 2026-08-05 (§8).  All 10 
 | S75 | `norm_sq_clean_blockS`: the equality sharpened `2^{−d}` → `2^{−(d+1)}` | fails |
 | S76 | `norm_clean_block_leS`: bound sharpened `s^d` → `s^{d+1}` | fails |
 | S77 | `clean_boundS`: level weakened `3 ≤ k` → `2 ≤ k` | fails |
+
+The shifted lower block and column-stochasticity, added 2026-08-06 (§11, §12).  All 8 fail:
+
+| # | mutation | result |
+|---|---|---|
+| S95 | `masked_entry_vanishesS`: regime inverted `b ≤ a` → `a ≤ b` | fails |
+| S96 | `masked_entry_vanishesS`: level bound weakened `b+2 ≤ k` → `b+1 ≤ k` | fails |
+| S97 | `clean_entry_vanishesS`: conclusion `= 0` → `= 1` | fails |
+| S98 | `inner_block_zeroS`: shift oddness weakened to a tautology | fails |
+| S99 | `P_UcleanS_P_eq_zero`: projections swapped, `P_a U P_b` → `P_b U P_a` | fails |
+| S100 | `TcountS_col_sum`: column total `2^k` → `2^{k-1}` | fails |
+| S101 | `TcountS_col_sum`: source oddness weakened to a tautology | fails |
+| S102 | `TkSC_col_sum`: column sum `1` → `2` | fails |
+
+S95 and S99 are the two orientation shots for the lower regime — which side of `b ≤ a` is
+assumed, and which projection stands on which side of `U`.  S101 is the one that matters for
+§12: column-stochasticity is a partition-of-unity statement, and it is the *source* being odd
+that keeps the target inside the odd residues; weakened, `syracuseS_odd` no longer applies and
+the fibre map leaves range.
 
 The collision bound at an arbitrary AP offset, and Lemma B for general `c`, added 2026-08-06
 (§10).  All 10 fail:
@@ -3086,7 +3112,223 @@ any `C < 3`.
 
 /-!
 --------------------------------------------------------------------------------
-## §11. Axiom audit
+## §11. The shifted LOWER block vanishes:  `P_a U_clean^{(c)} P_b = 0` for `b ≤ a`
+--------------------------------------------------------------------------------
+
+§8 is the *upper* regime (`a < b`).  The assembly needs the lower one too — `LemmaAFacts`'
+`hQlower` says that on and below the diagonal the block is **pure defect**, which is only
+true because the clean part vanishes identically there.
+
+Same substitution as §8, one regime down.  The `c = 1` chain is
+`BlockVanishing.masked_entry_vanishes` → `clean_entry_vanishes` →
+`OperatorBlock.inner_block_zero` → `P_Uclean_P_eq_zero`, and it consumes the shift only
+through `shell_character_sum`.  Its two real inputs — `LemmaA.valuation_lower` and
+`LemmaA.shell_sum_vanishes_lower` — are statements about `alphaJ`, which does not see the
+shift, so they are imported unchanged.
+
+This is the last piece of Lemma A's operator content at a general shift.  It is **not** the
+assembly: see §10's boundary note for what the assembly still needs.
+-/
+
+section LowerBlockShifted
+
+open LemmaA CharacterBasis BlockVanishing OperatorBlock CollisionBound GramIdentity
+
+/-- **R1 at a general shift.**  For `b ≤ a` the shifted masked sum is exactly `0`: every
+shell in `[1,b]` is inside S4's dead band. -/
+theorem masked_entry_vanishesS {c k a b : ℕ} {η ξ u η' ξ' : ℤ} (hc : c % 2 = 1)
+    (hη : η = 2 ^ b * η') (hη' : Odd η') (hξ : ξ = 2 ^ a * ξ')
+    (hab : b ≤ a) (hbk : b + 2 ≤ k) (hu : (2 : ℤ) ^ k ∣ 3 * u - 1) :
+    ∑ r ∈ maskedOddsS c k b, wz k (η * ((syracuseS c r : ℕ) : ℤ) - ξ * (r : ℤ)) = 0 := by
+  rw [maskedOddsS, Finset.sum_biUnion]
+  · refine Finset.sum_eq_zero fun j hj => ?_
+    rw [mem_Icc] at hj
+    obtain ⟨hj1, hjb⟩ := hj
+    have hjk : j + 1 ≤ k := by omega
+    have hvj : (2 : ℤ) ^ j ∣ alphaJ η ξ u j :=
+      dvd_trans (pow_dvd_pow 2 hjb)
+        (valuation_lower (ξ' := ξ') hη hη' hξ hj1 hab).1
+    rw [shell_character_sumS hc hj1 hjk hu (resJ_spec k η ξ u j) hvj,
+      shell_sum_vanishes_lower (a := a) (η' := η') (ξ' := ξ')
+        hη hη' hξ hab hbk hj1 hjb (resJ_spec k η ξ u j), mul_zero]
+  · intro x _ y _ hxy
+    exact shellS_disjoint hxy
+
+/-- **The shifted clean entry vanishes in the lower regime.** -/
+theorem clean_entry_vanishesS {c k a b η : ℕ} {ξ η' ξ' u : ℤ} (hc : c % 2 = 1)
+    (hη : (η : ℤ) = 2 ^ b * η') (hη' : Odd η') (hξ : ξ = 2 ^ a * ξ')
+    (hab : b ≤ a) (hbk : b + 2 ≤ k) (hu : (2 : ℤ) ^ k ∣ 3 * u - 1) :
+    cleanEntryS c k η ξ = 0 := by
+  rw [cleanEntryS_eq_masked hc hη hη' (by omega) ξ]
+  exact masked_entry_vanishesS (a := a) (η' := η') (ξ' := ξ') hc hη hη' hξ hab hbk hu
+
+/-- **The shifted block entry vanishes for `b ≤ a`.**  `uinv k` supplies the inverse of `3`,
+exactly as at `c = 1` — it is shift-free (see §8's preamble). -/
+theorem inner_block_zeroS {c k a b : ℕ} (hc : c % 2 = 1) (hk : 2 ≤ k) (hab : b ≤ a)
+    {ξ η : Fin (2 ^ (k - 1))} (hξ : ξ ∈ levelSet k a) (hη : η ∈ levelSet k b) :
+    (@inner ℂ _ _ (chiVec k ξ) (UendS c k (chiVec k η)) : ℂ) = 0 := by
+  have hk1 : 1 ≤ k := by omega
+  obtain ⟨m, hm, hmo⟩ := level_split hη
+  obtain ⟨n, hn, _⟩ := level_split hξ
+  rw [inner_chiVec_UendS hc hk1 ξ η,
+    clean_entry_vanishesS (a := a) (b := b) (η' := (m : ℤ)) (ξ' := (n : ℤ))
+      (u := uinv k) hc hm hmo hn hab (level_bound hk hη) (uinv_spec hk1),
+    mul_zero]
+
+/-- **THE SHIFTED OPERATOR IDENTITY.**  For `b ≤ a`, `P_a U_clean^{(c)} P_b = 0`, at every
+odd shift.  This is `hQlower`'s reason: on and below the diagonal the clean part is gone and
+only the defect remains. -/
+theorem P_UcleanS_P_eq_zero {c k a b : ℕ} (hc : c % 2 = 1) (hk : 2 ≤ k) (hab : b ≤ a)
+    (x : EuclideanSpace ℂ (Fin (2 ^ (k - 1)))) :
+    P k a (UendS c k (P k b x)) = 0 := by
+  rw [P_apply (k := k) (a := b), map_sum]
+  simp only [map_smul]
+  rw [P_apply]
+  refine Finset.sum_eq_zero fun ξ hξ => ?_
+  rw [inner_sum]
+  have hz : ∀ η ∈ levelSet k b,
+      (@inner ℂ _ _ (chiVec k ξ)
+        ((@inner ℂ _ _ (chiVec k η) x : ℂ) • UendS c k (chiVec k η)) : ℂ) = 0 := by
+    intro η hη
+    rw [inner_smul_right, inner_block_zeroS hc hk hab hξ hη, mul_zero]
+  rw [Finset.sum_congr rfl hz, Finset.sum_const_zero, zero_smul]
+
+/-- The same as an operator equation. -/
+theorem P_UcleanS_P_comp {c k a b : ℕ} (hc : c % 2 = 1) (hk : 2 ≤ k) (hab : b ≤ a) :
+    (P k a) ∘ₗ (UendS c k : EuclideanSpace ℂ (Fin (2 ^ (k - 1))) →ₗ[ℂ] _) ∘ₗ (P k b) = 0 := by
+  refine LinearMap.ext fun x => ?_
+  simp only [LinearMap.comp_apply, LinearMap.zero_apply]
+  exact P_UcleanS_P_eq_zero hc hk hab x
+
+/-- **Specialisation check.**  At `c = 1` this is `OperatorBlock.P_Uclean_P_eq_zero`. -/
+theorem P_UcleanS_P_eq_zero_one {k a b : ℕ} (hk : 2 ≤ k) (hab : b ≤ a)
+    (x : EuclideanSpace ℂ (Fin (2 ^ (k - 1)))) :
+    P k a (Uend k (P k b x)) = 0 :=
+  P_Uclean_P_eq_zero hk hab x
+
+/-- **Non-vacuity.**  `OperatorBlock` §7 pins the `c = 1` witness at `k = 6`, `a = 3`,
+`b = 2`, with `η = 4` (level 2) and `ξ = 8` (level 3) both genuine members.  The same point
+witnesses the shifted statement, at a shift that is not `1`. -/
+example : (@inner ℂ _ _ (chiVec 6 ⟨8, by norm_num⟩)
+    (UendS 5 6 (chiVec 6 ⟨4, by norm_num⟩)) : ℂ) = 0 :=
+  inner_block_zeroS (by norm_num) (by omega) (by omega)
+    (mem_levelSet.2 ⟨by norm_num, v2_eight⟩)
+    (mem_levelSet.2 ⟨by norm_num, v2_four⟩)
+
+end LowerBlockShifted
+
+/-!
+--------------------------------------------------------------------------------
+## §12. Column-stochasticity at a general shift  (`colStoch`, the first manifest field)
+--------------------------------------------------------------------------------
+
+`Assembly.LemmaAFacts`' first substantive field is `colStoch : φ ∘ₗ T = φ` — THEOREM.md I.1,
+`1ᵀ T = 1ᵀ`.  At `c = 1` it is `TransferOperator.colStoch_concrete`, from `Tcount_col_sum`.
+
+It is a partition-of-unity statement and it needs **nothing** of `3x + 1`: the lift window
+`m < 2^k` is partitioned by the target `Syr_c(r + m·2^k) mod 2^k`, whatever `Syr_c` is, and
+the only property used is that the map lands on odd residues (`syracuseS_odd`, §1).
+
+This is one manifest field.  See the note at the end of the section for the other six.
+-/
+
+section ColStochShifted
+
+open CharacterBasis
+
+/-- **COLUMN-STOCHASTICITY, count form, general shift.**  `∑_u TcountS c k (od u) r = 2^k`
+for every odd source `r`: the lift window is partitioned by target. -/
+theorem TcountS_col_sum {c k r : ℕ} (hc : c % 2 = 1) (hk : 1 ≤ k) (hr : r % 2 = 1) :
+    ∑ u ∈ range (2 ^ (k - 1)), TcountS c k (od u) r = 2 ^ k := by
+  have h := Finset.card_eq_sum_card_fiberwise
+    (f := fun m => idx (syracuseS c (r + m * 2 ^ k) % 2 ^ k))
+    (s := range (2 ^ k)) (t := range (2 ^ (k - 1)))
+    (fun m _ => Finset.mem_range.mpr (idx_lt hk (Nat.mod_lt _ (Nat.two_pow_pos k))))
+  rw [Finset.card_range] at h
+  refine Eq.trans (Finset.sum_congr rfl fun u _ => ?_) h.symm
+  unfold TcountS
+  congr 1
+  apply filter_congr
+  intro m _
+  have h2 : (2 : ℕ) ∣ 2 ^ k := dvd_pow_self 2 (by omega)
+  have hodd : syracuseS c (r + m * 2 ^ k) % 2 ^ k % 2 = 1 := by
+    rw [Nat.mod_mod_of_dvd _ h2]
+    exact syracuseS_odd hc (lift_odd hk hr)
+  constructor
+  · intro hm
+    show idx (syracuseS c (r + m * 2 ^ k) % 2 ^ k) = u
+    rw [hm, show idx (od u) = u by unfold od idx; omega]
+  · intro hm
+    show syracuseS c (r + m * 2 ^ k) % 2 ^ k = od u
+    rw [← hm, od_idx hodd]
+
+/-- The complexified shifted operator's columns sum to `1`. -/
+theorem TkSC_col_sum {c k : ℕ} (hc : c % 2 = 1) (hk : 1 ≤ k) (r : Fin (2 ^ (k - 1))) :
+    ∑ u : Fin (2 ^ (k - 1)), TkSC c k u r = 1 := by
+  have hsum : ∑ u : Fin (2 ^ (k - 1)), (TcountS c k (od u) (od r) : ℂ)
+      = ((2 : ℕ) ^ k : ℂ) := by
+    rw [Fin.sum_univ_eq_sum_range (fun u => (TcountS c k (od u) (od r) : ℂ)) (2 ^ (k - 1))]
+    exact_mod_cast congrArg (fun n : ℕ => (n : ℂ)) (TcountS_col_sum hc hk (od_odd r))
+  have h2 : ((2 : ℂ) ^ k) ≠ 0 := pow_ne_zero k (by norm_num)
+  calc ∑ u : Fin (2 ^ (k - 1)), TkSC c k u r
+      = (∑ u : Fin (2 ^ (k - 1)), (TcountS c k (od u) (od r) : ℂ)) / 2 ^ k := by
+        rw [Finset.sum_div]; rfl
+    _ = 1 := by rw [hsum]; push_cast; field_simp
+
+/-- The **full** shifted transfer operator as an endomorphism of `ℓ²`.  Note this is `TkSC`,
+not `UcleanS`: the clean operator of §5 is its transpose with the defect row removed. -/
+noncomputable def TendS (c k : ℕ) : Module.End ℂ (EuclideanSpace ℂ (Fin (2 ^ (k - 1)))) :=
+  Matrix.toEuclideanLin (TkSC c k)
+
+@[simp] theorem TendS_apply (c k : ℕ) (x : EuclideanSpace ℂ (Fin (2 ^ (k - 1))))
+    (u : Fin (2 ^ (k - 1))) : (TendS c k x) u = ∑ r, TkSC c k u r * x r := rfl
+
+theorem TendS_one (k : ℕ) : TendS 1 k = Tend k := rfl
+
+/-- **`colStoch` AT A GENERAL SHIFT.**  `1ᵀ T_c = 1ᵀ`, the first substantive field of
+`Assembly.LemmaAFacts`, discharged for the shifted operator. -/
+theorem colStochS_concrete {c k : ℕ} (hc : c % 2 = 1) (hk : 1 ≤ k) :
+    (onesCov k) ∘ₗ (TendS c k) = onesCov k := by
+  ext x
+  show ∑ u, (TendS c k x) u = ∑ r, x r
+  calc ∑ u, (TendS c k x) u = ∑ u, ∑ r, TkSC c k u r * x r := rfl
+    _ = ∑ r, (∑ u, TkSC c k u r) * x r := by
+        rw [Finset.sum_comm]
+        exact Finset.sum_congr rfl fun r _ => by rw [Finset.sum_mul]
+    _ = ∑ r, x r := by
+        exact Finset.sum_congr rfl fun r _ => by rw [TkSC_col_sum hc hk r, one_mul]
+
+end ColStochShifted
+
+/-!
+### Manifest status, so this section is not read as more than it is
+
+`Assembly.LemmaAFacts` has seven substantive fields.  After §8, §11 and §12 the position is:
+
+| field | shifted status |
+|---|---|
+| `hk`, `hK0`, `hKk` | side conditions, free at any shift |
+| `colStoch` | **DONE** — `colStochS_concrete` (§12) |
+| `hadj` | free: a witness always exists on a finite-dimensional `ker φ` |
+| `hQ0`, `hQblock` | definitional once a shifted `Qmat` exists — **needs `ManifestInstance`** |
+| `hQupper` | needs `clean_boundS` (§8, done) **plus a shifted defect split** |
+| `hQlower` | needs `P_UcleanS_P_eq_zero` (§11, done) **plus a shifted defect split** |
+| `hDefectVec` | definitional once a shifted `cvec` exists — **needs `DefectSplit`** |
+
+So the blocking object is a **shifted `DefectSplit` + `ManifestInstance`**: the rank-one
+decomposition `U_full^{(c)} = U_clean^{(c)} + D_c` with `D_c = e_{r*_c} ⊗ c*_c`, the level
+projections of `e_{r*_c}`, and `Qmat` built from them.  That is roughly 1400 lines of `c = 1`
+machinery (`DefectSplit.lean` 531, `ManifestInstance.lean` 867) and it is **not** started.
+
+**Do not read §8 + §10 + §11 + §12 as "the shifted certificate is nearly done".**  The two
+lemmas and three manifest fields are real, but the object that combines them does not exist
+at a general shift, and one of the two routes into it (`hL2`/`hParseval`) is an open gap at
+`c = 1` as well.
+-/
+
+/-!
+--------------------------------------------------------------------------------
+## §13. Axiom audit
 --------------------------------------------------------------------------------
 -/
 
@@ -3210,5 +3452,16 @@ any `C < 3`.
 #print axioms collS_le
 #print axioms defect_norm_sq_leS
 #print axioms collS_one
+-- §11, the shifted lower block
+#print axioms masked_entry_vanishesS
+#print axioms clean_entry_vanishesS
+#print axioms inner_block_zeroS
+#print axioms P_UcleanS_P_eq_zero
+#print axioms P_UcleanS_P_comp
+-- §12, column-stochasticity at a general shift
+#print axioms TcountS_col_sum
+#print axioms TkSC_col_sum
+#print axioms TendS_one
+#print axioms colStochS_concrete
 
 end ShiftedOperator
