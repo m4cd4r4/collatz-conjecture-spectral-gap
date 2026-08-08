@@ -21,7 +21,7 @@ the chain (`CountingLemmas`, `CollisionBound`, `BlockVanishing`, `OperatorBlock`
 `ManifestInstance`) generalised too, which is a larger job.  **Do not cite this file as
 "the 3x-1 certificate is formalised".  It is not, yet.**
 
-Nine things ARE finished, and the boundary between them and the rest is the point of this note:
+Ten things ARE finished, and the boundary between them and the rest is the point of this note:
 
 1. **Coset uniformity for a general odd shift** (§2b) — the engine Lemma A runs on, `c`-uniform.
 2. **Lemma B's `a = 3` case, complete and sorry-free** (§2c, 2026-08-05):
@@ -69,10 +69,22 @@ Nine things ARE finished, and the boundary between them and the rest is the poin
 9. **Column-stochasticity at a general shift** (§12, 2026-08-06): `colStochS_concrete` —
    `1ᵀ T_c = 1ᵀ`.  The first substantive field of `Assembly.LemmaAFacts`.
 
-Still open for general `c`: **the assembly.**  §12 ends with a field-by-field table of
-`LemmaAFacts`; the blocking object is a shifted `DefectSplit` + `ManifestInstance` (the
-rank-one split `U_full^{(c)} = U_clean^{(c)} + D_c` and the `Qmat` built from it), roughly
-1400 lines of `c = 1` machinery, not started.  See the boundary note below.
+10. **The shifted DEFECT SPLIT** (§13, 2026-08-08): `U_splitS` —
+    `U_full^{(c)} = U_clean^{(c)} + D_c` with `D_c = e_{r*_c} ⊗ c*_c` rank one by
+    construction, `DendS_apply_eq` for its rank-one action, and `norm_P_U_P_leS`, the bound
+    with the shape of `hQlower`.
+
+    Two things made it cheap, and both are worth carrying: `DefectSplit` §3
+    (`norm_P_single` and friends) is **operator-free** and was imported unchanged rather than
+    mirrored, and `cfS c k t = TcountS c k t (rstarS c k)` holds by **`rfl`**
+    (`cfS_eq_defect_col`) — the `c = 1` file needs `defect_col_eq_cf` as a theorem because
+    `cf` routes through the AP model, whereas §10's `cfS` was defined straight off the
+    operator.  Second time that definitional choice has paid off.
+
+Still open for general `c`: **`ManifestInstance` at `TkS c k`** — a shifted `Qmat`, `gcVec`
+and `facts_of_clean`, plus entering `ker φ`.  §12's field-by-field table still stands; §13
+supplies the *input* to `hQupper`/`hQlower`/`hDefectVec`, not the fields themselves.  See the
+boundary note below.
 
 > **CORRECTION 2026-08-05, of a claim this file and the private brief both made.**  Both said
 > the missing piece of Lemma B at a general shift was *"the **valuation** — which power of `2`
@@ -135,9 +147,9 @@ is specific to the shift `1`.  For general `c` the defect residue is the solutio
 `3r + c ≡ 0 (mod 2^k)`, given here as `rstarS c k` via the inverse of `3`.  Everything else in
 this file is `c`-uniform.
 
-Sorry-free.  Specialisation lemmas throughout, mutation table below, axiom audit `§13`.
+Sorry-free.  Specialisation lemmas throughout, mutation table below, axiom audit `§14`.
 
-## MUTATIONS (102, all fail)
+## MUTATIONS (110, all fail)
 
 | # | mutation | result |
 |---|---|---|
@@ -283,6 +295,30 @@ Lemma A's clean block norms at a general shift, added 2026-08-05 (§8).  All 10 
 | S75 | `norm_sq_clean_blockS`: the equality sharpened `2^{−d}` → `2^{−(d+1)}` | fails |
 | S76 | `norm_clean_block_leS`: bound sharpened `s^d` → `s^{d+1}` | fails |
 | S77 | `clean_boundS`: level weakened `3 ≤ k` → `2 ≤ k` | fails |
+
+The shifted defect split, added 2026-08-08 (§13).  All 8 fail:
+
+| # | mutation | result |
+|---|---|---|
+| S103 | `U_splitS`: the defect row dropped — `UcleanS = UfullS` | fails |
+| S104 | `U_splitS`: shift oddness weakened to a tautology | fails |
+| S105 | `cfS_eq_defect_col`: defect column moved `rstarS c k` → `rstarS c k + 2` | fails |
+| S106 | `DendS_apply_eq`: rank-one target moved off the defect index | fails |
+| S107 | `P_U_P_eq_defectS`: regime inverted `b ≤ a` → `a ≤ b` | fails |
+| S108 | `norm_P_U_P_leS`: level constant sharpened `s^{a+1}` → `s^{a+2}` | fails |
+| S109 | `norm_P_U_P_leS`: level range weakened `a+2 ≤ k` → `a+1 ≤ k` | fails |
+| S110 | `rstarIdxS_one`: the `c = 1` defect index moved to `c = 2` | fails |
+
+**S103 and S106 are the two that carry the section.**  S103 asserts the split is trivial —
+that the clean operator already *is* the full one — and it fails, so `D_c` is not zero and the
+defect row really is missing from `UcleanS`.  S106 moves the rank-one target off
+`rstarIdxS`, and it fails, so the image of `D_c` is genuinely the defect basis vector and not
+just *some* rank-one direction.  Together they are what makes "rank one, supported on the
+defect row" a checked claim rather than a construction that could not fail.
+
+S105 is the guard on the finding that made this section cheap: `cfS` is the `r*_c` column by
+`rfl`, so it would be easy to believe any column works.  Moved by 2, it is no longer a
+definitional equality.
 
 The shifted lower block and column-stochasticity, added 2026-08-06 (§11, §12).  All 8 fail:
 
@@ -3328,7 +3364,248 @@ at a general shift, and one of the two routes into it (`hL2`/`hParseval`) is an 
 
 /-!
 --------------------------------------------------------------------------------
-## §13. Axiom audit
+## §13. The shifted defect split:  `U_full^{(c)} = U_clean^{(c)} + D_c`, `D_c` rank one
+--------------------------------------------------------------------------------
+
+§12's table shows five of the seven `Assembly.LemmaAFacts` fields blocked on **one** object:
+the rank-one defect split at a general shift.  This section builds it, ending at the shifted
+`norm_P_U_P_le` — the bound with the shape of `hQlower`.
+
+### Two things that make this much smaller than `DefectSplit.lean`'s 531 lines
+
+**(a) `DefectSplit` §3 needs no shifted version at all.**  `norm_P_single`,
+`norm_sq_P_single`, `levelSet_card`, `norm_inner_chiVec_single` are about `P`, `chiVec` and
+the level sets.  **No operator appears in any of them**, and `norm_P_single` is stated for
+EVERY `r`.  They are imported and used unchanged — that is ~160 lines not written.
+
+**(b) The shifted defect column is DEFINITIONAL.**  `TransferOperator.defect_col_eq_cf`
+exists at `c = 1` because `CollisionBound.cf` is defined through the AP model and has to be
+*identified* with the `r*` column of `T`.  §10's `cfS` is defined directly from `syracuseS`
+and `rstarS`, so
+
+```
+    cfS c k t = TcountS c k t (rstarS c k)
+```
+
+holds by `rfl` (`cfS_eq_defect_col` below).  The identification the `c = 1` file needs a
+theorem for is free here.  This is the second time §9–§10's decision to define the shifted
+objects from the operator rather than from a model has paid off; the first was that
+`coll3_closed` became a statement about the real map.
+
+### What this is NOT
+
+Still no shifted `Qmat`, no `ker φ`, and therefore **no discharged `hQlower`** — the same
+caveat `DefectSplit` §0.3 carries at `c = 1`.  This is the input to that field, not the field.
+-/
+
+section DefectSplitShifted
+
+open LemmaA CharacterBasis BlockVanishing OperatorBlock CollisionBound GramIdentity
+open DefectSplit ManifestInstance
+
+/-- **The full shifted operator matrix `U^{(c)} = (T^{(c)})ᵀ`**, target-first. -/
+noncomputable def UfullS (c k : ℕ) : Matrix (Fin (2 ^ (k - 1))) (Fin (2 ^ (k - 1))) ℂ :=
+  Matrix.transpose (TkSC c k)
+
+theorem UfullS_apply (c k : ℕ) (r u : Fin (2 ^ (k - 1))) : UfullS c k r u = TkSC c k u r := rfl
+
+/-- The row index of the shifted defect: `idx (rstarS c k)`, the SAME index `UcleanS` zeroes. -/
+def rstarIdxS (c : ℕ) {k : ℕ} (hk : 1 ≤ k) : Fin (2 ^ (k - 1)) :=
+  ⟨idx (rstarS c k), idx_lt hk rstarS_lt⟩
+
+@[simp] theorem rstarIdxS_val (c : ℕ) {k : ℕ} (hk : 1 ≤ k) :
+    ((rstarIdxS c hk : Fin (2 ^ (k - 1))) : ℕ) = idx (rstarS c k) := rfl
+
+theorem od_rstarIdxS {c k : ℕ} (hc : c % 2 = 1) (hk : 1 ≤ k) :
+    od ((rstarIdxS c hk : Fin (2 ^ (k - 1))) : ℕ) = rstarS c k := od_idx (rstarS_odd hc hk)
+
+/-- **The shifted defect covector `c*_c`**: the `r*_c` column of `T^{(c)}`, normalised as
+`TkSC` is. -/
+noncomputable def cstarS (c k : ℕ) : Fin (2 ^ (k - 1)) → ℂ :=
+  fun u => (cfS c k (od (u : ℕ)) : ℂ) / 2 ^ k
+
+/-- **The shifted `defect_col_eq_cf`, and it is `rfl`.**  `cfS` was defined from `syracuseS`
+and `rstarS` directly, so it *is* the `r*_c` column of the shifted transition count — no
+identification theorem is required.  Compare `TransferOperator.defect_col_eq_cf`, which at
+`c = 1` has to bridge `cf`'s AP-model definition to the operator. -/
+theorem cfS_eq_defect_col (c k t : ℕ) : cfS c k t = TcountS c k t (rstarS c k) := rfl
+
+/-- The indicator of the shifted defect row, `e_{r*_c}`. -/
+noncomputable def estarS (c k : ℕ) : Fin (2 ^ (k - 1)) → ℂ :=
+  fun r => if (r : ℕ) = idx (rstarS c k) then 1 else 0
+
+/-- **`D_c`, rank one BY CONSTRUCTION**: literally the outer product `e_{r*_c} ⊗ c*_c`. -/
+noncomputable def DmatS (c k : ℕ) : Matrix (Fin (2 ^ (k - 1))) (Fin (2 ^ (k - 1))) ℂ :=
+  Matrix.vecMulVec (estarS c k) (cstarS c k)
+
+theorem DmatS_apply (c k : ℕ) (r u : Fin (2 ^ (k - 1))) :
+    DmatS c k r u = estarS c k r * cstarS c k u := rfl
+
+theorem DmatS_off (c k : ℕ) {r : Fin (2 ^ (k - 1))} (hr : (r : ℕ) ≠ idx (rstarS c k))
+    (u : Fin (2 ^ (k - 1))) : DmatS c k r u = 0 := by
+  rw [DmatS_apply, estarS, if_neg hr, zero_mul]
+
+theorem DmatS_on (c k : ℕ) {r : Fin (2 ^ (k - 1))} (hr : (r : ℕ) = idx (rstarS c k))
+    (u : Fin (2 ^ (k - 1))) : DmatS c k r u = cstarS c k u := by
+  rw [DmatS_apply, estarS, if_pos hr, one_mul]
+
+/-- **THE SHIFTED SPLITTING `U^{(c)} = U_clean^{(c)} + D_c`.**  The defect row of `U^{(c)}` is
+exactly `c*_c`; every other row agrees with `U_clean^{(c)}`.
+
+The defect-row branch closes by `rfl` — that is `cfS_eq_defect_col` doing its work. -/
+theorem U_splitS {c k : ℕ} (hc : c % 2 = 1) (hk : 1 ≤ k) :
+    UcleanS c k + DmatS c k = UfullS c k := by
+  ext r u
+  rw [Matrix.add_apply, UfullS_apply]
+  by_cases h : (r : ℕ) = idx (rstarS c k)
+  · rw [UcleanS_defect_row c k h, DmatS_on c k h, zero_add, cstarS, TkSC]
+    have hod : od (r : ℕ) = rstarS c k := by rw [h]; exact od_idx (rstarS_odd hc hk)
+    rw [hod, cfS_eq_defect_col]
+  · rw [UcleanS_clean_row c k h, DmatS_off c k h, add_zero]
+
+theorem DmatS_eq_sub {c k : ℕ} (hc : c % 2 = 1) (hk : 1 ≤ k) :
+    DmatS c k = UfullS c k - UcleanS c k := by
+  rw [← U_splitS hc hk]; abel
+
+/-- `U^{(c)}` as an endomorphism of `ℓ²`. -/
+noncomputable def UendfullS (c k : ℕ) : Module.End ℂ (EuclideanSpace ℂ (Fin (2 ^ (k - 1)))) :=
+  Matrix.toEuclideanLin (UfullS c k)
+
+/-- `D_c` as an endomorphism of `ℓ²`. -/
+noncomputable def DendS (c k : ℕ) : Module.End ℂ (EuclideanSpace ℂ (Fin (2 ^ (k - 1)))) :=
+  Matrix.toEuclideanLin (DmatS c k)
+
+/-- **The shifted splitting, at the level of operators.** -/
+theorem UendfullS_split {c k : ℕ} (hc : c % 2 = 1) (hk : 1 ≤ k)
+    (x : EuclideanSpace ℂ (Fin (2 ^ (k - 1)))) :
+    UendfullS c k x = UendS c k x + DendS c k x := by
+  rw [UendfullS, UendS, DendS, ← U_splitS hc hk, map_add]
+  rfl
+
+/-- The shifted defect covector as an element of `ℓ²`, conjugated so that pairing against it
+is the inner product. -/
+noncomputable def cvecES (c k : ℕ) : EuclideanSpace ℂ (Fin (2 ^ (k - 1))) :=
+  WithLp.toLp 2 (fun u => (starRingEnd ℂ) (cstarS c k u))
+
+theorem inner_cvecES (c k : ℕ) (y : EuclideanSpace ℂ (Fin (2 ^ (k - 1)))) :
+    (@inner ℂ _ _ (cvecES c k) y : ℂ) = ∑ u, cstarS c k u * y u := by
+  rw [PiLp.inner_apply]
+  refine Finset.sum_congr rfl fun u _ => ?_
+  rw [RCLike.inner_apply, cvecES]
+  simp [mul_comm]
+
+/-- **`D_c` acts as a rank-one operator**: `D_c y = ⟪c*_c, y⟫ · e_{r*_c}`.  This is the
+property the whole assembly consumes — it is what makes the defect block's norm a product of
+a scalar and `‖P_a e_{r*_c}‖`, with no dimension factor. -/
+theorem DendS_apply_eq {c k : ℕ} (hk : 1 ≤ k) (y : EuclideanSpace ℂ (Fin (2 ^ (k - 1)))) :
+    DendS c k y
+      = (@inner ℂ _ _ (cvecES c k) y : ℂ) • EuclideanSpace.single (rstarIdxS c hk) (1 : ℂ) := by
+  ext r
+  have hlhs : (DendS c k y) r = ∑ u, DmatS c k r u * y u := rfl
+  rw [hlhs, inner_cvecES]
+  by_cases h : (r : ℕ) = idx (rstarS c k)
+  · have hr : r = rstarIdxS c hk := Fin.ext h
+    rw [Finset.sum_congr rfl (fun u _ => by rw [DmatS_on c k h])]
+    subst hr
+    simp
+  · have hr : r ≠ rstarIdxS c hk := fun hcon => h (by rw [hcon]; rfl)
+    rw [Finset.sum_congr rfl (fun u _ => by rw [DmatS_off c k h, zero_mul]),
+      Finset.sum_const_zero]
+    simp [EuclideanSpace.single_apply, hr]
+
+/-- **`P_a U^{(c)} P_b` is the defect term alone**, for `a ≥ b`.  This is where §11's
+`P_UcleanS_P_eq_zero` is consumed: the clean part is gone below the diagonal, so what is left
+is rank one. -/
+theorem P_U_P_eq_defectS {c k a b : ℕ} (hc : c % 2 = 1) (hk : 2 ≤ k) (hab : b ≤ a)
+    (x : EuclideanSpace ℂ (Fin (2 ^ (k - 1)))) :
+    P k a (UendfullS c k (P k b x))
+      = (@inner ℂ _ _ (cvecES c k) (P k b x) : ℂ)
+          • P k a (EuclideanSpace.single (rstarIdxS c (by omega : 1 ≤ k)) (1 : ℂ)) := by
+  have hk1 : 1 ≤ k := by omega
+  rw [UendfullS_split hc hk1, map_add, P_UcleanS_P_eq_zero hc hk hab, zero_add,
+    DendS_apply_eq hk1, map_smul]
+
+/-- **THE SHIFTED BOUND.**  For `a ≥ b`,
+
+  `‖P_a U^{(c)} P_b x‖ ≤ s^{a+1} · ‖P_b c*_c‖ · ‖P_b x‖`,  `s = 2^{-1/2}`.
+
+The shape of `Assembly.LemmaAFacts.hQlower`.  `norm_P_single` is imported from
+`DefectSplit` **unchanged** — it is about `P` and a standard basis vector, and holds for every
+`r`, so it never saw the shift.
+
+As at `c = 1` (`DefectSplit` §0.3): no `Q` is constructed and `ker φ` is not entered, so
+**`hQlower` is not closed by this**. -/
+theorem norm_P_U_P_leS {c k a b : ℕ} (hc : c % 2 = 1) (hk : 2 ≤ k) (hab : b ≤ a)
+    (ha : a + 2 ≤ k) (x : EuclideanSpace ℂ (Fin (2 ^ (k - 1)))) :
+    ‖P k a (UendfullS c k (P k b x))‖
+      ≤ Assembly.s ^ (a + 1) * ‖P k b (cvecES c k)‖ * ‖P k b x‖ := by
+  have hk1 : 1 ≤ k := by omega
+  have hcoef : (@inner ℂ _ _ (cvecES c k) (P k b x) : ℂ)
+      = @inner ℂ _ _ (P k b (cvecES c k)) (P k b x) := by
+    rw [P_selfadjoint hk1 b, P_idem hk1]
+  have hCS : ‖(@inner ℂ _ _ (cvecES c k) (P k b x) : ℂ)‖
+      ≤ ‖P k b (cvecES c k)‖ * ‖P k b x‖ := by
+    rw [hcoef]; exact norm_inner_le_norm _ _
+  rw [P_U_P_eq_defectS hc hk hab, norm_smul, norm_P_single ha]
+  calc ‖(@inner ℂ _ _ (cvecES c k) (P k b x) : ℂ)‖ * Assembly.s ^ (a + 1)
+      ≤ (‖P k b (cvecES c k)‖ * ‖P k b x‖) * Assembly.s ^ (a + 1) :=
+        mul_le_mul_of_nonneg_right hCS (pow_nonneg (Real.sqrt_nonneg _) _)
+    _ = Assembly.s ^ (a + 1) * ‖P k b (cvecES c k)‖ * ‖P k b x‖ := by ring
+
+/-- The cruder shifted bound, with the full `‖c*_c‖` in place of its level-`b` part. -/
+theorem norm_P_U_P_leS' {c k a b : ℕ} (hc : c % 2 = 1) (hk : 2 ≤ k) (hab : b ≤ a)
+    (ha : a + 2 ≤ k) (x : EuclideanSpace ℂ (Fin (2 ^ (k - 1)))) :
+    ‖P k a (UendfullS c k (P k b x))‖
+      ≤ Assembly.s ^ (a + 1) * ‖cvecES c k‖ * ‖P k b x‖ := by
+  have hCS : ‖(@inner ℂ _ _ (cvecES c k) (P k b x) : ℂ)‖ ≤ ‖cvecES c k‖ * ‖P k b x‖ :=
+    norm_inner_le_norm _ _
+  rw [P_U_P_eq_defectS hc hk hab, norm_smul, norm_P_single ha]
+  calc ‖(@inner ℂ _ _ (cvecES c k) (P k b x) : ℂ)‖ * Assembly.s ^ (a + 1)
+      ≤ (‖cvecES c k‖ * ‖P k b x‖) * Assembly.s ^ (a + 1) :=
+        mul_le_mul_of_nonneg_right hCS (pow_nonneg (Real.sqrt_nonneg _) _)
+    _ = Assembly.s ^ (a + 1) * ‖cvecES c k‖ * ‖P k b x‖ := by ring
+
+/-- **Specialisation check.**  At `c = 1` the shifted defect index is `DefectSplit.rstarIdx`.
+**Not `rfl`** — it routes through `rstarS_one`, because the two `r*` closed forms differ. -/
+theorem rstarIdxS_one {k : ℕ} (hk : 1 ≤ k) : rstarIdxS 1 hk = rstarIdx hk :=
+  Fin.ext (by rw [rstarIdxS_val, rstarS_one hk]; rfl)
+
+/-- At `c = 1` the shifted defect covector is `DefectSplit.cstar`.  Also not `rfl`: it needs
+both `rstarS_one` (inside `cfS`) and `collS_one`'s route back to `CollisionBound.cf`. -/
+theorem cstarS_one {k : ℕ} (hk : 1 ≤ k) (u : Fin (2 ^ (k - 1))) :
+    cstarS 1 k u = cstar k u := by
+  have hcf : cfS 1 k (od (u : ℕ)) = cf k (od (u : ℕ)) := by
+    rw [cfS_eq_cfA (by norm_num) hk, apAS_one hk]
+    rfl
+  rw [cstarS, cstar, hcf]
+
+/-- And so the shifted split specialises to `DefectSplit.U_split`. -/
+theorem U_splitS_one {k : ℕ} (hk : 1 ≤ k) : UcleanS 1 k + DmatS 1 k = UfullS 1 k :=
+  U_splitS (by norm_num) hk
+
+end DefectSplitShifted
+
+/-!
+**Satisfiability witnesses for §13.**  `cstarS` is computable through `cfS`.  The shifted
+defect column sums to `2^k` before normalisation — it is a full fibre count — so the entries
+of `cstarS` sum to `1`.  That is `TcountS_col_sum` (§12) read at the defect column, and it is
+the numerical statement `calibrate_general_shift.py` gate 4 checks as `rank D = 1`.
+-/
+
+-- the shifted defect column, unnormalised, at k = 5: the fibre counts over r*_c
+#eval (List.range 16).map (fun u => cfS 5 5 (od u))
+  -- [4,2,3,2,2,3,2,2,2,2,1,2,1,1,2,1] - a genuinely uneven fibre, not a constant column
+#eval ((List.range 16).map (fun u => cfS 5 5 (od u))).sum      -- 32 = 2^5
+#eval ((List.range 16).map (fun u => cfS 11 5 (od u))).sum     -- 32, every shift
+#eval ((List.range 16).map (fun u => cfS 3 5 (od u))).sum      -- 32, the a = 3 shift
+
+-- the defect index MOVES with the shift, and is the row UcleanS zeroes
+#eval (rstarS 5 5, idx (rstarS 5 5))     -- (9, 4)
+#eval (rstarS 11 5, idx (rstarS 11 5))   -- (7, 3)
+
+/-!
+--------------------------------------------------------------------------------
+## §14. Axiom audit
 --------------------------------------------------------------------------------
 -/
 
@@ -3463,5 +3740,21 @@ at a general shift, and one of the two routes into it (`hL2`/`hParseval`) is an 
 #print axioms TkSC_col_sum
 #print axioms TendS_one
 #print axioms colStochS_concrete
+-- §13, the shifted defect split
+#print axioms UfullS_apply
+#print axioms od_rstarIdxS
+#print axioms cfS_eq_defect_col
+#print axioms DmatS_off
+#print axioms DmatS_on
+#print axioms U_splitS
+#print axioms DmatS_eq_sub
+#print axioms UendfullS_split
+#print axioms inner_cvecES
+#print axioms DendS_apply_eq
+#print axioms P_U_P_eq_defectS
+#print axioms norm_P_U_P_leS
+#print axioms norm_P_U_P_leS'
+#print axioms rstarIdxS_one
+#print axioms cstarS_one
 
 end ShiftedOperator
