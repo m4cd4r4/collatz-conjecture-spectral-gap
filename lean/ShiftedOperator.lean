@@ -21,7 +21,7 @@ the chain (`CountingLemmas`, `CollisionBound`, `BlockVanishing`, `OperatorBlock`
 `ManifestInstance`) generalised too, which is a larger job.  **Do not cite this file as
 "the 3x-1 certificate is formalised".  It is not, yet.**
 
-Ten things ARE finished, and the boundary between them and the rest is the point of this note:
+Eleven things ARE finished, and the boundary between them and the rest is the point of this note:
 
 1. **Coset uniformity for a general odd shift** (§2b) — the engine Lemma A runs on, `c`-uniform.
 2. **Lemma B's `a = 3` case, complete and sorry-free** (§2c, 2026-08-05):
@@ -81,10 +81,21 @@ Ten things ARE finished, and the boundary between them and the rest is the point
     `cf` routes through the AP model, whereas §10's `cfS` was defined straight off the
     operator.  Second time that definitional choice has paid off.
 
-Still open for general `c`: **`ManifestInstance` at `TkS c k`** — a shifted `Qmat`, `gcVec`
-and `facts_of_clean`, plus entering `ker φ`.  §12's field-by-field table still stands; §13
-supplies the *input* to `hQupper`/`hQlower`/`hDefectVec`, not the fields themselves.  See the
-boundary note below.
+11. **Four more manifest fields** (§14, 2026-08-09): `hadjS_concrete` (`hadj`),
+    `QmatS_nonneg` (`hQ0`), `QmatS_lower_le` (`hQlower`, and **tight** — `QmatS_lower_eq`),
+    and `hDefectVecS_concrete` (`hDefectVec`), plus `norm_sq_cvecSfull_le`, which joins the
+    defect covector to Lemma B: `‖c_c‖² = collS c k / 4^k ≤ 3·s^{2k}`.
+
+    **The friction predicted here was not there.**  `ManifestInstance` §1–§4 — `ker φ`, the
+    level spaces, and the isometry `elev` — mention no operator and were reused unchanged, as
+    was `perronPart`/`mzProj`.  That is where `CleanBlock` §6's `synthInstance`/`isDefEq`
+    budget blowups live, and none of it had to be rebuilt.  ~200 lines instead of 867.
+
+Still open for general `c`: **`hQblock`, and `hQupper`.**  `hQblock` is the field that needs
+`elev` and `UopS` *together* — `‖(e (U_c (e.symm (levelSingle m y)))) m'‖ ≤ Q_c m' m * ‖y‖` —
+and it is the one place the isometry and the operator have to meet.  `hQupper` needs
+`clean_boundS` (§8) combined with the defect term through `QmatS`.  Until both land there is
+**no shifted `LemmaAFacts` instance and no shifted certificate**.  See the boundary note below.
 
 > **CORRECTION 2026-08-05, of a claim this file and the private brief both made.**  Both said
 > the missing piece of Lemma B at a general shift was *"the **valuation** — which power of `2`
@@ -147,9 +158,9 @@ is specific to the shift `1`.  For general `c` the defect residue is the solutio
 `3r + c ≡ 0 (mod 2^k)`, given here as `rstarS c k` via the inverse of `3`.  Everything else in
 this file is `c`-uniform.
 
-Sorry-free.  Specialisation lemmas throughout, mutation table below, axiom audit `§14`.
+Sorry-free.  Specialisation lemmas throughout, mutation table below, axiom audit `§15`.
 
-## MUTATIONS (110, all fail)
+## MUTATIONS (118, all fail)
 
 | # | mutation | result |
 |---|---|---|
@@ -295,6 +306,38 @@ Lemma A's clean block norms at a general shift, added 2026-08-05 (§8).  All 10 
 | S75 | `norm_sq_clean_blockS`: the equality sharpened `2^{−d}` → `2^{−(d+1)}` | fails |
 | S76 | `norm_clean_block_leS`: bound sharpened `s^d` → `s^{d+1}` | fails |
 | S77 | `clean_boundS`: level weakened `3 ≤ k` → `2 ≤ k` | fails |
+
+The shifted manifest fields, added 2026-08-09 (§14).  All 8 fail:
+
+| # | mutation | result |
+|---|---|---|
+| S111 | `inner_TendS_UendfullS`: adjoint orientation flipped (`U` on the left) | fails |
+| S112 | `P_UopS_eq`: the transpose forgotten — `P_a U_c` claimed equal to `P_a T_c` | fails |
+| S113 | `QmatS_lower_le`: regime inverted `b ≤ a` → `a ≤ b` | fails |
+| S114 | `QmatS_lower_le`: level hypothesis weakened `2 ≤ k` → `1 ≤ k` | fails |
+| S115 | `QmatS_lower_eq`: the tightness value squared in the wrong factor | fails |
+| S116 | `norm_mzcS_le`: the inequality reversed | fails |
+| S117 | `norm_sq_cvecSfull_le`: the constant `3` → `2` | fails |
+| S118 | `norm_sq_cvecSfull_le`: the shift's size hypothesis dropped | fails |
+
+**S111 and S112 are the orientation pair**, and they are the ones that matter here, because
+`ManifestInstance` §6 exists at `c = 1` for exactly this reason: `Uendfull = Tᵀ` must be a
+theorem rather than a convention, or the whole manifest could be built on a transposed
+operator and still typecheck.  S111 flips which side the adjoint sits on; S112 drops the
+transpose from the bridge.  Both fail.
+
+S117 and S118 are the two guards on the join with Lemma B: the constant `3` is `collS`'s
+bound and cannot be lowered, and `c < 2^k` is inherited from `collS_le` and is not decorative.
+
+**Two mutations had to be rewritten, and the reason is worth recording.**  The first drafts of
+S112 (swap the two sides of `hadjS_concrete`) and S114 (sharpen `s^{a+1}` → `s^{a+2}`) did not
+fail mathematically — they made elaboration **diverge**, timing out at `whnf` even at a 1M
+heartbeat budget.  A timeout is not a refutation: it is the checker running out of road, and
+it would report identically for a mutation that was actually true.  Both were replaced with
+mutations that fail on a type mismatch and on unsolved goals respectively.  S113 still emits a
+declaration-level timeout *in addition to* its genuine type mismatch; that one is a cascade of
+the real error, not a separate finding.  Fourth instance of the standing lesson: **read the
+error, not the exit code.**
 
 The shifted defect split, added 2026-08-08 (§13).  All 8 fail:
 
@@ -3605,7 +3648,325 @@ the numerical statement `calibrate_general_shift.py` gate 4 checks as `rank D = 
 
 /-!
 --------------------------------------------------------------------------------
-## §14. Axiom audit
+## §14. The shifted manifest fields:  `hadj`, `Q`, `hQlower`, `hDefectVec`
+--------------------------------------------------------------------------------
+
+### The friction I expected here is not there
+
+`ManifestInstance.lean` is 867 lines and the previous handover flagged it as the risky piece,
+because `CleanBlock` §6 records a 400k `synthInstance` budget and then a 1M `isDefEq` budget
+exhausted on operators over a `Submodule` of `EuclideanSpace`.
+
+**That machinery is entirely shift-free and is reused unchanged.** `ManifestInstance` §1–§4 —
+`mem_ker_iff`, `norm_sq_P`, `sum_sq_coeff`, `Glev`, `eFun`, `eInv`, `norm_eFun`, and the
+isometry `elev : ker φ ≃ₗᵢ PiLp 2 G` — mention no operator at all. They are about `onesCov`,
+`chiVec` and the level sets. So is `perronPart` / `mzProj` (§5), which is built from the
+Perron character `χ₀` alone.
+
+What actually depends on the operator is §5's `Uop`, §6's orientation bridge, §7's `Q`, and
+§8's defect-vector bound. Those are mirrored below. Roughly 200 lines, not 867.
+
+### What this closes, and the one field it does not
+
+| `LemmaAFacts` field | shifted status after this section |
+|---|---|
+| `hk`, `hK0`, `hKk` | free |
+| `colStoch` | `colStochS_concrete` (§12) |
+| `hadj` | **`hadjS_concrete`** (below) |
+| `hQ0` | **`QmatS_nonneg`** (below) |
+| `hQlower` | **`QmatS_lower_le`**, and it is TIGHT — `QmatS_lower_eq` |
+| `hDefectVec` | **`hDefectVecS_concrete`** (below) |
+| `hQblock` | **still open** — see below |
+
+**`hQblock` is the one left.** It says `Q` dominates `U`'s blocks *after* transport through
+the isometry `e`, i.e. `‖(e (U (e.symm (levelSingle m y)))) m'‖ ≤ Q m' m * ‖y‖`. At `c = 1`
+that is `ManifestInstance` §9's territory and it is the field that needs `elev` and `Uop`
+together. It is not proved here, so **there is still no shifted `LemmaAFacts` instance and no
+shifted certificate.**
+
+`hQupper` also needs `clean_boundS` (§8) combined with the defect term through `QmatS`; the
+combination is the shifted `GramIdentity.hQupper_holds` and is likewise not done here.
+-/
+
+section ManifestShifted
+
+open LemmaA CharacterBasis BlockVanishing OperatorBlock CollisionBound GramIdentity
+open DefectSplit ManifestInstance CleanBlock
+
+/-- `A_c = T^{(c)}|_V`, the compression to the mean-zero space.  Available exactly because
+§12 proved `colStochS_concrete`. -/
+noncomputable def AopS {c k : ℕ} (hc : c % 2 = 1) (hk : 1 ≤ k) :
+    Module.End ℂ (LinearMap.ker (onesCov k)) :=
+  OperatorChain.compression (colStochS_concrete hc hk)
+
+/-- **`U_c`, the shifted Koopman partner**: the compression of `U_full^{(c)} = (T^{(c)})ᵀ` to
+the mean-zero space.  `mzProj` is shift-free and is reused — `ker φ` is not
+`U_full^{(c)}`-invariant, at any shift, which is what makes the projection load-bearing rather
+than decorative. -/
+noncomputable def UopS {c k : ℕ} (hk : 1 ≤ k) :
+    Module.End ℂ (LinearMap.ker (onesCov k)) where
+  toFun z := ⟨mzProj k (UendfullS c k (z : Fsp k)), mzProj_mem_ker hk _⟩
+  map_add' u v := by
+    refine Subtype.ext ?_
+    show mzProj k (UendfullS c k ((u : Fsp k) + (v : Fsp k))) = _
+    rw [map_add, map_add]; rfl
+  map_smul' d v := by
+    refine Subtype.ext ?_
+    show mzProj k (UendfullS c k (d • (v : Fsp k))) = _
+    rw [map_smul, map_smul]; rfl
+
+@[simp] theorem UopS_coe {c k : ℕ} (hk : 1 ≤ k) (z : LinearMap.ker (onesCov k)) :
+    ((UopS (c := c) hk z : LinearMap.ker (onesCov k)) : Fsp k)
+      = mzProj k (UendfullS c k (z : Fsp k)) := rfl
+
+/-- The shifted matrix entries are real, so conjugation fixes them. -/
+theorem conj_TkSC (c k : ℕ) (u r : Fin (2 ^ (k - 1))) :
+    (starRingEnd ℂ) (TkSC c k u r) = TkSC c k u r := by
+  show (starRingEnd ℂ) ((TcountS c k (od (u : ℕ)) (od (r : ℕ)) : ℂ) / 2 ^ k)
+      = (TcountS c k (od (u : ℕ)) (od (r : ℕ)) : ℂ) / 2 ^ k
+  rw [show ((TcountS c k (od (u : ℕ)) (od (r : ℕ)) : ℂ) / 2 ^ k)
+      = (((TcountS c k (od (u : ℕ)) (od (r : ℕ)) : ℝ) / 2 ^ k : ℝ) : ℂ) by push_cast; ring]
+  exact Complex.conj_ofReal _
+
+@[simp] theorem UendfullS_apply (c k : ℕ) (y : Fsp k) (r : Fin (2 ^ (k - 1))) :
+    (UendfullS c k y) r = ∑ u, UfullS c k r u * y u := rfl
+
+/-- **The shifted orientation step.**  `U_full^{(c)} = (T^{(c)})ᵀ` really is the adjoint of
+`TendS` on the ambient space, so the transpose orientation is a theorem and not a convention —
+the same guarantee the `c = 1` file insists on. -/
+theorem inner_TendS_UendfullS {c k : ℕ} (x y : Fsp k) :
+    (@inner ℂ _ _ (TendS c k x) y : ℂ) = @inner ℂ _ _ x (UendfullS c k y) := by
+  rw [PiLp.inner_apply, PiLp.inner_apply]
+  have hL : ∀ u : Fin (2 ^ (k - 1)),
+      (inner ℂ ((TendS c k x).ofLp u) (y.ofLp u) : ℂ)
+        = ∑ r, y u * (TkSC c k u r * (starRingEnd ℂ) (x r)) := by
+    intro u
+    rw [RCLike.inner_apply]
+    show y u * (starRingEnd ℂ) (∑ r, TkSC c k u r * x r) = _
+    rw [map_sum, Finset.mul_sum]
+    exact Finset.sum_congr rfl fun r _ => by rw [map_mul, conj_TkSC]
+  have hR : ∀ r : Fin (2 ^ (k - 1)),
+      (inner ℂ (x.ofLp r) ((UendfullS c k y).ofLp r) : ℂ)
+        = ∑ u, y u * (TkSC c k u r * (starRingEnd ℂ) (x r)) := by
+    intro r
+    rw [RCLike.inner_apply]
+    show (∑ u, UfullS c k r u * y u) * (starRingEnd ℂ) (x r) = _
+    rw [Finset.sum_mul]
+    exact Finset.sum_congr rfl fun u _ => by rw [UfullS_apply]; ring
+  rw [Fintype.sum_congr _ _ hL, Fintype.sum_congr _ _ hR]
+  exact Finset.sum_comm
+
+/-- **The shifted orientation bridge.**  For every level `a`, `P_a U_c = P_a (T^{(c)})ᵀ` on
+`ker φ`. -/
+theorem P_UopS_eq {c k : ℕ} (hk : 1 ≤ k) (a : ℕ) (z : LinearMap.ker (onesCov k)) :
+    P k a (((UopS (c := c) hk z : LinearMap.ker (onesCov k)) : Fsp k))
+      = P k a (UendfullS c k (z : Fsp k)) := by
+  rw [UopS_coe, P_mzProj hk]
+
+/-- **`hadj` AT A GENERAL SHIFT, DISCHARGED.**  `⟨T_c x, y⟩ = ⟨x, U_c y⟩` for mean-zero
+`x`, `y`.  The Perron correction inside `U_c` is invisible to `x ∈ ker φ`. -/
+theorem hadjS_concrete {c k : ℕ} (hk : 1 ≤ k) (x y : LinearMap.ker (onesCov k)) :
+    (@inner ℂ _ _ (TendS c k (x : Fsp k)) (y : Fsp k) : ℂ)
+      = @inner ℂ _ _ (x : Fsp k)
+          (((UopS (c := c) hk y : LinearMap.ker (onesCov k)) : Fsp k)) := by
+  have hx : (@inner ℂ _ _ (chiVec k (0 : Fin (2 ^ (k - 1)))) (x : Fsp k) : ℂ) = 0 :=
+    (mem_ker_iff _).1 x.2
+  have hx' : (@inner ℂ _ _ (x : Fsp k) (chiVec k (0 : Fin (2 ^ (k - 1)))) : ℂ) = 0 := by
+    rw [← inner_conj_symm, hx, map_zero]
+  rw [UopS_coe, mzProj_apply, inner_sub_right, inner_smul_right, hx', mul_zero, sub_zero]
+  exact inner_TendS_UendfullS (x : Fsp k) (y : Fsp k)
+
+/-- The shifted level block `P_a U_full^{(c)} P_b`. -/
+noncomputable def blockOpS (c k a b : ℕ) : Fsp k →ₗ[ℂ] Fsp k :=
+  (P k a).comp ((UendfullS c k).comp (P k b))
+
+noncomputable def blockCLMS (c k a b : ℕ) : Fsp k →L[ℂ] Fsp k :=
+  LinearMap.toContinuousLinearMap (blockOpS c k a b)
+
+@[simp] theorem blockCLMS_apply (c k a b : ℕ) (x : Fsp k) :
+    blockCLMS c k a b x = P k a (UendfullS c k (P k b x)) := rfl
+
+/-- **The shifted level-block norm matrix `Q_c`.** -/
+noncomputable def QmatS (c k : ℕ) : Matrix (Fin (k - 1)) (Fin (k - 1)) ℝ :=
+  fun a b => ‖blockCLMS c k (a : ℕ) (b : ℕ)‖
+
+/-- **`hQ0` at a general shift**: `Q_c` is entrywise nonnegative.  Definitional — it is a
+matrix of operator norms. -/
+theorem QmatS_nonneg (c k : ℕ) (a b : Fin (k - 1)) : 0 ≤ QmatS c k a b := norm_nonneg _
+
+/-- The mean-zero part of the shifted defect covector. -/
+noncomputable def mzcS (c k : ℕ) : Fsp k := mzProj k (cvecES c k)
+
+theorem mzcS_mem_ker {c k : ℕ} (hk : 1 ≤ k) : mzcS c k ∈ LinearMap.ker (onesCov k) :=
+  mzProj_mem_ker hk _
+
+theorem P_mzcS {c k : ℕ} (hk : 1 ≤ k) (b : ℕ) : P k b (mzcS c k) = P k b (cvecES c k) :=
+  P_mzProj hk b _
+
+/-- The level decomposition of the shifted defect covector. -/
+noncomputable def gcVecS (c : ℕ) {k : ℕ} (hk : 2 ≤ k) : PiLp 2 (Glev k) :=
+  elev hk ⟨mzcS c k, mzcS_mem_ker (one_le' hk)⟩
+
+theorem s_pow_norm_nonnegS {c k : ℕ} (a b : ℕ) :
+    (0 : ℝ) ≤ Assembly.s ^ (a + 1) * ‖P k b (cvecES c k)‖ :=
+  mul_nonneg (pow_nonneg Assembly.s_pos.le _) (norm_nonneg _)
+
+/-- **`hQlower` AT A GENERAL SHIFT, DISCHARGED**, from §13's `norm_P_U_P_leS`. -/
+theorem QmatS_lower_le {c k : ℕ} (hc : c % 2 = 1) (hk : 2 ≤ k) (a b : Fin (k - 1))
+    (hab : (b : ℕ) ≤ (a : ℕ)) :
+    QmatS c k a b ≤ Assembly.s ^ ((a : ℕ) + 1) * ‖P k (b : ℕ) (cvecES c k)‖ := by
+  have ha : (a : ℕ) + 2 ≤ k := by have := a.isLt; omega
+  refine ContinuousLinearMap.opNorm_le_bound _ (s_pow_norm_nonnegS _ _) fun x => ?_
+  calc ‖blockCLMS c k (a : ℕ) (b : ℕ) x‖
+      ≤ Assembly.s ^ ((a : ℕ) + 1) * ‖P k (b : ℕ) (cvecES c k)‖ * ‖P k (b : ℕ) x‖ :=
+        norm_P_U_P_leS hc hk hab ha x
+    _ ≤ Assembly.s ^ ((a : ℕ) + 1) * ‖P k (b : ℕ) (cvecES c k)‖ * ‖x‖ :=
+        mul_le_mul_of_nonneg_left (norm_P_le (one_le' hk) (b : ℕ) x) (s_pow_norm_nonnegS _ _)
+
+/-- **`hQlower` is TIGHT at a general shift**: for `b ≤ a` the shifted block norm is *exactly*
+`s^{a+1}·‖P_b c*_c‖`.
+
+Same double duty as at `c = 1`: it shows `Q_c`'s lower triangle is not a loose over-estimate,
+and it is the anti-degeneracy check for `gc_c` — a degenerate defect vector cannot hide behind
+a large `Q_c`, because it would force the whole lower triangle to vanish. -/
+theorem QmatS_lower_eq {c k : ℕ} (hc : c % 2 = 1) (hk : 2 ≤ k) (a b : Fin (k - 1))
+    (hab : (b : ℕ) ≤ (a : ℕ)) :
+    QmatS c k a b = Assembly.s ^ ((a : ℕ) + 1) * ‖P k (b : ℕ) (cvecES c k)‖ := by
+  have hk1 : 1 ≤ k := by omega
+  have ha : (a : ℕ) + 2 ≤ k := by have := a.isLt; omega
+  refine le_antisymm (QmatS_lower_le hc hk a b hab) ?_
+  rcases eq_or_lt_of_le (norm_nonneg (P k (b : ℕ) (cvecES c k))) with h0 | hpos
+  · rw [← h0, mul_zero]; exact norm_nonneg _
+  have hcoef : (@inner ℂ _ _ (cvecES c k) (P k (b : ℕ) (P k (b : ℕ) (cvecES c k))) : ℂ)
+      = @inner ℂ _ _ (P k (b : ℕ) (cvecES c k)) (P k (b : ℕ) (cvecES c k)) :=
+    (P_selfadjoint hk1 (b : ℕ) (cvecES c k) (P k (b : ℕ) (cvecES c k))).symm
+  have hval : ‖blockCLMS c k (a : ℕ) (b : ℕ) (P k (b : ℕ) (cvecES c k))‖
+      = Assembly.s ^ ((a : ℕ) + 1) * ‖P k (b : ℕ) (cvecES c k)‖
+          * ‖P k (b : ℕ) (cvecES c k)‖ := by
+    show ‖P k (a : ℕ) (UendfullS c k (P k (b : ℕ) (P k (b : ℕ) (cvecES c k))))‖ = _
+    rw [P_U_P_eq_defectS hc hk hab, norm_smul, norm_P_single ha, hcoef,
+      inner_self_eq_norm_sq_to_K (𝕜 := ℂ)]
+    simp only [norm_pow, RCLike.norm_ofReal, abs_norm]
+    ring
+  have hle := (blockCLMS c k (a : ℕ) (b : ℕ)).le_opNorm (P k (b : ℕ) (cvecES c k))
+  rw [hval] at hle
+  refine le_of_mul_le_mul_right ?_ hpos
+  show (Assembly.s ^ ((a : ℕ) + 1) * ‖P k (b : ℕ) (cvecES c k)‖)
+      * ‖P k (b : ℕ) (cvecES c k)‖
+      ≤ ‖blockCLMS c k (a : ℕ) (b : ℕ)‖ * ‖P k (b : ℕ) (cvecES c k)‖
+  linarith
+
+/-- The shifted mean-zero part is no longer than the whole. -/
+theorem norm_mzcS_le {c k : ℕ} (hk : 1 ≤ k) : ‖mzcS c k‖ ≤ ‖cvecES c k‖ := by
+  have hon := chiVec_orthonormal hk
+  have hcoef : ∀ ξ : Fin (2 ^ (k - 1)), ξ ≠ 0 →
+      (@inner ℂ _ _ (chiVec k ξ) (mzcS c k) : ℂ) = @inner ℂ _ _ (chiVec k ξ) (cvecES c k) := by
+    intro ξ hξ
+    rw [mzcS, mzProj_apply, inner_sub_right, inner_smul_right,
+      orthonormal_iff_ite.1 hon ξ (0 : Fin (2 ^ (k - 1))), if_neg hξ, mul_zero, sub_zero]
+  have hzero : (@inner ℂ _ _ (chiVec k (0 : Fin (2 ^ (k - 1)))) (mzcS c k) : ℂ) = 0 :=
+    (mem_ker_iff _).1 (mzcS_mem_ker hk)
+  have hsq : ‖mzcS c k‖ ^ 2 ≤ ‖cvecES c k‖ ^ 2 := by
+    rw [← sum_sq_coeff hk (mzcS c k), ← sum_sq_coeff hk (cvecES c k)]
+    refine Finset.sum_le_sum fun ξ _ => ?_
+    by_cases h : ξ = 0
+    · subst h; rw [hzero]; simp
+    · rw [hcoef ξ h]
+  nlinarith [norm_nonneg (mzcS c k), norm_nonneg (cvecES c k)]
+
+/-- **The shifted defect covector, in `ℓ²` over ALL residues** — the analogue of
+`Assembly.cvec`, built from `cfS`.  This is the object whose norm Lemma B bounds. -/
+noncomputable def cvecSfull (c k : ℕ) : EuclideanSpace ℝ (Fin (2 ^ k)) :=
+  WithLp.toLp 2 (fun t => (cfS c k t : ℝ) / 2 ^ k)
+
+@[simp] theorem cvecSfull_apply (c k : ℕ) (t : Fin (2 ^ k)) :
+    cvecSfull c k t = (cfS c k t : ℝ) / 2 ^ k := rfl
+
+/-- `‖c*_c‖` over the odd residues is at most `‖c_c‖` over all residues: the odd residues are a
+subset and every term is nonnegative. -/
+theorem norm_cvecES_le {c k : ℕ} (hk : 1 ≤ k) : ‖cvecES c k‖ ≤ ‖cvecSfull c k‖ := by
+  have hterm : ∀ u : Fin (2 ^ (k - 1)),
+      ‖(cvecES c k) u‖ ^ 2 = ((cfS c k (od (u : ℕ)) : ℝ) / 2 ^ k) ^ 2 := by
+    intro u
+    show ‖(starRingEnd ℂ) (cstarS c k u)‖ ^ 2 = _
+    rw [RCLike.norm_conj, cstarS,
+      show ((cfS c k (od (u : ℕ)) : ℂ) / 2 ^ k)
+          = (((cfS c k (od (u : ℕ)) : ℝ) / 2 ^ k : ℝ) : ℂ) by push_cast; ring,
+      Complex.norm_real, Real.norm_eq_abs, sq_abs]
+  have hL : ‖cvecES c k‖ ^ 2
+      = ∑ u : Fin (2 ^ (k - 1)), ((cfS c k (od (u : ℕ)) : ℝ) / 2 ^ k) ^ 2 := by
+    rw [EuclideanSpace.norm_eq, Real.sq_sqrt (Finset.sum_nonneg fun i _ => by positivity)]
+    exact Finset.sum_congr rfl fun u _ => hterm u
+  have hR : ‖cvecSfull c k‖ ^ 2 = ∑ t ∈ range (2 ^ k), ((cfS c k t : ℝ) / 2 ^ k) ^ 2 := by
+    rw [EuclideanSpace.norm_eq, Real.sq_sqrt (Finset.sum_nonneg fun i _ => by positivity),
+      ← Fin.sum_univ_eq_sum_range (fun t => ((cfS c k t : ℝ) / 2 ^ k) ^ 2) (2 ^ k)]
+    refine Finset.sum_congr rfl fun t _ => ?_
+    rw [cvecSfull_apply, Real.norm_eq_abs, sq_abs]
+  have hsub : ∑ u : Fin (2 ^ (k - 1)), ((cfS c k (od (u : ℕ)) : ℝ) / 2 ^ k) ^ 2
+      ≤ ∑ t ∈ range (2 ^ k), ((cfS c k t : ℝ) / 2 ^ k) ^ 2 := by
+    have himg : ∑ u : Fin (2 ^ (k - 1)), ((cfS c k (od (u : ℕ)) : ℝ) / 2 ^ k) ^ 2
+        = ∑ t ∈ (range (2 ^ (k - 1))).image od, ((cfS c k t : ℝ) / 2 ^ k) ^ 2 := by
+      rw [Finset.sum_image (by intro x _ y _ h; exact od_injective h)]
+      exact Fin.sum_univ_eq_sum_range
+        (fun u => ((cfS c k (od u) : ℝ) / 2 ^ k) ^ 2) (2 ^ (k - 1))
+    rw [himg]
+    refine Finset.sum_le_sum_of_subset_of_nonneg ?_ (fun i _ _ => by positivity)
+    intro t ht
+    rw [Finset.mem_image] at ht
+    obtain ⟨u, hu, rfl⟩ := ht
+    exact Finset.mem_range.2 (od_lt hk (Finset.mem_range.1 hu))
+  rw [← Real.sqrt_sq (norm_nonneg (cvecES c k)), ← Real.sqrt_sq (norm_nonneg (cvecSfull c k))]
+  exact Real.sqrt_le_sqrt (by rw [hL, hR]; exact hsub)
+
+/-- **`hDefectVec` AT A GENERAL SHIFT, DISCHARGED.** -/
+theorem hDefectVecS_concrete {c k : ℕ} (hk : 2 ≤ k) :
+    ‖gcVecS c hk‖ ≤ ‖cvecSfull c k‖ := by
+  have h1 : ‖gcVecS c hk‖ = ‖mzcS c k‖ := by
+    rw [gcVecS, (elev hk).norm_map]
+    rfl
+  rw [h1]
+  exact le_trans (norm_mzcS_le (one_le' hk)) (norm_cvecES_le (one_le' hk))
+
+/-- **THE JOIN WITH LEMMA B.**  `‖c_c‖² = collS c k / 4^k ≤ 3·s^{2k}` — the defect covector's
+norm bound at a general odd shift, from §10.  This is what makes the shifted `hDefectVec`
+useful rather than merely true: it is the numerical content the assembly's defect row consumes.
+
+Note the hypotheses: `c` odd and `c < 2^k`, inherited from `collS_le`. -/
+theorem norm_sq_cvecSfull_le {s : ℝ} (hs : 0 < s) (hsq : s ^ 2 = 1 / 2) {c k : ℕ}
+    (hc : c % 2 = 1) (hk : 1 ≤ k) (hck : c < 2 ^ k) :
+    ‖cvecSfull c k‖ ^ 2 ≤ 3 * s ^ (2 * k) := by
+  have hnorm : ‖cvecSfull c k‖ ^ 2 = (collS c k : ℝ) / 4 ^ k := by
+    rw [EuclideanSpace.norm_eq, Real.sq_sqrt (Finset.sum_nonneg fun i _ => by positivity)]
+    have hcast : ∀ t : Fin (2 ^ k),
+        ‖cvecSfull c k t‖ ^ 2 = ((cfS c k (t : ℕ) : ℝ)) ^ 2 / 4 ^ k := by
+      intro t
+      rw [cvecSfull_apply, Real.norm_eq_abs, sq_abs, div_pow]
+      congr 1
+      rw [show (4 : ℝ) = 2 * 2 by norm_num, mul_pow]
+      ring
+    rw [Fintype.sum_congr _ _ hcast, ← Finset.sum_div]
+    congr 1
+    rw [collS]
+    push_cast
+    exact (Fin.sum_univ_eq_sum_range (fun t => ((cfS c k t : ℝ)) ^ 2) (2 ^ k))
+  rw [hnorm]
+  exact defect_norm_sq_leS hs hsq hc hk hck
+
+end ManifestShifted
+
+/-!
+**Satisfiability witnesses for §14.**  `cfS` is computable, so the defect covector's squared
+norm is too.  `collS c k / 4^k` is `‖c_c‖²`, and Lemma B says it is at most `3/2^k`.
+At `k = 5` the bound is `3/32 = 0.09375`.
+-/
+
+#eval (collS 5 5, 3 * 2 ^ 5)     -- (74, 96)   ‖c‖² = 74/1024, bound 96/1024
+#eval (collS 3 5, 3 * 2 ^ 5)     -- (94, 96)   the a = 3 shift, nearly saturating
+#eval (collS 11 5, 3 * 2 ^ 5)    -- (74, 96)
+
+/-!
+--------------------------------------------------------------------------------
+## §15. Axiom audit
 --------------------------------------------------------------------------------
 -/
 
@@ -3756,5 +4117,18 @@ the numerical statement `calibrate_general_shift.py` gate 4 checks as `rank D = 
 #print axioms norm_P_U_P_leS'
 #print axioms rstarIdxS_one
 #print axioms cstarS_one
+-- §14, the shifted manifest fields
+#print axioms conj_TkSC
+#print axioms inner_TendS_UendfullS
+#print axioms P_UopS_eq
+#print axioms hadjS_concrete
+#print axioms QmatS_nonneg
+#print axioms P_mzcS
+#print axioms QmatS_lower_le
+#print axioms QmatS_lower_eq
+#print axioms norm_mzcS_le
+#print axioms norm_cvecES_le
+#print axioms hDefectVecS_concrete
+#print axioms norm_sq_cvecSfull_le
 
 end ShiftedOperator
