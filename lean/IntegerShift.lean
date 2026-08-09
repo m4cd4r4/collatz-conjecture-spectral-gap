@@ -67,6 +67,15 @@ it is recorded here in its corrected form).
 | S129 | `syracuseZ_odd` | hypothesis `0 < 3n + c` dropped | cannot prove `(3n+c).toNat ≠ 0`; without it `Int.toNat` clamps at `0` and the map is not odd |
 | S130 | `rstarZ_minus_one_pos` | `1 ≤ r*` strengthened to `2 ≤ r*` | unprovable from oddness alone, and `r* = 1` genuinely occurs (at `c = -3`, every `k`) |
 | S131 | `cmodN_odd` | hypothesis `c % 2 = 1` dropped | cannot derive an odd residue; an even `c` has an even residue mod `2^k` |
+| S132 | `link_theorem` | hypothesis `1 ≤ apAZ c k` dropped | `positivity` fails on `A_c + 3m`; at the degenerate shifts it is `≤ 0`, where `Int.toNat` clamps and the identity is false |
+| S133 | `oddPartZ_two_pow_mul` | hypothesis `0 < X` dropped | cannot produce the ℕ representative; at `X ≤ 0` both sides are clamps, not odd parts |
+| S134 | `fibre_odd` | hypothesis `c % 2 = 1` dropped | cannot supply `rstarZ_odd`; an even shift has an even `r*`, so the fibre is not odd |
+| S135 | `link_theorem_minus_one` | offset pinned to the constant `1` instead of `apAZ (-1) k` | type mismatch; and **false** by computation — at `k = 4` the true fibre is `[1,5,1,11]` against the pinned `[1,1,7,5]`.  This is precisely the overclaim ("`A_{-1} = 1` at every `k`") that the calibration caught in the first draft of `DECISION_INTEGER_SHIFT.md` |
+
+**Two mutations in this batch first failed for non-mathematical reasons** and were re-run:
+S132/S135 initially reported `unknown identifier`, because `lake env lean` typechecks without
+writing the `.olean`, so the scratch files imported a stale module.  A stale-import failure
+reports identically to a refutation and proves nothing — `lake build` the target first.
 -/
 import ShiftedOperator
 
@@ -225,7 +234,90 @@ theorem apAZ_minus_one_mem {k : ℕ} (hk : 1 ≤ k) : apAZ (-1) k = 1 ∨ apAZ (
 
 /-!
 --------------------------------------------------------------------------------
-## §5. `#eval` witnesses, checked against the Python
+## §5. The link theorem at an integer shift
+--------------------------------------------------------------------------------
+
+The defect fibre over `r*_c` **is** the arithmetic progression `A_c + 3m`.  This is the
+integer-shift analogue of `CollisionBound.syracuse_defect_fibre` and of gate B3, and it is what
+Lemma B consumes.
+
+Gate I3 measured it first: **0 mismatches over 523,917 compared pairs**, `k = 3..9`, every odd
+`c` with `-2·2^k < c < 2^k`.  The measurement also fixed the shape of the statement — entries
+where a side is genuinely undefined (`A_c + 3m = 0`, equivalently `3n + c = 0`) were *counted*,
+not skipped, and there were exactly as many as the `A_c = 0` shifts predict.  Here `1 ≤ A_c`
+excludes them, which is the route-(a′) hypothesis doing its job.
+
+Note what is **not** needed: nothing below is sensitive to the sign of `c`.  The shift enters
+only through `apAZ_mul`, and `oddPart (2^k · X) = oddPart X` is what does the work — which is
+why gate I3 found the identity holding verbatim at negative `A_c` too.
+-/
+
+/-- `oddPartZ` on a natural is `CollisionBound.oddPart`.  A bridge, so the ℕ development's
+odd-part lemmas apply unchanged. -/
+theorem oddPartZ_natCast (n : ℕ) : oddPartZ (n : ℤ) = CollisionBound.oddPart n := by
+  unfold oddPartZ CollisionBound.oddPart
+  rw [Int.toNat_natCast]
+
+/-- **Powers of two are invisible to the odd part**, at integer argument.  This is the whole
+mechanism of the link theorem, and the reason it is sign-agnostic. -/
+theorem oddPartZ_two_pow_mul {X : ℤ} (hX : 0 < X) (j : ℕ) :
+    oddPartZ ((2 ^ j : ℤ) * X) = oddPartZ X := by
+  obtain ⟨t, ht⟩ : ∃ t : ℕ, X = (t : ℤ) := ⟨X.toNat, (Int.toNat_of_nonneg hX.le).symm⟩
+  have ht0 : t ≠ 0 := by rintro rfl; simp at ht; omega
+  have hcast : ((2 ^ j : ℤ) * X).toNat = 2 ^ j * X.toNat := by
+    subst ht
+    rw [show ((2 ^ j : ℤ) * (t : ℤ)) = ((2 ^ j * t : ℕ) : ℤ) by push_cast; ring]
+    rw [Int.toNat_natCast, Int.toNat_natCast]
+  unfold oddPartZ
+  rw [hcast]
+  exact CollisionBound.oddPart_two_pow_mul (by omega : X.toNat ≠ 0)
+
+/-- The fibre entries over `r*_c` are odd, so the map does not fall through its parity guard. -/
+theorem fibre_odd {c : ℤ} (hc : c % 2 = 1) {k : ℕ} (hk : 1 ≤ k) (m : ℕ) :
+    (rstarZ c k + m * 2 ^ k) % 2 = 1 := by
+  have hr : rstarZ c k % 2 = 1 := rstarZ_odd hc hk
+  -- omega treats `m * 2^k` as an atom, so hand it the divisibility explicitly
+  have hdvd : 2 ∣ m * 2 ^ k := Dvd.dvd.mul_left (dvd_pow_self 2 (by omega)) m
+  omega
+
+/-- **THE LINK THEOREM at an integer shift.**  The shifted-Syracuse image of the `m`-th lift of
+the defect residue is the odd part of `A_c + 3m` — the defect fibre *is* the AP model.
+
+The hypothesis `1 ≤ apAZ c k` is route (a′)'s offset hypothesis; it is exactly what excludes the
+degenerate `A_c ≤ 0` shifts, and `apAZ_minus_one_mem` discharges it for `3x − 1`. -/
+theorem link_theorem {c : ℤ} (hc : c % 2 = 1) {k : ℕ} (hk : 1 ≤ k)
+    (hA : 1 ≤ apAZ c k) (m : ℕ) :
+    syracuseZ c (rstarZ c k + m * 2 ^ k) = oddPartZ (apAZ c k + 3 * m) := by
+  have hodd := fibre_odd hc hk m
+  unfold syracuseZ
+  rw [if_neg (by omega : ¬ (rstarZ c k + m * 2 ^ k) % 2 = 0)]
+  -- 3n + c = 2^k * (A_c + 3m), by the defining property of the offset
+  have hfac : 3 * ((rstarZ c k + m * 2 ^ k : ℕ) : ℤ) + c
+      = (2 ^ k : ℤ) * (apAZ c k + 3 * m) := by
+    have := apAZ_mul (c := c) hk
+    push_cast
+    linarith [this]
+  rw [hfac]
+  exact oddPartZ_two_pow_mul (by positivity) k
+
+/-- The link theorem in the form gate I3 measured it: mod `2^k`. -/
+theorem link_theorem_mod {c : ℤ} (hc : c % 2 = 1) {k : ℕ} (hk : 1 ≤ k)
+    (hA : 1 ≤ apAZ c k) (m : ℕ) :
+    syracuseZ c (rstarZ c k + m * 2 ^ k) % 2 ^ k = oddPartZ (apAZ c k + 3 * m) % 2 ^ k := by
+  rw [link_theorem hc hk hA m]
+
+/-- **The link theorem for `3x − 1`**, with no hypothesis left to discharge: the offset one is
+supplied by `apAZ_minus_one_mem`.  This is the first statement in the corpus that is about the
+`3x − 1` defect fibre and is *proved* rather than measured. -/
+theorem link_theorem_minus_one {k : ℕ} (hk : 1 ≤ k) (m : ℕ) :
+    syracuseMinus (rstarZ (-1) k + m * 2 ^ k) = oddPartZ (apAZ (-1) k + 3 * m) := by
+  have hA : 1 ≤ apAZ (-1) k := by
+    rcases apAZ_minus_one_mem hk with h | h <;> omega
+  exact link_theorem (by decide) hk hA m
+
+/-!
+--------------------------------------------------------------------------------
+## §6. `#eval` witnesses, checked against the Python
 --------------------------------------------------------------------------------
 
 Ground rule 5: verify from outside the system that made the claim.  Every value below is
@@ -260,6 +352,12 @@ example : (List.range 6).map (fun i => apAZ (-1) (i + 3)) = [1, 2, 1, 2, 1, 2] :
 -- and the bridge in action: at `c = 1` this is the ordinary Syracuse map.
 #eval (List.range 6).map (fun i => syracuseZ 1 (2 * i + 1))
 
+-- The link theorem's two sides at `c = -1`, `k = 4` (`r* = 11`, `A = 2`), `m = 0..5`.
+-- `link_theorem_minus_one` proves these agree; the `#eval` is the outside check that they
+-- agree with `syr_c(-1, 11 + 16m)` in the Python, i.e. that the theorem is about the real map.
+#eval (List.range 6).map (fun m => syracuseMinus (rstarZ (-1) 4 + m * 2 ^ 4))
+#eval (List.range 6).map (fun m => oddPartZ (apAZ (-1) 4 + 3 * m))
+
 end Witnesses
 
 /-! ### Axiom audit — every theorem in this file.  Expect `[propext, Classical.choice, Quot.sound]`
@@ -277,5 +375,11 @@ and nothing else: no `sorryAx`, no `Lean.ofReduceBool`. -/
 #print axioms apAZ_mul
 #print axioms rstarZ_minus_one_pos
 #print axioms apAZ_minus_one_mem
+#print axioms oddPartZ_natCast
+#print axioms oddPartZ_two_pow_mul
+#print axioms fibre_odd
+#print axioms link_theorem
+#print axioms link_theorem_mod
+#print axioms link_theorem_minus_one
 
 end IntegerShift
