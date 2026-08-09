@@ -44,16 +44,19 @@ Twelve things ARE finished, and the boundary between them and the rest is the po
    `w^{ξuc} · Sodd (resJ k η ξ u d) (k − d)`, `d = b − a` — the **same `Sodd`, the same
    `resJ`, the same `alphaJ`** as `c = 1`, with the shift confined to a unimodular prefactor.
 5. **LEMMA A ITSELF, AT A GENERAL ODD SHIFT** (§8, 2026-08-05): `clean_boundS` —
-   `‖P_a U_clean^{(c)} P_b‖ ≤ s^{b−a}`, `s = √(1/2)`, for every odd `c` and every `a < b`,
-   via the exact identity `norm_sq_clean_blockS` and the shifted Gram identity `gram_upperS`.
+   `‖P_a U_clean^{(c)} P_b‖ ≤ s^{b−a}`, `s = √(1/2)`, for every odd `c`, every `k ≥ 3`, and
+   every `a < b` **in `Fin (k-1)`** — the level range, which excludes the top two levels; the
+   theorem is not stated for arbitrary naturals `a < b`.  Via the exact identity
+   `norm_sq_clean_blockS` and the shifted Gram identity `gram_upperS`.
    This is `calibrate_general_shift.py`'s gate 2 — measured to `1e-14` for every odd `c` — now
    proved.
 
 6. **The shifted defect fibre is the AP model** (§9, 2026-08-05): `syracuseS_defect_fibre` —
    `Syr_c(r*_c + m·2^k) ≡ oddPart(apAS c k + 3m) (mod 2^k)`, with `apAS c k ∈ {1,2,3}`
    (`apAS_mem`) for every odd `c < 2^k`.  This is the theorem §2c's caveat said did not
-   exist, so `coll3_closed` is now tied to the real shifted operator at every shift whose
-   offset is `3`.
+   exist.  With `coll3_eq_collA` (added 2026-08-09) it ties `coll3_closed` to the real shifted
+   operator at every shift whose offset is `3` — **by theorem, not by `#eval`**; the tie was
+   asserted in prose here until an independent referee pointed out it was only a comment.
 
 7. **LEMMA B AT A GENERAL ODD SHIFT** (§10, 2026-08-06): `collS_le_sharp` —
    `collS c k + 2 ≤ 3·2^k` for every odd `c < 2^k`, where `collS` is the collision count of
@@ -169,7 +172,9 @@ that `c : ℕ` cannot express `3x−1` at all (§4).
 Run before writing any of this (`calibrate_general_shift.py`, public repo).  Four gates, every
 odd `c` tested, `k = 4..8`, all pass:
 
-* `cert_c(k) ≤ 0.853553...` — the same **bound**, not the same value (measured `0.604`–`0.682`);
+* `cert_c(k) ≤ 0.853553...` — the same **bound**, not the same value (measured `0.578`–`0.682`;
+  this line read `0.604`–`0.682` until 2026-08-09, which did not match the script's own output —
+  the true minimum over the swept shifts is `0.577964` at `k = 4`, `c = 5`);
 * **Lemma A's clean block norms are exactly `2^{-(b-a)/2}` for every odd `c`, to `1e-14`.**  This
   is the structural fact the certificate rests on and it is completely shift-independent — the
   decisive evidence that the generalisation is real rather than hoped for;
@@ -197,7 +202,59 @@ this file is `c`-uniform.
 
 Sorry-free.  Specialisation lemmas throughout, mutation table below, axiom audit `§16`.
 
-## MUTATIONS (126, all fail)
+## INDEPENDENT REFEREE PASS, 2026-08-09
+
+Three referees with fresh context and no access to the author's reasoning, given only this
+file and its dependencies, with three distinct lenses: prose-vs-theorem overclaim,
+mathematical correctness (is each theorem about the object it names), and verification
+integrity (do the checks check what they claim).
+
+**Mathematics and verification: both passed.**  The correctness referee independently
+brute-forced the link theorem (`syracuseS_defect_fibre`, all odd `c < 2^k`, `k ≤ 10`, zero
+failures), the offset trichotomy (`k ≤ 12`, zero counterexamples), and the sharpness of
+`collA_le_sharp`, and computed the actual spectra at `k = 3,4,5` (`max |λ₂|` = `0.250` /
+`0.309` / `0.330` against the bound `0.853553`), confirming the certificate is neither vacuous
+nor false at concrete instances.  The verification referee re-derived sorry-freedom with a
+Lean tokenizer rather than `grep`, checked all 49 `#eval` witnesses against actual output
+(**zero mismatches**), and forced each calibration script to fail on a tampered copy to prove
+the gates are real.
+
+**The overclaim referee found a genuine cluster, all in the documentation layer.**  Every one
+is fixed above, in place:
+
+| # | finding | fix |
+|---|---|---|
+| 1 | §15's preamble claimed "every field of `LemmaAFacts`" — contradicted by §15's own obstruction note 170 lines later | corrected in place, with the contradiction named |
+| 2 | `hDefectVecS_concrete` was labelled as the manifest **field**; it is an analogue against a *different* covector | relabelled; §14's table corrected |
+| 3 | `coll3` was tied to `collA 3` only by a comment and an `#eval`, yet the header stated the tie and the sharpness flatly | **now theorems**: `coll3_eq_collA`, `collA_three_closed`, `collS_sharp_at_offset_three` |
+| 4 | stale caveats in §8, §12, §14 still said "no shifted certificate" after §15 proved one | withdrawn in place |
+| 5 | "every `a < b`" overstated `clean_boundS`, whose `a b : Fin (k-1)` excludes the top levels | scope stated |
+| 6 | the calibration range appeared as both `0.604`–`0.682` and `0.578`–`0.682` | re-measured: `0.578` is right |
+
+**The root cause of 1, 2 and 4 is worth recording.**  §15's preamble was written *before* the
+`hDefectVec` obstruction was discovered, and was never revised once the obstruction note was
+added below it.  The file therefore asserted and refuted the same claim within 200 lines.  A
+self-review does not catch that, because the author reads the intent; a referee reading only
+the artifact does.  This is the argument for the referee pass, made concrete.
+
+**Two coverage gaps the verification referee found, recorded rather than fixed:**
+
+* The mutation count was `126`, the highest ID; there are **128 rows** (`S23` became
+  `S23a`/`S23b`/`S23c`).  Corrected below.
+* **Five hypotheses are flagged `unused variable` by the compiler and are not mutation-tested**,
+  so a "drop this hypothesis" mutation on any of them would *survive*:
+  `cu_syracuse_affineS_one` (`hx`, `hK`), `syracuseS_on_shellS` (`hj`), `shA_eq_top_iff`
+  (`hk`), `shell_as_classA` (`hMk`), `defect_norm_sq_leS` (`hs`).  None is load-bearing —
+  they are inherited from the `c = 1` statement shapes for parallelism — but the hypothesis
+  half of the table claims to show hypotheses are used, and for these five it does not.  Stated
+  here rather than quietly trimmed, because trimming them would hide that the table's coverage
+  is not total.
+
+## MUTATIONS (128 rows, IDs S1–S126, all fail)
+
+*The count is 128 and the highest ID is S126: `S23` was replaced by `S23a`/`S23b`/`S23c` after
+the original was found to be conclusion-weakening (see the note below). The header said "126"
+until 2026-08-09, which was the max ID rather than the row count.*
 
 | # | mutation | result |
 |---|---|---|
@@ -2543,12 +2600,17 @@ theorem norm_clean_block_leS {c k a b : ℕ} (hc : c % 2 = 1) (hk : 2 ≤ k) (ha
     (by nlinarith [norm_nonneg (P k b x), norm_nonneg x]) hpos
 
 /-- **LEMMA A AT A GENERAL ODD SHIFT.**  `‖P_a U_clean^{(c)} P_b‖ ≤ s^{b−a}`, `s = √(1/2)`,
-for every odd `c` and every `a < b`.  This is brief step 4, and it closes Lemma A's clean
-block norms for the shifted operator.
+for every odd `c`, every `k ≥ 3`, and every `a < b` in `Fin (k-1)` — the level range, **not**
+arbitrary naturals.  This is brief step 4, and it closes Lemma A's clean block norms for the
+shifted operator.
 
-**Read the section preamble before citing this.**  It is Lemma A, not a certificate: the
-defect half (Lemma B for general `c`) is open, so there is deliberately no shifted analogue of
-`GramIdentity.gap_certificate_unconditional` in this file. -/
+**Scope, corrected 2026-08-09.**  This docstring used to add: *"It is Lemma A, not a
+certificate: the defect half (Lemma B for general `c`) is open, so there is deliberately no
+shifted analogue of `GramIdentity.gap_certificate_unconditional` in this file."*  Both clauses
+are now **false** — Lemma B is `collS_le_sharp` (§10) and the shifted certificate is
+`gap_certificate_shifted` (§15).  The caveat is withdrawn in place rather than deleted, per the
+project's ground rule 4.  What remains true is narrower: this theorem on its own is Lemma A,
+and a certificate needs §10 and §15 as well. -/
 theorem clean_boundS {c k : ℕ} (hc : c % 2 = 1) (hk : 3 ≤ k) (a b : Fin (k - 1))
     (hab : (a : ℕ) < (b : ℕ)) :
     ‖cleanBlockCLMS c k (a : ℕ) (b : ℕ)‖ ≤ Assembly.s ^ ((b : ℕ) - (a : ℕ)) := by
@@ -2653,9 +2715,9 @@ theorem apAS_mem {c k : ℕ} (hc : c % 2 = 1) (hk : 1 ≤ k) (hck : c < 2 ^ k) :
 /-- The third offset is genuinely reachable, so `apAS_mem` is not two cases with a dead
 branch — and `coll3_closed` (§2c) is not about an empty class.  `c = 5`, `k = 3`:
 `r* = 1`, `3·1 + 5 = 8 = 2^3 · 1`; `c = 3`, `k = 3`: `r* = 7`, `3·7 + 3 = 24 = 2^3 · 3`. -/
-example : apAS 3 3 = 3 := by native_decide
+example : apAS 3 3 = 3 := by decide
 
-example : apAS 5 3 = 1 := by native_decide
+example : apAS 5 3 = 1 := by decide
 
 /-- **THE LINK THEOREM.**  The genuine shifted Syracuse fibre over the genuine shifted defect
 residue **is** the arithmetic progression `apAS c k + 3m`:
@@ -3139,6 +3201,17 @@ theorem collA_le {a k : ℕ} (ha : 0 < a) (hk : 1 ≤ k) : collA a k ≤ 3 * 2 ^
 At the offset `apA k` this IS `CollisionBound.coll k`, definitionally. -/
 theorem collA_eq_coll (k : ℕ) : collA (apA k) k = coll k := rfl
 
+/-- **§2c's `coll3` IS `collA` at offset 3.**  Added 2026-08-09 after an independent referee
+observed that the two were connected only by a comment and an `#eval`.  `fibVal3` and
+`fibValA 3` are definitionally equal, so this is `collA_eq_card` read backwards. -/
+theorem coll3_eq_collA (k : ℕ) : coll3 k = collA 3 k := (collA_eq_card 3 k).symm
+
+/-- **The offset-3 collision count in closed form**, transported from `coll3_closed` (§2c).
+This is what makes the sharpness claim a theorem rather than a numerical observation. -/
+theorem collA_three_closed {k : ℕ} (hk : 1 ≤ k) : collA 3 k + 2 = 3 * 2 ^ k := by
+  rw [← coll3_eq_collA]
+  exact coll3_closed hk
+
 /-- And the sharp bound specialises to `CollisionBound.coll_le_sharp`. -/
 example {k : ℕ} (hk : 1 ≤ k) : coll k + 2 ≤ 3 * 2 ^ k :=
   collA_eq_coll k ▸ collA_le_sharp (apA_pos k) hk
@@ -3196,6 +3269,17 @@ theorem collS_le {c k : ℕ} (hc : c % 2 = 1) (hk : 1 ≤ k) (hck : c < 2 ^ k) :
     collS c k ≤ 3 * 2 ^ k := by
   have := collS_le_sharp hc hk hck
   omega
+
+/-- **THE BOUND IS ATTAINED**, and this is now a theorem rather than gate B6's measurement.
+At any shift whose offset is `3`, `collS c k + 2 = 3·2^k` **exactly**, so `3·2^k` cannot be
+lowered to `C·2^k` for any `C < 3`.
+
+Added 2026-08-09 with `coll3_eq_collA`, after an independent referee pointed out that the
+sharpness claim in the header rested on `#eval` rather than on a proof. -/
+theorem collS_sharp_at_offset_three {c k : ℕ} (hc : c % 2 = 1) (hk : 1 ≤ k)
+    (h3 : apAS c k = 3) : collS c k + 2 = 3 * 2 ^ k := by
+  rw [collS_eq_collA hc hk, h3]
+  exact collA_three_closed hk
 
 /-- **The real-valued form of the shifted collision bound**, in exactly the shape
 `CollisionBound.defect_norm_sq_le` has — same `s`, same `2*k`, same `3` — so the two are
@@ -3735,17 +3819,25 @@ What actually depends on the operator is §5's `Uop`, §6's orientation bridge, 
 | `hadj` | **`hadjS_concrete`** (below) |
 | `hQ0` | **`QmatS_nonneg`** (below) |
 | `hQlower` | **`QmatS_lower_le`**, and it is TIGHT — `QmatS_lower_eq` |
-| `hDefectVec` | **`hDefectVecS_concrete`** (below) |
-| `hQblock` | **still open** — see below |
+| `hDefectVec` | see the correction below — **`hDefectVecS_concrete` is an analogue, not the field** |
+| `hQblock` | closed in §15 (`hQblockS`) |
 
-**`hQblock` is the one left.** It says `Q` dominates `U`'s blocks *after* transport through
-the isometry `e`, i.e. `‖(e (U (e.symm (levelSingle m y)))) m'‖ ≤ Q m' m * ‖y‖`. At `c = 1`
-that is `ManifestInstance` §9's territory and it is the field that needs `elev` and `Uop`
-together. It is not proved here, so **there is still no shifted `LemmaAFacts` instance and no
-shifted certificate.**
+**CORRECTED 2026-08-09, after an independent referee pass.**  This table originally listed
+`hDefectVec` as **DONE** via `hDefectVecS_concrete`, and said `hQblock` was "the one left" so
+that "there is still no shifted `LemmaAFacts` instance and no shifted certificate".  Two things
+were wrong with that:
 
-`hQupper` also needs `clean_boundS` (§8) combined with the defect term through `QmatS`; the
-combination is the shifted `GramIdentity.hQupper_holds` and is likewise not done here.
+* `hQblock` and `hQupper` are now closed (§15), and the shifted certificate
+  `gap_certificate_shifted` exists.  The "no shifted certificate" clause is withdrawn.
+* **`hDefectVecS_concrete` is NOT the manifest field.**  The field is
+  `hDefectVec : ‖gc‖ ≤ ‖Assembly.cvec k‖`, measured against the **`c = 1`** defect covector;
+  `hDefectVecS_concrete` proves `‖gcVecS c hk‖ ≤ ‖cvecSfull c k‖`, against the **shifted** one.
+  Those are different statements, and §15 shows the actual field is **unprovable** at a general
+  shift.  Calling the analogue "the field discharged" was exactly the relabelling this corpus
+  calls failure mode (2).
+
+So `Assembly.LemmaAFacts` is **never instantiated** at a shifted operator anywhere in this
+file; §15 explains what is done instead.
 -/
 
 section ManifestShifted
@@ -3978,7 +4070,12 @@ theorem norm_cvecES_le {c k : ℕ} (hk : 1 ≤ k) : ‖cvecES c k‖ ≤ ‖cvec
   rw [← Real.sqrt_sq (norm_nonneg (cvecES c k)), ← Real.sqrt_sq (norm_nonneg (cvecSfull c k))]
   exact Real.sqrt_le_sqrt (by rw [hL, hR]; exact hsub)
 
-/-- **`hDefectVec` AT A GENERAL SHIFT, DISCHARGED.** -/
+/-- **The shifted ANALOGUE of `hDefectVec`** — deliberately not called "the field discharged".
+
+The manifest field is `‖gc‖ ≤ ‖Assembly.cvec k‖`, against the **`c = 1`** defect covector.
+This is `‖gcVecS c‖ ≤ ‖cvecSfull c k‖`, against the **shifted** one.  §15 shows the actual
+field is unprovable at a general shift, so this is a different — and weaker-in-scope —
+statement, used through `hL2S` rather than through the manifest. -/
 theorem hDefectVecS_concrete {c k : ℕ} (hk : 2 ≤ k) :
     ‖gcVecS c hk‖ ≤ ‖cvecSfull c k‖ := by
   have h1 : ‖gcVecS c hk‖ = ‖mzcS c k‖ := by
@@ -4029,8 +4126,14 @@ At `k = 5` the bound is `3/32 = 0.09375`.
 ## §15. The last two fields, the shifted manifest, and the shifted certificate
 --------------------------------------------------------------------------------
 
-§14 left `hQblock` and `hQupper`.  Both land here, and with them every field of
-`Assembly.LemmaAFacts` at a general odd shift — hence a **certificate for `3x + c`**.
+§14 left `hQblock` and `hQupper`.  Both land here, and with them a **certificate for
+`3x + c`**.
+
+**This sentence used to read "and with them every field of `Assembly.LemmaAFacts` at a general
+odd shift".  That was false**, and an independent referee caught it on 2026-08-09: the
+manifest's `hDefectVec` field is **not** available at a general shift and cannot be — see the
+obstruction note below, which was written in the same session and contradicted the sentence it
+followed.  The certificate does not go through `LemmaAFacts` at all.
 
 ### `hQblock`: the one place the isometry and the operator meet
 
@@ -4470,6 +4573,9 @@ end CertificateShifted
 #print axioms collS_le
 #print axioms defect_norm_sq_leS
 #print axioms collS_one
+#print axioms coll3_eq_collA
+#print axioms collA_three_closed
+#print axioms collS_sharp_at_offset_three
 -- §11, the shifted lower block
 #print axioms masked_entry_vanishesS
 #print axioms clean_entry_vanishesS
