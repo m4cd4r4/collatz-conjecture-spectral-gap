@@ -14,14 +14,20 @@ generalising the operator from the hardcoded `3n + 1` to `3n + c` for arbitrary 
 
 ## SCOPE OF *THIS* FILE, STATED HONESTLY
 
-This is a **foundation layer, not the finished result.**  It provides the parametrised
+**UPDATED 2026-08-09.**  This file now proves a **certificate for `3x + c`** at every odd
+`c < 2^k` (`gap_certificate_shifted`, §15).  The paragraph below was written when it was a
+foundation layer and is kept because its warning still binds on the one thing that has NOT
+changed: **none of this is about `3x − 1`**, because `syracuseS` takes `c : ℕ` and cannot
+express that map (§4).  Do not read the new theorem as closing the control experiment.
+
+This was, when written, a **foundation layer, not the finished result.**  It provides the parametrised
 definitions and proves that they specialise correctly at `c = 1`, so nothing existing changes
 meaning.  It does **not** yet reach a certificate bound for general `c`; that needs the rest of
 the chain (`CountingLemmas`, `CollisionBound`, `BlockVanishing`, `OperatorBlock`, `CleanBlock`,
 `ManifestInstance`) generalised too, which is a larger job.  **Do not cite this file as
 "the 3x-1 certificate is formalised".  It is not, yet.**
 
-Eleven things ARE finished, and the boundary between them and the rest is the point of this note:
+Twelve things ARE finished, and the boundary between them and the rest is the point of this note:
 
 1. **Coset uniformity for a general odd shift** (§2b) — the engine Lemma A runs on, `c`-uniform.
 2. **Lemma B's `a = 3` case, complete and sorry-free** (§2c, 2026-08-05):
@@ -91,11 +97,42 @@ Eleven things ARE finished, and the boundary between them and the rest is the po
     was `perronPart`/`mzProj`.  That is where `CleanBlock` §6's `synthInstance`/`isDefEq`
     budget blowups live, and none of it had to be rebuilt.  ~200 lines instead of 867.
 
-Still open for general `c`: **`hQblock`, and `hQupper`.**  `hQblock` is the field that needs
-`elev` and `UopS` *together* — `‖(e (U_c (e.symm (levelSingle m y)))) m'‖ ≤ Q_c m' m * ‖y‖` —
-and it is the one place the isometry and the operator have to meet.  `hQupper` needs
-`clean_boundS` (§8) combined with the defect term through `QmatS`.  Until both land there is
-**no shifted `LemmaAFacts` instance and no shifted certificate**.  See the boundary note below.
+12. **THE CERTIFICATE FOR `3x + c`** (§15, 2026-08-09): `gap_certificate_shifted` —
+
+    > for every odd `c < 2^k` and every `k ≥ 3`, every eigenvalue of the shifted Syracuse
+    > transfer operator `T^{(c)}_k` other than `1` has `‖μ‖ ≤ 2^{-3/2} + 2^{-1} < 0.853554`.
+
+    Sorry-free, standard axioms only.  This is `calibrate_general_shift.py`'s gate 1 —
+    measured `0.578`–`0.682` for every odd `c` at `k = 4..8` — now a theorem.  With it
+    `hQblockS` and `hQupperS_holds`, the last two manifest fields.
+
+### THE OBSTRUCTION FOUND ON THE WAY, WHICH IS A REAL RESULT ABOUT `Assembly`
+
+`Assembly.LemmaAFacts` **is not shift-parametric**, and §15 does not instantiate it.  Its
+`hDefectVec : ‖gc‖ ≤ ‖Assembly.cvec k‖` names the **`c = 1`** defect covector, and is consumed
+to reach `coll k`, the `c = 1` collision count.  Instantiating at `T^{(c)}` would need
+`collS c k ≤ coll k`, **which is false** — `coll k` uses offset `apA k ∈ {1,2}` while a shift
+of offset `3` exists at every level and beats it (`42/46`, `80/94`, `328/382` at `k = 4,5,7`;
+evaluated in §15, not asserted).
+
+The certificate therefore goes one level down, through the fully abstract
+`LevelMajorisation.norm_eigenvalue_le_cert_adjoint`, with `hL2` supplied from `collS_le`
+instead of from `hDefectVec`.  Nothing is weakened — same row bound, same inequality, sourced
+from the shifted Lemma B rather than the unshifted one.
+
+### WHAT THE CERTIFICATE IS NOT.  READ THIS BEFORE CITING IT.
+
+* **It is not about `3x − 1`.**  `syracuseS` takes `c : ℕ` and therefore **cannot express
+  `3x − 1` at all**; §4 records why `c = 2^k − 1` is a different operator.  The control
+  experiment in `CYCLE_CLAIM_REFUTED.md` remains a Python observation.
+* **It does not resurrect any cycle conclusion.**  A certificate that holds across a whole
+  family of shifts — several of which *have* cycles — makes "spectral gap ⟹ no cycles"
+  false for **more** maps, not fewer.  This strengthens the refutation; it does not weaken it.
+* **`c < 2^k` is a real hypothesis**, inherited from Lemma B via `apAS_mem`'s trichotomy, and
+  not removable by this route.
+* **`hL2`/`hParseval` is still untouched.**  This route reaches the defect through the
+  rank-one split, not through `coll`.  The `hParseval` gap `CollisionBound` §8 names is still
+  open, at `c = 1` and at every shift.  See the boundary note below.
 
 > **CORRECTION 2026-08-05, of a claim this file and the private brief both made.**  Both said
 > the missing piece of Lemma B at a general shift was *"the **valuation** — which power of `2`
@@ -158,9 +195,9 @@ is specific to the shift `1`.  For general `c` the defect residue is the solutio
 `3r + c ≡ 0 (mod 2^k)`, given here as `rstarS c k` via the inverse of `3`.  Everything else in
 this file is `c`-uniform.
 
-Sorry-free.  Specialisation lemmas throughout, mutation table below, axiom audit `§15`.
+Sorry-free.  Specialisation lemmas throughout, mutation table below, axiom audit `§16`.
 
-## MUTATIONS (118, all fail)
+## MUTATIONS (126, all fail)
 
 | # | mutation | result |
 |---|---|---|
@@ -306,6 +343,29 @@ Lemma A's clean block norms at a general shift, added 2026-08-05 (§8).  All 10 
 | S75 | `norm_sq_clean_blockS`: the equality sharpened `2^{−d}` → `2^{−(d+1)}` | fails |
 | S76 | `norm_clean_block_leS`: bound sharpened `s^d` → `s^{d+1}` | fails |
 | S77 | `clean_boundS`: level weakened `3 ≤ k` → `2 ≤ k` | fails |
+
+The shifted certificate, added 2026-08-09 (§15).  All 8 fail:
+
+| # | mutation | result |
+|---|---|---|
+| S119 | `norm_P_DS_P_le`: level constant sharpened `s^{a+1}` → `s^{a+2}` | fails |
+| S120 | `block_splitS`: **the defect term dropped** | fails |
+| S121 | `QmatS_le_clean_add`: the defect summand dropped | fails |
+| S122 | `hQupperS_holds`: regime inverted `a < b` → `b < a` | fails |
+| S123 | `hL2S`: the constant `3` → `2` | fails |
+| S124 | `hQblockS`: level hypothesis weakened `3 ≤ k` → `2 ≤ k` | fails |
+| S125 | `gap_certificate_shifted`: **shift oddness weakened to a tautology** | fails |
+| S126 | `gap_certificate_shifted`: **the shift's size hypothesis dropped** | fails |
+
+**S125 and S126 are the two that matter, because they are about the headline theorem.**  They
+show its two hypotheses are load-bearing rather than inherited decoration: without `c` odd the
+column-stochasticity input fails, and without `c < 2^k` the Lemma B input fails.  A
+certificate whose hypotheses were not used would be the most dangerous possible result here.
+
+S120 and S121 are the pair that guard against the certificate quietly becoming a statement
+about the *clean* operator only — both drop the defect term, and both fail.
+
+All eight fail with a genuine mathematical error and **no timeouts**, unlike the §14 round.
 
 The shifted manifest fields, added 2026-08-09 (§14).  All 8 fail:
 
@@ -3966,7 +4026,327 @@ At `k = 5` the bound is `3/32 = 0.09375`.
 
 /-!
 --------------------------------------------------------------------------------
-## §15. Axiom audit
+## §15. The last two fields, the shifted manifest, and the shifted certificate
+--------------------------------------------------------------------------------
+
+§14 left `hQblock` and `hQupper`.  Both land here, and with them every field of
+`Assembly.LemmaAFacts` at a general odd shift — hence a **certificate for `3x + c`**.
+
+### `hQblock`: the one place the isometry and the operator meet
+
+`hQblock` says `Q_c` dominates `U_c`'s blocks *after transport through the isometry* `elev`.
+The `c = 1` proof (`ManifestInstance.facts_of_hQupper`) turns `levelSingle m y` into a vector
+`z ∈ ker φ` concentrated at level `m`, shows `P_m z = z`, and then reads the `m'` component of
+`elev (U_c z)` as a block norm.  Everything in that argument except `P_UopS_eq` and
+`blockCLMS` is shift-free — `norm_elev_component`, `P_resolution`, `levelSingle`,
+`sum_levelEnergy_sq`.  The composition of `elev` with `UopS` that I expected to be expensive
+is a single `rw`.
+
+### `hQupper`: the triangle inequality, and where the two lemmas finally meet
+
+`Q_c[a,b] ≤ ‖clean block‖ + s^{a+1}·‖P_b c*_c‖` by the triangle inequality on the split
+`U_full^{(c)} = U_clean^{(c)} + D_c` (§13), and then **Lemma A** (`clean_boundS`, §8) bounds
+the first summand for `a < b` while the second is `hQupper`'s own defect term verbatim.  The
+only inequality with slack in it is the triangle inequality.
+
+### THE CERTIFICATE, AND EXACTLY WHAT IT IS
+
+`gap_certificate_shifted` below: for every odd `c < 2^k` and every `k ≥ 3`, every eigenvalue
+of the **shifted** Syracuse transfer operator `T^{(c)}_k` other than `1` has modulus at most
+`envelope s 3 = 2^{-3/2} + 2^{-1} < 0.853554`.
+
+That is `calibrate_general_shift.py`'s gate 1 — measured `0.578`–`0.682` against the bound
+`0.853553` for every odd `c` at `k = 4..8` — now a theorem.
+
+**What it is NOT, and this has not changed:**
+
+* **It is not about `3x − 1`.**  `syracuseS` takes `c : ℕ`; §4 records at length why
+  `c = 2^k − 1` is a *different operator* from `3x − 1` and why `oddPart` not factoring
+  through the residue is the reason.  The control experiment in `CYCLE_CLAIM_REFUTED.md`
+  remains a Python observation.
+* **It does not resurrect any cycle conclusion.**  The certificate holding for a whole family
+  of shifts, several of which have cycles, is the *strengthened* form of the original
+  refutation: it makes "spectral gap ⟹ no cycles" false for more maps, not fewer.
+* **`hL2`/`hParseval` is untouched.**  This route reaches the defect through `DefectSplit`'s
+  rank-one treatment, not through `coll`.  Lemma B (§10) still does not feed it, and the
+  `hParseval` gap `CollisionBound` §8 names is still open at `c = 1` and at every shift.
+-/
+
+section CertificateShifted
+
+open LemmaA CharacterBasis BlockVanishing OperatorBlock CollisionBound GramIdentity
+open DefectSplit ManifestInstance CleanBlock
+
+/-- **The shifted defect block bound.**  No ordering hypothesis on `a`, `b` — `D_c` is rank one
+whatever the levels are, which is what makes this available in the `a < b` regime that
+`norm_P_U_P_leS` cannot reach. -/
+theorem norm_P_DS_P_le {c k a b : ℕ} (hk : 1 ≤ k) (ha : a + 2 ≤ k) (x : Fsp k) :
+    ‖P k a (DendS c k (P k b x))‖
+      ≤ Assembly.s ^ (a + 1) * ‖P k b (cvecES c k)‖ * ‖P k b x‖ := by
+  have hcoef : (@inner ℂ _ _ (cvecES c k) (P k b x) : ℂ)
+      = @inner ℂ _ _ (P k b (cvecES c k)) (P k b x) := by
+    rw [P_selfadjoint hk b, P_idem hk]
+  have hCS : ‖(@inner ℂ _ _ (cvecES c k) (P k b x) : ℂ)‖
+      ≤ ‖P k b (cvecES c k)‖ * ‖P k b x‖ := by
+    rw [hcoef]; exact norm_inner_le_norm _ _
+  rw [DendS_apply_eq hk, map_smul, norm_smul, norm_P_single ha]
+  calc ‖(@inner ℂ _ _ (cvecES c k) (P k b x) : ℂ)‖ * Assembly.s ^ (a + 1)
+      ≤ (‖P k b (cvecES c k)‖ * ‖P k b x‖) * Assembly.s ^ (a + 1) :=
+        mul_le_mul_of_nonneg_right hCS (pow_nonneg Assembly.s_pos.le _)
+    _ = Assembly.s ^ (a + 1) * ‖P k b (cvecES c k)‖ * ‖P k b x‖ := by ring
+
+theorem block_splitS {c k a b : ℕ} (hc : c % 2 = 1) (hk : 1 ≤ k) (x : Fsp k) :
+    blockCLMS c k a b x = P k a (UendS c k (P k b x)) + P k a (DendS c k (P k b x)) := by
+  show P k a (UendfullS c k (P k b x)) = _
+  rw [UendfullS_split hc hk (P k b x), map_add]
+
+/-- **THE SHIFTED REDUCTION.**  `Q_c[a,b] ≤ ‖clean block‖ + s^{a+1}·‖P_b c*_c‖`, for every
+`a, b` in range.  The only inequality with slack is the triangle inequality. -/
+theorem QmatS_le_clean_add {c k : ℕ} (hc : c % 2 = 1) (hk : 2 ≤ k) (a b : Fin (k - 1)) :
+    QmatS c k a b ≤ ‖cleanBlockCLMS c k (a : ℕ) (b : ℕ)‖
+      + Assembly.s ^ ((a : ℕ) + 1) * ‖P k (b : ℕ) (cvecES c k)‖ := by
+  have hk1 : 1 ≤ k := by omega
+  have ha : (a : ℕ) + 2 ≤ k := by have := a.isLt; omega
+  refine ContinuousLinearMap.opNorm_le_bound _
+    (add_nonneg (norm_nonneg _) (s_pow_norm_nonnegS _ _)) fun x => ?_
+  have htri : ‖blockCLMS c k (a : ℕ) (b : ℕ) x‖
+      ≤ ‖P k (a : ℕ) (UendS c k (P k (b : ℕ) x))‖
+        + ‖P k (a : ℕ) (DendS c k (P k (b : ℕ) x))‖ := by
+    rw [block_splitS hc hk1 x]; exact norm_add_le _ _
+  have hclean : ‖P k (a : ℕ) (UendS c k (P k (b : ℕ) x))‖
+      ≤ ‖cleanBlockCLMS c k (a : ℕ) (b : ℕ)‖ * ‖x‖ :=
+    (cleanBlockCLMS c k (a : ℕ) (b : ℕ)).le_opNorm x
+  have hdef : ‖P k (a : ℕ) (DendS c k (P k (b : ℕ) x))‖
+      ≤ Assembly.s ^ ((a : ℕ) + 1) * ‖P k (b : ℕ) (cvecES c k)‖ * ‖x‖ :=
+    le_trans (norm_P_DS_P_le hk1 ha x)
+      (mul_le_mul_of_nonneg_left (norm_P_le hk1 (b : ℕ) x) (s_pow_norm_nonnegS _ _))
+  calc ‖blockCLMS c k (a : ℕ) (b : ℕ) x‖
+      ≤ ‖P k (a : ℕ) (UendS c k (P k (b : ℕ) x))‖
+        + ‖P k (a : ℕ) (DendS c k (P k (b : ℕ) x))‖ := htri
+    _ ≤ ‖cleanBlockCLMS c k (a : ℕ) (b : ℕ)‖ * ‖x‖
+        + Assembly.s ^ ((a : ℕ) + 1) * ‖P k (b : ℕ) (cvecES c k)‖ * ‖x‖ :=
+        add_le_add hclean hdef
+    _ = (‖cleanBlockCLMS c k (a : ℕ) (b : ℕ)‖
+        + Assembly.s ^ ((a : ℕ) + 1) * ‖P k (b : ℕ) (cvecES c k)‖) * ‖x‖ := by ring
+
+/-- `levelVec` of the shifted defect vector is the level norm, as at `c = 1`. -/
+theorem levelVec_gcVecS {c k : ℕ} (hk : 2 ≤ k) {b : ℕ} (hb : b < k - 1) :
+    Assembly.levelVec (gcVecS c hk) b = ‖P k b (cvecES c k)‖ := by
+  rw [Assembly.levelVec_of_lt _ hb, gcVecS, norm_elev_component hk]
+  exact congrArg norm (P_mzcS (one_le' hk) b)
+
+/-- **`hQupper` AT A GENERAL SHIFT, DISCHARGED** — this is where Lemma A (§8) is consumed. -/
+theorem hQupperS_holds {c k : ℕ} (hc : c % 2 = 1) (hk : 3 ≤ k) :
+    ∀ a b : Fin (k - 1), (a : ℕ) < (b : ℕ) →
+      QmatS c k a b ≤ Assembly.s ^ ((b : ℕ) - (a : ℕ))
+        + Assembly.s ^ ((a : ℕ) + 1) * Assembly.levelVec (gcVecS c (two_le hk)) (b : ℕ) := by
+  intro a b hab
+  rw [levelVec_gcVecS (two_le hk) b.isLt]
+  have hc' := clean_boundS hc hk a b hab
+  have hred := QmatS_le_clean_add hc (two_le hk) a b
+  linarith
+
+/-- **`hQblock` AT A GENERAL SHIFT, DISCHARGED.**  `Q_c` dominates the blocks of `U_c` after
+transport through the isometry `elev`.  This is the one place `elev` and the operator meet,
+and the meeting is a single `rw` (`P_UopS_eq`) — the `synthInstance` cost `CleanBlock` §6
+warns about does not materialise, because `elev` itself never had to be rebuilt. -/
+theorem hQblockS {c k : ℕ} (hk : 3 ≤ k) (m : Fin (k - 1)) (y : Glev k m) (m' : Fin (k - 1)) :
+    ‖(elev (two_le hk) (UopS (c := c) (one_le hk)
+        ((elev (two_le hk)).symm (LevelMajorisation.levelSingle m y)))) m'‖
+      ≤ QmatS c k m' m * ‖y‖ := by
+  have hk1 : 1 ≤ k := one_le hk
+  have hk2 : 2 ≤ k := two_le hk
+  set z : LinearMap.ker (onesCov k) :=
+    (elev hk2).symm (LevelMajorisation.levelSingle m y) with hz
+  have hez : elev hk2 z = LevelMajorisation.levelSingle m y := (elev hk2).apply_symm_apply _
+  have hnorm : ‖(z : Fsp k)‖ = ‖y‖ := by
+    show ‖z‖ = ‖y‖
+    rw [hz, (elev hk2).symm.norm_map]
+    refine sq_eq_of_nonneg (norm_nonneg _) (norm_nonneg _) ?_
+    rw [← Assembly.sum_levelEnergy_sq (G := Glev k) (LevelMajorisation.levelSingle m y),
+      Finset.sum_eq_single_of_mem m (Finset.mem_univ m)]
+    · rw [LevelMajorisation.levelSingle_apply, Pi.single_eq_same]
+    · intro b _ hb
+      rw [LevelMajorisation.levelSingle_apply, Pi.single_eq_of_ne hb, norm_zero]
+      ring
+  have hother : ∀ b : Fin (k - 1), b ≠ m → P k (b : ℕ) (z : Fsp k) = 0 := by
+    intro b hb
+    refine norm_eq_zero.1 ?_
+    rw [← norm_elev_component hk2 z b, hez, LevelMajorisation.levelSingle_apply,
+      Pi.single_eq_of_ne hb, norm_zero]
+  have hPz : P k (m : ℕ) (z : Fsp k) = (z : Fsp k) := by
+    have hres := P_resolution hk2 (z : Fsp k)
+    have hperron : (@inner ℂ _ _ (chiVec k (0 : Fin (2 ^ (k - 1)))) (z : Fsp k) : ℂ) = 0 :=
+      (mem_ker_iff _).1 z.2
+    rw [hperron, zero_smul, add_zero] at hres
+    calc P k (m : ℕ) (z : Fsp k)
+        = ∑ a : Fin (k - 1), P k (a : ℕ) (z : Fsp k) := by
+          rw [Finset.sum_eq_single_of_mem m (Finset.mem_univ m)]
+          intro b _ hb
+          exact hother b hb
+      _ = ∑ a ∈ range (k - 1), P k a (z : Fsp k) :=
+          Fin.sum_univ_eq_sum_range (fun a => P k a (z : Fsp k)) (k - 1)
+      _ = (z : Fsp k) := hres
+  have hkey : ‖(elev hk2 (UopS (c := c) hk1 z)) m'‖
+      = ‖blockCLMS c k (m' : ℕ) (m : ℕ) (z : Fsp k)‖ := by
+    rw [norm_elev_component hk2 (UopS (c := c) hk1 z) m', P_UopS_eq hk1 (m' : ℕ) z]
+    show _ = ‖P k (m' : ℕ) (UendfullS c k (P k (m : ℕ) (z : Fsp k)))‖
+    rw [hPz]
+  calc ‖(elev hk2 (UopS (c := c) hk1
+          ((elev hk2).symm (LevelMajorisation.levelSingle m y)))) m'‖
+      = ‖blockCLMS c k (m' : ℕ) (m : ℕ) (z : Fsp k)‖ := by rw [← hz]; exact hkey
+    _ ≤ QmatS c k m' m * ‖(z : Fsp k)‖ := (blockCLMS c k (m' : ℕ) (m : ℕ)).le_opNorm _
+    _ = QmatS c k m' m * ‖y‖ := by rw [hnorm]
+
+/-!
+### WHY `Assembly.LemmaAFacts` IS NOT INSTANTIATED HERE — a real obstruction, not a shortcut
+
+Every field of the manifest is now available at a general shift **except one**, and the
+exception is structural rather than mathematical:
+
+```
+    hDefectVec : ‖gc‖ ≤ ‖Assembly.cvec k‖
+```
+
+`Assembly.cvec k` is the **`c = 1`** defect covector, built from `CollisionBound.cf`.  The
+field is not parametric in the operator, and it is consumed — via `hL2_discharged` →
+`hParseval_of_norm_le` → `cvec_norm_sq` — to reach `coll k`, again the `c = 1` collision
+count.  So instantiating the manifest at `T^{(c)}` would require
+
+```
+    ‖gcVecS c‖ ≤ ‖Assembly.cvec k‖      i.e.      collS c k ≤ coll k
+```
+
+**and that is FALSE.**  `coll k` is `collA (apA k) k` with `apA k ∈ {1,2}`, while a shift of
+offset `3` exists at every level and beats it:
+
+| `k` | `coll k` | `collS 3 k` |
+|---|---|---|
+| 4 | 42 | 46 |
+| 5 | 80 | 94 |
+| 7 | 328 | 382 |
+
+evaluated below rather than asserted.  This is **not** a defect in Lemma B — `collS_le_sharp`
+bounds `collS` by `3·2^k` perfectly well, which is all the certificate needs.  It is that the
+manifest hard-codes *which* defect vector the bound is measured against.
+
+**The route taken instead** goes one level down.
+`LevelMajorisation.norm_eigenvalue_le_cert_adjoint` is fully abstract and mentions no `cvec`:
+it takes the block field, `Q` nonnegativity, and a certificate row bound.  All three are
+available, so `certS_le` supplies the row bound with `hL2` fed from `collS_le` directly.
+
+Nothing is weakened by this — the row bound is the same quantity `Assembly.cert_le` computes
+and `hL2` is the same inequality, sourced from the shifted Lemma B instead of the unshifted
+one.  What it does mean is that **`Assembly.LemmaAFacts` must not be described as
+shift-parametric.**
+-/
+
+-- the obstruction, evaluated rather than asserted
+#eval (coll 4, collS 3 4, decide (collS 3 4 ≤ coll 4))   -- (42, 46, false)
+#eval (coll 5, collS 3 5, decide (collS 3 5 ≤ coll 5))   -- (80, 94, false)
+#eval (coll 7, collS 3 7, decide (collS 3 7 ≤ coll 7))   -- (328, 382, false)
+
+/-- **Lemma B, in the form the row bound consumes**, at a general odd shift. -/
+theorem hL2S {c k : ℕ} (hc : c % 2 = 1) (hk : 3 ≤ k) (hck : c < 2 ^ k) :
+    ∑ b ∈ range (k - 1), (Assembly.levelVec (gcVecS c (two_le hk)) b) ^ 2
+      ≤ 3 * Assembly.s ^ (2 * k) := by
+  have hdv : ‖gcVecS c (two_le hk)‖ ≤ ‖cvecSfull c k‖ := hDefectVecS_concrete (two_le hk)
+  calc ∑ b ∈ range (k - 1), (Assembly.levelVec (gcVecS c (two_le hk)) b) ^ 2
+      ≤ ‖gcVecS c (two_le hk)‖ ^ 2 := Assembly.sum_levelVec_sq_le _ _
+    _ ≤ ‖cvecSfull c k‖ ^ 2 := by
+        nlinarith [norm_nonneg (gcVecS c (two_le hk)), norm_nonneg (cvecSfull c k)]
+    _ ≤ 3 * Assembly.s ^ (2 * k) :=
+        norm_sq_cvecSfull_le Assembly.s_pos Assembly.s_sq hc (one_le hk) hck
+
+/-- **THE CERTIFICATE ROW BOUND AT A GENERAL SHIFT.**  `∑_b Q_c[a,b]·2^{a-b} ≤ 2^{-3/2}+2^{-1}`
+for every row `a`.  Mirror of `Assembly.cert_le`, with `hL2` supplied from the shifted Lemma B
+(`hL2S`) rather than from the manifest's `hDefectVec`. -/
+theorem certS_le {c k : ℕ} (hc : c % 2 = 1) (hk : 3 ≤ k) (hck : c < 2 ^ k)
+    (a : Fin (k - 1)) :
+    ∑ b, QmatS c k a b * ((2 : ℝ) ^ (a : ℕ) / 2 ^ (b : ℕ))
+      ≤ GapCertificate.envelope Assembly.s 3 := by
+  have ha : (a : ℕ) + 2 ≤ k := by have := a.isLt; omega
+  have hup : ∀ b : ℕ, (a : ℕ) < b →
+      Assembly.rowFun (QmatS c k) a b
+        ≤ Assembly.s ^ (b - (a : ℕ))
+          + Assembly.s ^ ((a : ℕ) + 1) * Assembly.levelVec (gcVecS c (two_le hk)) b := by
+    intro b hab
+    by_cases hb : b < k - 1
+    · have hQ := hQupperS_holds hc hk a ⟨b, hb⟩ (by simpa using hab)
+      simpa [Assembly.rowFun, hb] using hQ
+    · have hA : (0 : ℝ) ≤ Assembly.s ^ (b - (a : ℕ)) := pow_nonneg Assembly.s_pos.le _
+      have hB : (0 : ℝ) ≤ Assembly.s ^ ((a : ℕ) + 1)
+          * Assembly.levelVec (gcVecS c (two_le hk)) b :=
+        mul_nonneg (pow_nonneg Assembly.s_pos.le _) (Assembly.levelVec_nonneg _ b)
+      rw [Assembly.rowFun_of_ge (QmatS c k) a (Nat.not_lt.mp hb)]
+      linarith
+  have hlow : ∀ b : ℕ, b ≤ (a : ℕ) →
+      Assembly.rowFun (QmatS c k) a b
+        ≤ Assembly.s ^ ((a : ℕ) + 1) * Assembly.levelVec (gcVecS c (two_le hk)) b := by
+    intro b hab
+    have hb : b < k - 1 := lt_of_le_of_lt hab a.isLt
+    have hQ : QmatS c k a (⟨b, hb⟩ : Fin (k - 1))
+        ≤ Assembly.s ^ ((a : ℕ) + 1) * ‖P k b (cvecES c k)‖ :=
+      QmatS_lower_le hc (two_le hk) a ⟨b, hb⟩ (by simpa using hab)
+    rw [levelVec_gcVecS (two_le hk) hb]
+    simpa [Assembly.rowFun, hb] using hQ
+  have hrow := GapCertificate.assembly_row_bound Assembly.s_pos Assembly.s_sq ha
+    (Assembly.levelVec_nonneg (gcVecS c (two_le hk))) hup hlow (hL2S hc hk hck)
+  have henv : GapCertificate.envelope Assembly.s (k - (a : ℕ))
+      ≤ GapCertificate.envelope Assembly.s 3 :=
+    GapCertificate.envelope_max Assembly.s_pos Assembly.s_sq (by omega : 2 ≤ k - (a : ℕ))
+  rw [← Assembly.rowSum_eq (QmatS c k) a (le_rfl : k - 1 ≤ k - 1)]
+  linarith
+
+/-- **THE CERTIFICATE FOR `3x + c`.**
+
+Every eigenvalue of the concretely defined **shifted** Syracuse transfer operator `T^{(c)}_k`
+other than `1` has modulus at most `envelope s 3 = 2^{-3/2} + 2^{-1}`, for every odd
+`c < 2^k` and every `k ≥ 3`.
+
+`calibrate_general_shift.py` gate 1 measures the same quantity as `0.578`–`0.682` for every
+odd `c` at `k = 4..8`, against this bound of `0.853553`.
+
+**The `c < 2^k` hypothesis is inherited from Lemma B** (`collS_le`, via `apAS_mem`'s offset
+trichotomy) and is not removable by this route.
+
+**Read §15's preamble before citing this.**  It is **not** about `3x − 1` (`syracuseS` takes
+`c : ℕ`; see §4), and it does not resurrect any cycle conclusion — a certificate holding
+across a family of shifts, several of which have cycles, strengthens
+`CYCLE_CLAIM_REFUTED.md` rather than weakening it. -/
+theorem gap_certificate_shifted {c k : ℕ} (hc : c % 2 = 1) (hk : 3 ≤ k) (hck : c < 2 ^ k)
+    {μ : ℂ} (hμ : μ ≠ 1) {x : Fsp k} (hx0 : x ≠ 0) (hx : TendS c k x = μ • x) :
+    ‖μ‖ ≤ GapCertificate.envelope Assembly.s 3 := by
+  have hadj' : ∀ u w : LinearMap.ker (onesCov k),
+      @inner ℂ _ _ ((OperatorChain.compression (colStochS_concrete hc (one_le hk))) u) w
+        = @inner ℂ _ _ u (UopS (c := c) (one_le hk) w) := by
+    intro u w
+    rw [Submodule.coe_inner, Submodule.coe_inner]
+    exact hadjS_concrete (one_le hk) u w
+  exact LevelMajorisation.norm_eigenvalue_le_cert_adjoint
+    (colStochS_concrete hc (one_le hk)) (by omega : 0 < k - 1)
+    (UopS (c := c) (one_le hk)) hadj' (elev (two_le hk)) (QmatS c k) (QmatS_nonneg c k)
+    (fun m y m' => hQblockS hk m y m')
+    (GapCertificate.envelope Assembly.s 3) (certS_le hc hk hck) hμ hx0 hx
+
+/-- **Specialisation check.**  At `c = 1` this is the same conclusion as
+`GramIdentity.gap_certificate_unconditional`, about the same operator — `TendS 1 k = Tend k`
+definitionally. -/
+theorem gap_certificate_shifted_one {k : ℕ} (hk : 3 ≤ k)
+    {μ : ℂ} (hμ : μ ≠ 1) {x : Fsp k} (hx0 : x ≠ 0) (hx : Tend k x = μ • x) :
+    ‖μ‖ ≤ GapCertificate.envelope Assembly.s 3 :=
+  gap_certificate_shifted (c := 1) (by norm_num) hk (Nat.one_lt_two_pow (by omega)) hμ hx0 hx
+
+/-- **Non-vacuity at a second concrete shift.**  `c = 5` is odd and is not `1`. -/
+example {k : ℕ} (hk : 3 ≤ k) (h5 : 5 < 2 ^ k) {μ : ℂ} (hμ : μ ≠ 1) {x : Fsp k} (hx0 : x ≠ 0)
+    (hx : TendS 5 k x = μ • x) : ‖μ‖ ≤ GapCertificate.envelope Assembly.s 3 :=
+  gap_certificate_shifted (by norm_num) hk h5 hμ hx0 hx
+
+end CertificateShifted
+
+/-!
+--------------------------------------------------------------------------------
+## §16. Axiom audit
 --------------------------------------------------------------------------------
 -/
 
@@ -4130,5 +4510,16 @@ At `k = 5` the bound is `3/32 = 0.09375`.
 #print axioms norm_cvecES_le
 #print axioms hDefectVecS_concrete
 #print axioms norm_sq_cvecSfull_le
+-- §15, the last two fields and the shifted certificate
+#print axioms norm_P_DS_P_le
+#print axioms block_splitS
+#print axioms QmatS_le_clean_add
+#print axioms levelVec_gcVecS
+#print axioms hQupperS_holds
+#print axioms hQblockS
+#print axioms hL2S
+#print axioms certS_le
+#print axioms gap_certificate_shifted
+#print axioms gap_certificate_shifted_one
 
 end ShiftedOperator
