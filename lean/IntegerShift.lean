@@ -72,6 +72,11 @@ it is recorded here in its corrected form).
 | S134 | `fibre_odd` | hypothesis `c % 2 = 1` dropped | cannot supply `rstarZ_odd`; an even shift has an even `r*`, so the fibre is not odd |
 | S135 | `link_theorem_minus_one` | offset pinned to the constant `1` instead of `apAZ (-1) k` | type mismatch; and **false** by computation — at `k = 4` the true fibre is `[1,5,1,11]` against the pinned `[1,1,7,5]`.  This is precisely the overclaim ("`A_{-1} = 1` at every `k`") that the calibration caught in the first draft of `DECISION_INTEGER_SHIFT.md` |
 
+| S136 | `collZ_le_sharp` | hypothesis `1 ≤ apAZ c k` dropped | cannot produce `0 < (apAZ c k).toNat`; at the degenerate shifts the offset is `≤ 0` |
+| S137 | `collZ_minus_one_le_sharp` | `≤` strengthened to `=`, i.e. `3x − 1` **attains** the bound | `omega` cannot close it; and **false** by computation — `collZ (-1) 3 + 2 = 20`, not `24`.  `3x − 1` has offset 1 or 2, so it is not the extremal witness (`collZ_minus_one_offset_ne_three`) |
+| S138 | `cfZ_eq_cfA` | hypothesis `c % 2 = 1` dropped | `link_theorem` needs an odd shift; without it the fibre is not odd and the identity has no content |
+| S139 | `collZ_le_sharp` | additive slack `+2` improved to `+3` | type mismatch against `collA_le_sharp`; and **false** — at `c = 3` (offset 3) the bound is *attained*: `coll + 2 = 24, 48, 96` at `k = 3,4,5`, exactly `3·2^k` |
+
 **Two mutations in this batch first failed for non-mathematical reasons** and were re-run:
 S132/S135 initially reported `unknown identifier`, because `lake env lean` typechecks without
 writing the `.olean`, so the scratch files imported a stale module.  A stale-import failure
@@ -317,7 +322,101 @@ theorem link_theorem_minus_one {k : ℕ} (hk : 1 ≤ k) (m : ℕ) :
 
 /-!
 --------------------------------------------------------------------------------
-## §6. `#eval` witnesses, checked against the Python
+## §6. Lemma B at an integer shift
+--------------------------------------------------------------------------------
+
+`collZ c k` is the collision count of the **genuine** integer-shifted defect fibre: it is
+defined from `syracuseZ` and `rstarZ`, with no AP model anywhere in the statement.  §5's link
+theorem is what turns it into `collA`, and `ShiftedOperator.collA_le_sharp` — already proved,
+at an arbitrary positive offset — bounds it.
+
+**No new collision mathematics is written here, and gate I4 is why.**  I4 measured that
+`coll_c ≤ 3·2^k` still holds at negative `c` and still depends on `c` only through `A_c`.  So
+Lemma B at an integer shift is a routing problem, not a proof problem.
+
+**Note what replaced the size hypothesis.**  `ShiftedOperator.collS_le_sharp` needs `c < 2^k`,
+because that is what its trichotomy `apAS_mem` needs to know the offset is positive.  Here the
+offset hypothesis `1 ≤ apAZ c k` is carried directly, so **no bound on `c` appears** — a shift
+of any magnitude is in scope provided its offset is positive.  That is route (a′) paying for
+itself, and it is why `collZ_minus_one_le` needs no side condition at all. -/
+
+/-- The AP term as an integer, bridged to `ShiftedOperator.apTermA`. -/
+theorem oddPartZ_ap {A : ℤ} (hA : 1 ≤ A) (m : ℕ) :
+    oddPartZ (A + 3 * m) = CollisionBound.oddPart (apTermA A.toNat m) := by
+  have hcast : A + 3 * (m : ℤ) = ((apTermA A.toNat m : ℕ) : ℤ) := by
+    unfold apTermA
+    push_cast
+    omega
+  rw [hcast, oddPartZ_natCast]
+
+/-- The fibre-value multiplicity of the genuine integer-shifted defect fibre. -/
+def cfZ (c : ℤ) (k t : ℕ) : ℕ :=
+  ((range (2 ^ k)).filter
+    (fun m => syracuseZ c (rstarZ c k + m * 2 ^ k) % 2 ^ k = t)).card
+
+/-- **`coll` for the genuine integer-shifted defect fibre.**  Defined from `syracuseZ` and
+`rstarZ` alone. -/
+def collZ (c : ℤ) (k : ℕ) : ℕ := ∑ t ∈ range (2 ^ k), (cfZ c k t) ^ 2
+
+/-- The genuine fibre count IS the AP-model count, at the offset `apAZ c k`.  This is §5's link
+theorem, applied under the filter. -/
+theorem cfZ_eq_cfA {c : ℤ} (hc : c % 2 = 1) {k : ℕ} (hk : 1 ≤ k)
+    (hA : 1 ≤ apAZ c k) (t : ℕ) :
+    cfZ c k t = cfA (apAZ c k).toNat k t := by
+  unfold cfZ cfA
+  congr 1
+  apply filter_congr
+  intro m _
+  rw [link_theorem hc hk hA m, oddPartZ_ap hA m]
+  rfl
+
+theorem collZ_eq_collA {c : ℤ} (hc : c % 2 = 1) {k : ℕ} (hk : 1 ≤ k)
+    (hA : 1 ≤ apAZ c k) :
+    collZ c k = collA (apAZ c k).toNat k := by
+  unfold collZ collA
+  exact Finset.sum_congr rfl fun t _ => by rw [cfZ_eq_cfA hc hk hA t]
+
+/-- **LEMMA B AT AN INTEGER SHIFT.**  `collZ c k + 2 ≤ 3·2^k`, for every odd integer `c` whose
+offset is positive — including negative `c`, and with **no bound on `|c|`**.
+
+The statement is about the genuine integer-shifted Syracuse map over its genuine defect
+residue.  The route is §5's link theorem, then `collA_le_sharp`. -/
+theorem collZ_le_sharp {c : ℤ} (hc : c % 2 = 1) {k : ℕ} (hk : 1 ≤ k)
+    (hA : 1 ≤ apAZ c k) : collZ c k + 2 ≤ 3 * 2 ^ k := by
+  have hpos : 0 < (apAZ c k).toNat := by omega
+  rw [collZ_eq_collA hc hk hA]
+  exact collA_le_sharp hpos hk
+
+/-- **LEMMA B AT AN INTEGER SHIFT**, in the form `CollisionBound.coll_le` states it. -/
+theorem collZ_le {c : ℤ} (hc : c % 2 = 1) {k : ℕ} (hk : 1 ≤ k)
+    (hA : 1 ≤ apAZ c k) : collZ c k ≤ 3 * 2 ^ k := by
+  have := collZ_le_sharp hc hk hA
+  omega
+
+/-- **LEMMA B FOR `3x − 1`**, with every hypothesis discharged but `k ≥ 1`.
+
+This is Lemma B for the actual map the control experiment is about.  It is **not** a
+certificate: Lemma A and the assembly are still open, and this file claims neither. -/
+theorem collZ_minus_one_le_sharp {k : ℕ} (hk : 1 ≤ k) :
+    collZ (-1) k + 2 ≤ 3 * 2 ^ k := by
+  have hA : 1 ≤ apAZ (-1) k := by
+    rcases apAZ_minus_one_mem hk with h | h <;> omega
+  exact collZ_le_sharp (by decide) hk hA
+
+theorem collZ_minus_one_le {k : ℕ} (hk : 1 ≤ k) : collZ (-1) k ≤ 3 * 2 ^ k := by
+  have := collZ_minus_one_le_sharp hk
+  omega
+
+/-- **The bound is NOT attained at `3x − 1`**, and saying so is the honest form of the
+sharpness claim.  `collS_sharp_at_offset_three` shows `3·2^k` is attained at offset `3`; gate
+I2 shows `A_{-1} ∈ {1,2}`, never `3`.  So `3x − 1` sits strictly inside a bound that is sharp
+for the family — the bound cannot be lowered for the family, but `3x − 1` is not the witness. -/
+theorem collZ_minus_one_offset_ne_three {k : ℕ} (hk : 1 ≤ k) : apAZ (-1) k ≠ 3 := by
+  rcases apAZ_minus_one_mem hk with h | h <;> omega
+
+/-!
+--------------------------------------------------------------------------------
+## §7. `#eval` witnesses, checked against the Python
 --------------------------------------------------------------------------------
 
 Ground rule 5: verify from outside the system that made the claim.  Every value below is
@@ -358,6 +457,12 @@ example : (List.range 6).map (fun i => apAZ (-1) (i + 3)) = [1, 2, 1, 2, 1, 2] :
 #eval (List.range 6).map (fun m => syracuseMinus (rstarZ (-1) 4 + m * 2 ^ 4))
 #eval (List.range 6).map (fun m => oddPartZ (apAZ (-1) 4 + 3 * m))
 
+-- Lemma B's quantity for `3x - 1`, against `coll_from_true_fibre(-1, k)` in the Python.
+-- `collZ_minus_one_le_sharp` proves `collZ + 2 ≤ 3·2^k`; these are the actual values, which
+-- show the slack — `3x - 1` has offset 1 or 2, never the extremal 3.
+#eval (List.range 4).map (fun i => collZ (-1) (i + 3))
+#eval (List.range 4).map (fun i => 3 * 2 ^ (i + 3))
+
 end Witnesses
 
 /-! ### Axiom audit — every theorem in this file.  Expect `[propext, Classical.choice, Quot.sound]`
@@ -381,5 +486,13 @@ and nothing else: no `sorryAx`, no `Lean.ofReduceBool`. -/
 #print axioms link_theorem
 #print axioms link_theorem_mod
 #print axioms link_theorem_minus_one
+#print axioms oddPartZ_ap
+#print axioms cfZ_eq_cfA
+#print axioms collZ_eq_collA
+#print axioms collZ_le_sharp
+#print axioms collZ_le
+#print axioms collZ_minus_one_le_sharp
+#print axioms collZ_minus_one_le
+#print axioms collZ_minus_one_offset_ne_three
 
 end IntegerShift
