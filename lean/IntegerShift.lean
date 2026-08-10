@@ -87,6 +87,11 @@ it is recorded here in its corrected form).
 | S142 | `syracuseZ_ne_syracuseS_cmodN` | single witness `n = 1` strengthened to **all** `n` | type mismatch; and **false** — the two maps *agree* at `n = 3`, both giving `1`.  They are different operators, not disjoint ones, which is why the separation needs a witness |
 | S143 | `TkZ_nonneg` | `0 ≤` strengthened to `0 <` | `positivity` reports it can prove non-negativity only; and **false** — `TcountZ (-1) 4` has zero entries throughout (§7's matrix) |
 
+| S144 | `shellZ_residue` | valuation bound weakened from `j + 1 ≤ k` to `j ≤ k` | `omega` cannot supply the bound; and **false** — at `c = -1, k = 3, j = 3` the integer shell is `{3}` and the residue shell is `∅`.  A valuation *at* `k` is not congruence data mod `2^k` |
+| S145 | `sbMapZ_residue` | conclusion strengthened from `sbMap` (the quotient **mod `2^(k-j)`**) to `syracuseZ` itself (the full odd part) | type mismatch; and **false** — §7 evaluates both columns, `sbMap` pairs agree `(5,5), (11,11), …` while `syracuse` pairs are `(5,21), (11,27), …`.  This is gate L6's boundary, and it is the §6b trap one level down |
+| S146 | `shellZ_card` | hypothesis `c % 2 = 1` dropped | `omega` cannot produce the oddness; and **false** — at the even shift `c = -2`, `k = 5`, `j = 2` the shell is **empty** (card `0`, against `2^(k-1-j) = 4`), because an even shift makes `3r + c` odd for odd `r` |
+| S147 | `v2Z_congr` | bound weakened from `j + 1 ≤ k` to `j ≤ k` | `omega` cannot supply it; and **false** — `x = 4`, `y = 8`, `j = k = 2`: `2^2 ∣ 4 - 8`, `v2Z 4 = 2`, but `v2Z 8 = 3` |
+
 **Two mutations in this batch first failed for non-mathematical reasons** and were re-run:
 S132/S135 initially reported `unknown identifier`, because `lake env lean` typechecks without
 writing the `.olean`, so the scratch files imported a stale module.  A stale-import failure
@@ -96,7 +101,7 @@ import ShiftedOperator
 
 namespace IntegerShift
 
-open Finset GapCertificate CountingLemmas TransferOperator ShiftedOperator
+open Finset GapCertificate CountingLemmas TransferOperator ShiftedOperator LemmaA
 
 /-!
 --------------------------------------------------------------------------------
@@ -607,6 +612,194 @@ theorem operator_not_residue_reducible :
 
 /-!
 --------------------------------------------------------------------------------
+## §6c. The **shell layer** at an integer shift  (step 4b, first half)
+--------------------------------------------------------------------------------
+
+`upper_entry_eqS`'s proof reaches down through `cleanEntryS_eq_masked`, `maskedOddsS`,
+`shellS_disjoint` and `shell_character_sumS` into `shellS`, `sbMapS`, `shellS_oddpart`,
+`syracuseS_on_shellS` and `shellS_reindex` — the whole §2b shell layer, at `c : ℕ`.  This
+section is that layer at `c : ℤ`.
+
+### WHERE THE RESIDUE REDUCTION IS LEGITIMATE, AND WHERE IT IS NOT
+
+§6b refuted the residue shortcut **for the operator**.  It is natural — and, this time,
+correct — to ask whether the *shell* reduces, and the answer decides how big this section is.
+It does, and here is the reason, which is also the reason it does not contradict §6b:
+
+* the shell is cut out by `v2 (3r + c) = j` with `j ≤ k - 1`, and a valuation below `k` is
+  determined by `3r + c` **mod `2^k`**;
+* `sbMap` takes `(3r + c) / 2^j` **mod `2^(k-j)`**, and replacing `c` by `c + 2^k t` moves that
+  quotient by `2^(k-j) t`, i.e. not at all mod `2^(k-j)`;
+* and, decisively, **`r` ranges over `[0, 2^k)` here — this is not the lift window.**  §6b's
+  operator takes `oddPart (3n + c)` for `n = r + m·2^k`, an *unbounded* odd part that no
+  congruence mod `2^k` can pin down.  That is the whole difference.
+
+`syracuseZ` itself is **not** residue-reducible even on the shell — it returns the full odd
+part `(3r + c)/2^j`, which moves by `2^(k-j) t`.  Only its value *mod `2^(k-j)`*, which is
+exactly `sbMapZ`, is stable.  Gate **L6** measures all three: shell identical `True`, sbMap
+identical `True`, `syracuse` identical **`False`**, at `c = -1,-5,-7,-11,-13`, `k = 4..7`.
+
+So the reduction below is **proved, never assumed**, and it is stated as its own theorem
+(`shellZ_residue`, `sbMapZ_residue`) precisely so that the boundary against §6b is legible.
+-/
+
+/-- The 2-adic valuation of a **non-zero integer**, sign-agnostically: `v₂(-10) = v₂(10) = 1`.
+`Int.toNat` would clamp a negative argument to `0` and report valuation `0`, which is wrong at
+exactly the shifts this file exists for — `3r + c` is genuinely negative for small `r` at
+`c = -13`.  `natAbs` is the honest choice, and matches the Python's `v2(abs(n))`. -/
+def v2Z (m : ℤ) : ℕ := v2 m.natAbs
+
+theorem v2Z_natCast (n : ℕ) : v2Z (n : ℤ) = v2 n := by
+  unfold v2Z; rw [Int.natAbs_natCast]
+
+/-- The `ℤ` form of `CountingLemmas.v2_eq_iff_dvd`, with divisibility taken over `ℤ`. -/
+theorem v2Z_eq_iff_dvd {m : ℤ} {j : ℕ} (hm : m ≠ 0) :
+    v2Z m = j ↔ ((2 : ℤ) ^ j ∣ m ∧ ¬ ((2 : ℤ) ^ (j + 1) ∣ m)) := by
+  have habs : m.natAbs ≠ 0 := Int.natAbs_ne_zero.2 hm
+  have hd : ∀ i : ℕ, ((2 : ℤ) ^ i ∣ m) ↔ (2 ^ i ∣ m.natAbs) := by
+    intro i
+    rw [← Int.natAbs_dvd_natAbs]
+    simp [Int.natAbs_pow]
+  rw [v2Z, v2_eq_iff_dvd habs, hd, hd]
+
+/-- **A valuation below `k` is congruence data mod `2^k`.**  This is the whole reason the shell
+layer reduces through the residue while the operator (§6b) does not. -/
+theorem v2Z_congr {x y : ℤ} {j k : ℕ} (hx : x ≠ 0) (hy : y ≠ 0)
+    (hjk : j + 1 ≤ k) (hcong : (2 : ℤ) ^ k ∣ x - y) (hv : v2Z x = j) : v2Z y = j := by
+  rw [v2Z_eq_iff_dvd hx] at hv
+  rw [v2Z_eq_iff_dvd hy]
+  have hdvd : ∀ i : ℕ, i ≤ k → ((2 : ℤ) ^ i ∣ x ↔ (2 : ℤ) ^ i ∣ y) := by
+    intro i hi
+    have hsub : (2 : ℤ) ^ i ∣ x - y := dvd_trans (pow_dvd_pow 2 hi) hcong
+    constructor
+    · intro h; simpa using h.sub hsub
+    · intro h
+      have : (2 : ℤ) ^ i ∣ y + (x - y) := h.add hsub
+      simpa using this
+  exact ⟨(hdvd j (by omega)).1 hv.1, fun h => hv.2 ((hdvd (j + 1) (by omega)).2 h)⟩
+
+/-- **The integer-shifted valuation shell.**  Defined at `c : ℤ` directly — *not* through the
+residue — so that `shellZ_residue` below is a theorem about it rather than its definition. -/
+def shellZ (c : ℤ) (k j : ℕ) : Finset ℕ :=
+  (range (2 ^ k)).filter (fun r => 0 < r ∧ r % 2 = 1 ∧ v2Z (3 * (r : ℤ) + c) = j)
+
+/-- **The integer-shifted SB map.**  `Int.emod` by a positive modulus is non-negative, so the
+`toNat` is faithful and not a clamp. -/
+def sbMapZ (c : ℤ) (k j r : ℕ) : ℕ := (((3 * (r : ℤ) + c) / 2 ^ j) % 2 ^ (k - j)).toNat
+
+theorem shellZ_natCast (c k j : ℕ) : shellZ (c : ℤ) k j = shellS c k j := by
+  unfold shellZ shellS
+  apply filter_congr
+  intro r _
+  have hc : 3 * (r : ℤ) + (c : ℤ) = ((3 * r + c : ℕ) : ℤ) := by push_cast; ring
+  rw [hc, v2Z_natCast]
+
+/-- `3r + c` never vanishes at the shifts this file is about: `c ≥ -1` gives `3r + c ≥ -1`, and
+it is `0` only if `3 ∣ c`, which is the `c = -3t` case held out of scope throughout. -/
+theorem three_mul_add_ne_zero {c : ℤ} (hc : ¬ (3 : ℤ) ∣ c) (r : ℕ) : 3 * (r : ℤ) + c ≠ 0 := by
+  intro h
+  exact hc ⟨-(r : ℤ), by linarith⟩
+
+/-- **THE REDUCTION, PROVED.**  On the shell — but *not* on the operator (§6b) — the integer
+shift may be replaced by its residue.  The hypothesis `j + 1 ≤ k` is what makes the valuation
+congruence data, and `¬ 3 ∣ c` is the standing `A_c ≤ 0` exclusion. -/
+theorem shellZ_residue {c : ℤ} (hc3 : ¬ (3 : ℤ) ∣ c) {k j : ℕ} (hjk : j + 1 ≤ k) :
+    shellZ c k j = shellS (cmodN c k) k j := by
+  rw [← shellZ_natCast]
+  unfold shellZ
+  apply filter_congr
+  intro r _
+  rcases Nat.eq_zero_or_pos r with rfl | hrpos
+  · simp
+  have hres : ((cmodN c k : ℕ) : ℤ) = c % (2 ^ k : ℤ) := cmodN_cast c k
+  have hcong : (2 : ℤ) ^ k ∣ (3 * (r : ℤ) + c) - (3 * (r : ℤ) + ((cmodN c k : ℕ) : ℤ)) := by
+    refine ⟨c / 2 ^ k, ?_⟩
+    rw [hres]
+    linarith [Int.emod_add_ediv c ((2 : ℤ) ^ k)]
+  have hx : 3 * (r : ℤ) + c ≠ 0 := three_mul_add_ne_zero hc3 r
+  have hy : 3 * (r : ℤ) + ((cmodN c k : ℕ) : ℤ) ≠ 0 := by
+    have h1 : (1 : ℤ) ≤ (r : ℤ) := by exact_mod_cast hrpos
+    have h2 : (0 : ℤ) ≤ ((cmodN c k : ℕ) : ℤ) := Int.natCast_nonneg _
+    intro h; linarith
+  constructor
+  · rintro ⟨h0, h1, h2⟩; exact ⟨h0, h1, v2Z_congr hx hy hjk hcong h2⟩
+  · rintro ⟨h0, h1, h2⟩
+    exact ⟨h0, h1, v2Z_congr hy hx hjk (by simpa using (dvd_neg.2 hcong)) h2⟩
+
+/-- On the shell the integer `2^j` genuinely divides `3r + c` — the fact every quotient
+statement below rests on. -/
+theorem shellZ_dvd {c : ℤ} (hc3 : ¬ (3 : ℤ) ∣ c) {k j r : ℕ} (hr : r ∈ shellZ c k j) :
+    (2 : ℤ) ^ j ∣ 3 * (r : ℤ) + c := by
+  unfold shellZ at hr
+  rw [mem_filter] at hr
+  exact ((v2Z_eq_iff_dvd (three_mul_add_ne_zero hc3 r)).1 hr.2.2.2).1
+
+theorem sbMapZ_natCast (c k j r : ℕ) : sbMapZ (c : ℤ) k j r = sbMapS c k j r := by
+  unfold sbMapZ sbMapS
+  have h : 3 * (r : ℤ) + (c : ℤ) = ((3 * r + c : ℕ) : ℤ) := by push_cast; ring
+  rw [h, show ((2 : ℤ) ^ j) = ((2 ^ j : ℕ) : ℤ) by push_cast; ring,
+    show ((2 : ℤ) ^ (k - j)) = ((2 ^ (k - j) : ℕ) : ℤ) by push_cast; ring,
+    ]
+  norm_cast
+
+/-- **THE REDUCTION FOR `sbMap`.**  Companion to `shellZ_residue`: replacing `c` by its residue
+moves the quotient `(3r + c)/2^j` by `2^(k-j) t`, i.e. not at all mod `2^(k-j)`.  Gate L6
+measures this as `sbMap identical: True` at every shift and `k` tested. -/
+theorem sbMapZ_residue {c : ℤ} (hc3 : ¬ (3 : ℤ) ∣ c) {k j r : ℕ} (hjk : j + 1 ≤ k)
+    (hr : r ∈ shellZ c k j) : sbMapZ c k j r = sbMapS (cmodN c k) k j r := by
+  rw [← sbMapZ_natCast]
+  unfold sbMapZ
+  congr 1
+  obtain ⟨q, hq⟩ := shellZ_dvd hc3 hr
+  have hres : ((cmodN c k : ℕ) : ℤ) = c % (2 ^ k : ℤ) := cmodN_cast c k
+  have hsplit : (2 : ℤ) ^ k = 2 ^ j * 2 ^ (k - j) := by rw [← pow_add]; congr 1; omega
+  -- `3r + c'` is `2^j (q − 2^{k−j} t)`, with `t = c / 2^k`
+  have hq' : 3 * (r : ℤ) + ((cmodN c k : ℕ) : ℤ)
+      = 2 ^ j * (q - 2 ^ (k - j) * (c / 2 ^ k)) := by
+    rw [hres]
+    have hd := Int.emod_add_ediv c ((2 : ℤ) ^ k)
+    have : c % (2 : ℤ) ^ k = c - 2 ^ k * (c / 2 ^ k) := by linarith
+    rw [this, hsplit]
+    linarith [hq]
+  rw [hq, hq', Int.mul_ediv_cancel_left _ (by positivity : (2 : ℤ) ^ j ≠ 0),
+    Int.mul_ediv_cancel_left _ (by positivity : (2 : ℤ) ^ j ≠ 0), Int.sub_emod,
+    Int.mul_emod_right, sub_zero, Int.emod_emod_of_dvd _ dvd_rfl]
+
+/-!
+### The corollaries, inherited rather than re-proved
+
+With the two reductions in hand, every shell fact `4b(ii)` consumes transfers from the `c : ℕ`
+development by rewriting.  **This is the payoff of proving the reduction instead of assuming
+it:** nothing below is a new argument, and nothing below touches the operator, where the same
+move is false.
+-/
+
+/-- Shell cardinality at an integer shift: `2^{k-1-j}`, shift-independent. -/
+theorem shellZ_card {c : ℤ} (hc3 : ¬ (3 : ℤ) ∣ c) (hc : c % 2 = 1) {k j : ℕ}
+    (hj : 1 ≤ j) (hjk : j + 1 ≤ k) : (shellZ c k j).card = 2 ^ (k - 1 - j) := by
+  rw [shellZ_residue hc3 hjk]
+  exact shellS_card (cmodN_odd hc (by omega)) hj hjk
+
+/-- Distinct shells are disjoint at an integer shift. -/
+theorem shellZ_disjoint {c : ℤ} {k j j' : ℕ} (h : j ≠ j') :
+    Disjoint (shellZ c k j) (shellZ c k j') := by
+  apply Finset.disjoint_left.2
+  intro r hr hr'
+  unfold shellZ at hr hr'
+  rw [mem_filter] at hr hr'
+  exact h (hr.2.2.2 ▸ hr'.2.2.2 ▸ rfl)
+
+/-- **Lemma SB at an integer shift**, as the change of summation variable `4b(ii)` consumes. -/
+theorem shellZ_reindex {c : ℤ} (hc3 : ¬ (3 : ℤ) ∣ c) (hc : c % 2 = 1) {k j : ℕ}
+    (hj : 1 ≤ j) (hjk : j + 1 ≤ k) (α : ℕ) :
+    ∑ r ∈ shellZ c k j, w k ^ (α * sbMapZ c k j r) = Sodd k α (k - j) := by
+  rw [← shellS_reindex (c := cmodN c k) (cmodN_odd hc (by omega)) hj hjk α]
+  refine Finset.sum_congr (shellZ_residue hc3 hjk) ?_
+  intro r hr
+  rw [sbMapZ_residue hc3 hjk ((shellZ_residue hc3 hjk).symm ▸ hr)]
+
+/-!
+--------------------------------------------------------------------------------
 ## §7. `#eval` witnesses, checked against the Python
 --------------------------------------------------------------------------------
 
@@ -676,6 +869,17 @@ example : (List.range 6).map (fun i => apAZ (-1) (i + 3)) = [1, 2, 1, 2, 1, 2] :
 #eval (List.range 4).map (fun i => TcountZ 1 (i + 3) 1 1)
 #eval (List.range 4).map (fun i => TcountS 1 (i + 3) 1 1)
 
+-- §6c, the shell layer.  Shell cardinality is `2^(k-1-j)` and shift-independent; against the
+-- L3 table in `calibrate_lemmaA_integer_shift.py`, at `c = -1`, `k = 6`, `j = 1..5`.
+-- Expected [16, 8, 4, 2, 1].
+#eval (List.range 5).map (fun i => (shellZ (-1) 6 (i + 1)).card)
+
+-- THE REDUCTION, as a computation: shell and sbMap agree with the residue version, but
+-- `syracuseZ` does NOT (gate L6's three columns, in the same order).
+#eval (List.range 5).map (fun i => decide (shellZ (-1) 6 (i + 1) = shellS (cmodN (-1) 6) 6 (i + 1)))
+#eval (shellZ (-1) 6 2).image (fun r => (sbMapZ (-1) 6 2 r, sbMapS (cmodN (-1) 6) 6 2 r))
+#eval (shellZ (-1) 6 2).image (fun r => (syracuseZ (-1) r, syracuseS (cmodN (-1) 6) r))
+
 end Witnesses
 
 /-! ### Axiom audit — every theorem in this file.  Expect `[propext, Classical.choice, Quot.sound]`
@@ -720,5 +924,17 @@ and nothing else: no `sorryAx`, no `Lean.ofReduceBool`. -/
 #print axioms UendZ_natCast
 #print axioms syracuseZ_ne_syracuseS_cmodN
 #print axioms operator_not_residue_reducible
+#print axioms v2Z_natCast
+#print axioms v2Z_eq_iff_dvd
+#print axioms v2Z_congr
+#print axioms shellZ_natCast
+#print axioms three_mul_add_ne_zero
+#print axioms shellZ_residue
+#print axioms shellZ_dvd
+#print axioms sbMapZ_natCast
+#print axioms sbMapZ_residue
+#print axioms shellZ_card
+#print axioms shellZ_disjoint
+#print axioms shellZ_reindex
 
 end IntegerShift

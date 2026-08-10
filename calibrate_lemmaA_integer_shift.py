@@ -245,12 +245,59 @@ def run_l5():
     print()
 
 
+# --------------------------------------------------------------------------- L6
+
+def run_l6():
+    print("L6  WHERE EXACTLY THE RESIDUE REDUCTION IS LEGITIMATE - the boundary, both sides.")
+    print("   The operator is NOT residue-reducible (L5).  The question this asks is whether")
+    print("   the SHELL LAYER is, because that decides how big the Lean mirror of section 2b is.")
+    print("   Reason to expect yes: the shell is cut out by v2(3r+c) = j with j <= k-1, which is")
+    print("   determined by 3r+c mod 2^(j+1), and j+1 <= k; and (3r+c)/2^j taken mod 2^(k-j)")
+    print("   moves by 2^(k-j)*t under c -> c + 2^k*t, i.e. not at all.  Both are CONGRUENCE")
+    print("   data mod 2^k.  r ranges over [0,2^k) here - it is NOT the lift window, which is")
+    print("   precisely what makes this different from L5.")
+    print()
+    print("   k | c    | shell identical | sbMap identical | syracuse identical (EXPECT False)")
+    for k in (4, 5, 6, 7):
+        mod = 1 << k
+        for c in NEG_SHIFTS:
+            cres = c % mod
+            sh_ok = sb_ok = True
+            syr_same = True
+            saw_shell = False
+            for j in range(1, k):
+                sz = shell_int(k, c, j)
+                sn = shell_int(k, cres, j)
+                if sz != sn:
+                    sh_ok = False
+                    continue
+                if sz:
+                    saw_shell = True
+                for r in sz:
+                    if sbmap_int(k, c, j, r) != sbmap_int(k, cres, j, r):
+                        sb_ok = False
+                    # the FULL odd part, which is what syracuse returns
+                    if syr_c(r, c) != syr_c(r, cres):
+                        syr_same = False
+            if not sh_ok:
+                FAIL.append("L6 shell differs at k=%d c=%d" % (k, c))
+            if not sb_ok:
+                FAIL.append("L6 sbMap differs at k=%d c=%d" % (k, c))
+            if saw_shell and syr_same:
+                FAIL.append("L6 syracuse agreed through the residue at k=%d c=%d - the "
+                            "boundary is not where this script says it is; re-derive." % (k, c))
+            print("   %d | %-4d | %-15s | %-15s | %s"
+                  % (k, c, str(sh_ok), str(sb_ok), str(syr_same)))
+        print()
+
+
 def run():
     run_l1()
     run_l2()
     run_l3()
     run_l4()
     run_l5()
+    run_l6()
     if FAIL:
         print("FAILURES (%d):" % len(FAIL))
         for f in FAIL[:20]:
