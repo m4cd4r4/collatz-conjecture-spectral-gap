@@ -155,6 +155,8 @@ are useful to anyone formalising nearby material:
 | [`lean/CharacterBasis.lean`](lean/CharacterBasis.lean) | a genuine `OrthonormalBasis` of characters on `Z/2^k`, with level projections by 2-adic valuation |
 | [`lean/GramIdentity.lean`](lean/GramIdentity.lean) | a Gram identity `B*B = 2^{-d} I`, proved without ever forming an adjoint |
 | [`lean/SignBlind.lean`](lean/SignBlind.lean) | `3x + c` valuation statistics are the same for every odd `c`, at every depth - the theorem behind item 1 |
+| [`lean/ShiftedOperator.lean`](lean/ShiftedOperator.lean) | the `3x+c` development: shifted operator, shells, entry theorem, clean blocks, defect split, and the certificate for every odd `c < 2^k` |
+| [`lean/IntegerShift.lean`](lean/IntegerShift.lean) | the shift moved to `c : Z` - the representation in which `3x-1` can be written down at all - with the link theorem, Lemma B, the operator and the shell layer |
 
 Formalising number theory is slow. A sorry-free block someone else already paid for is worth
 having.
@@ -211,6 +213,9 @@ part of) the Collatz conjecture.
 | Lemma C in its *sharp* form `g_b <= 3/4`, giving `cert <= 0.6553300859` | **DATA** - machine-verified `k <= 26`, no proof |
 | Lean 4: the headline chain end-to-end, from `T_k`'s definition to `\|\|mu\|\| < 0.853554` | **Machine-checked, sorry-free, UNCONDITIONAL** (2026-08-03; 18 files, 449 decls, Mathlib v4.27.0) |
 | Lean 4: Lemma C's sharpening (`0.6827` / `0.6553`); the non-degeneracy `gc != 0` | Paper-only - and neither is an input to the headline |
+| Lean 4: the certificate at a general **odd** shift `3x+c` - `gap_certificate_shifted` | **Machine-checked, sorry-free** (2026-08; hypotheses are `c` odd, `k >= 3`, `c < 2^k` - no manifest or Parseval binder) |
+| Lean 4: the `3x-1` line at an **integer** shift - map, defect residue, offset, link theorem, Lemma B, the operator, the shell layer | **Machine-checked, sorry-free** - but the chain is **incomplete**: Lemma A and the assembly are open |
+| A certificate for `3x-1` | **Does not exist** - not proved, not claimed |
 | Paper write-up, 10 pp | **Done** - [`paper/syracuse_spectral_gap.pdf`](paper/syracuse_spectral_gap.pdf) |
 | Cycle elimination (`gap => no cycles`) | **Retracted, false** - [why](CYCLE_CLAIM_REFUTED.md) |
 | Proof of the Collatz conjecture (any part) | Not attempted / not claimed |
@@ -223,6 +228,15 @@ copied from [EXTREMAL_VALUES.md](EXTREMAL_VALUES.md), the single source of truth
 `GramIdentity.gap_certificate_unconditional`, no hypothesis binder - superseding the note that
 stood here, which said it was not. `PROVEN` labels on the headline are now backed by Lean as well
 as by the prose proofs; the `DATA` label on Lemma C's sharp form is unaffected and unchanged.*
+
+*On the shifted line (2026-08-10): `gap_certificate_shifted` covers odd `c` with **`c < 2^k`**, and
+that hypothesis is why it says nothing about `3x-1`. A `c : Nat` shift cannot express `-1` at all.
+The tempting substitute `c = 2^k - 1` is congruent to `-1` mod `2^k` but is a **different operator** -
+`oddPart` does not factor through the residue, and the entrywise separation is measured at
+`2, 12, 8, 44, 32, 172` for `k = 3..8` (`operator_not_residue_reducible`, and gate L5 of
+`calibrate_lemmaA_integer_shift.py`). `IntegerShift.lean` moves the shift to `c : Z` so that `3x-1`
+is expressible; it does not certify it. No declaration counts are quoted in these rows - the Lean
+census in EXTREMAL_VALUES.md is still absent and four documents disagree on the number.*
 
 ## Contents
 
