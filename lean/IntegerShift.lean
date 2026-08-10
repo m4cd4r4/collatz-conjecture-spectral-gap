@@ -462,6 +462,25 @@ entrywise separation independently: `2, 12, 8, 44, 32, 172` at `k = 3..8`.
 `H3` remains **FALSE** (`calibrate_lemmaA_shift_structure.py`): the phase is *not* a column
 phase, there is no diagonal-unitary shortcut, and the norm invariance comes from **disjoint
 support**.  Do not attempt a conjugation argument here.
+
+### SCOPING CORRECTION FOR STEP 4b, found by tracing the dependency and recorded here so the
+### next session does not re-discover it
+
+`BRIEF_LEMMA_A_GENERAL_SHIFT.md` scopes `4b` as "mirror §12–§13", i.e. `upper_entry_eqS` and
+`norm_upper_entryS`.  That is **too shallow**.  `upper_entry_eqS`'s proof consumes
+`cleanEntryS_eq_masked`, `maskedOddsS`, `shellS_disjoint` and `shell_character_sumS`, and
+`shell_character_sumS` in turn consumes `shellS_reindex`, `shellS_oddpart`,
+`syracuseS_on_shellS` and `sbMapS` — the whole §2b **shell layer**, all of it at `c : ℕ`.
+
+So `4b` is really **two** slices: the shell layer at `ℤ` (`shellZ`, `sbMapZ`, and their
+reindex / oddpart / on-shell lemmas) and only then the entry theorem.  `norm_shift_phase` is
+the cheap half and is essentially free at `ℤ` — `wz` already takes an integer argument, so
+`‖wz k (ξ * u * c)‖ = 1` is `norm_wz` verbatim with no `ℕ`-cast in the way.
+
+Gate **L3** is the reason this is a mirror rather than a re-scope: the `shell`/`sbMap`
+bijection onto the odd residues mod `2^(k-j)` **survives** at negative `c`, where
+`(3r + c)/2^j` goes negative before it goes anywhere.  L3 passing says the objects exist; it
+does **not** say they have been built.  They have not.
 -/
 
 /-- **The integer-shifted transition count.**  Mirror of `ShiftedOperator.TcountS`, with the
