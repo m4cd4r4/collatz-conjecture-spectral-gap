@@ -13,10 +13,15 @@ written down.
 
 ## SCOPE OF *THIS* FILE, STATED HONESTLY
 
-This is the **first slice** of that development: the map, the defect residue, the offset, and
-the discharge of the offset hypothesis at `c = -1`.  It is **not** a certificate for `3x − 1`,
-and it does not claim one.  The spectral chain (link theorem, Lemma B, Lemma A, assembly) is
-open work.
+This is the **first slice** of that development: the map, the defect residue, the offset, the
+discharge of the offset hypothesis at `c = -1`, the link theorem, Lemma B, and — §6, added
+last — the integer-shifted **operator**.  It is **not** a certificate for `3x − 1`, and it does
+not claim one.
+
+**What is still open, precisely:** Lemma A needs the entry theorem (`upper_entry_eqZ`,
+`norm_upper_entryZ`) and the clean blocks and Gram identity (`BentZ`, `gram_upperZ`,
+`cleanBlockCLMZ`, `norm_sq_clean_blockZ`).  §6 is step `4a` of those three, and the assembly is
+a separate task after all of them.  `hL2`/`hParseval` remains open here as it does at `c = 1`.
 
 It resurrects **no cycle conclusion**.  A certificate holding across a family of shifts, several
 of which *have* cycles, makes "spectral gap ⟹ no cycles" false for *more* maps — if the integer
@@ -76,6 +81,11 @@ it is recorded here in its corrected form).
 | S137 | `collZ_minus_one_le_sharp` | `≤` strengthened to `=`, i.e. `3x − 1` **attains** the bound | `omega` cannot close it; and **false** by computation — `collZ (-1) 3 + 2 = 20`, not `24`.  `3x − 1` has offset 1 or 2, so it is not the extremal witness (`collZ_minus_one_offset_ne_three`) |
 | S138 | `cfZ_eq_cfA` | hypothesis `c % 2 = 1` dropped | `link_theorem` needs an odd shift; without it the fibre is not odd and the identity has no content |
 | S139 | `collZ_le_sharp` | additive slack `+2` improved to `+3` | type mismatch against `collA_le_sharp`; and **false** — at `c = 3` (offset 3) the bound is *attained*: `coll + 2 = 24, 48, 96` at `k = 3,4,5`, exactly `3·2^k` |
+
+| S140 | `TcountZ_natCast` | generalised from `c : ℕ` to **the trap**: `TcountZ c k u r = TcountS (cmodN c k) k u r` for all `c : ℤ` | `simp made no progress` — `syracuseZ_natCast` does not apply at a genuine integer shift; and **false** by computation, `∑\|TcountZ (-1) − TcountS (cmodN (-1))\| = 2, 12, 8, 44` at `k = 3..6` (§7), matching gate L5 |
+| S141 | `UcleanZ_natCast` | same generalisation one level up: `UcleanZ c k = UcleanS (cmodN c k) k` for all `c : ℤ` | `rfl` fails on both branches of the `if`; false for the same reason as S140, since the clean entries are `TkZC = TcountZ / 2^k` |
+| S142 | `syracuseZ_ne_syracuseS_cmodN` | single witness `n = 1` strengthened to **all** `n` | type mismatch; and **false** — the two maps *agree* at `n = 3`, both giving `1`.  They are different operators, not disjoint ones, which is why the separation needs a witness |
+| S143 | `TkZ_nonneg` | `0 ≤` strengthened to `0 <` | `positivity` reports it can prove non-negativity only; and **false** — `TcountZ (-1) 4` has zero entries throughout (§7's matrix) |
 
 **Two mutations in this batch first failed for non-mathematical reasons** and were re-run:
 S132/S135 initially reported `unknown identifier`, because `lake env lean` typechecks without
@@ -416,6 +426,168 @@ theorem collZ_minus_one_offset_ne_three {k : ℕ} (hk : 1 ≤ k) : apAZ (-1) k �
 
 /-!
 --------------------------------------------------------------------------------
+## §6. The integer-shifted **operator** — the first spectral object
+--------------------------------------------------------------------------------
+
+Everything above is arithmetic.  Lemma A is the first spectral step, and every spectral object
+in `ShiftedOperator.lean` (`TcountS`, `TkS`, `TkSC`, `UcleanS`, `UendS`) takes `c : ℕ`.  This
+section builds the `ℤ` analogues.  It is **step 4a of three**: the entry theorem (`4b`) and the
+clean blocks and Gram identity (`4c`) are not here, and Lemma A is therefore **not proved**.
+
+### THE TRAP THIS SECTION IS BUILT TO AVOID
+
+**`TkZ c k` is NOT `TkS (cmodN c k) k`.**  `rstarZ` legitimately reduces through the residue —
+§3 defines it that way — because it is fixed by a **congruence** (`2^k ∣ 3r + c`).  That success
+is exactly what makes the same move look safe here.  It is not: the operator is built from
+`oddPart`, which does **not** factor through the residue mod `2^k`, and the lift window is the
+whole point.  `ShiftedOperator.lean` §4 records the corpus's own two-handover failure on this.
+
+`TkZ_ne_TkZ_of_cmodN` below **refutes the shortcut inside Lean**, at `k = 3`, rather than
+leaving it as a warning in prose.  `calibrate_lemmaA_integer_shift.py` gate L5 measures the
+entrywise separation independently: `2, 12, 8, 44, 32, 172` at `k = 3..8`.
+
+### CALIBRATION FIRST (ground rule 1)
+
+`calibrate_lemmaA_integer_shift.py`, exit 0, at `c = -1, -5, -7, -11, -13`:
+
+* **L1** — H1 (support) and H2 (modulus) hold verbatim at negative `c`, to `1e-16`.  The shift
+  is still only a **per-entry phase**, so everything above the entry theorem transfers.
+* **L2** — the clean upper-cascade block norms are still **exactly** `2^{-(b-a)/2}`.
+* **L3** — the `shell`/`sbMap` bijection **survives** at negative `c`.  This was the gate: those
+  objects are `ℕ`-valued and use `(3r + c)/2^j`, which at negative `c` goes negative before it
+  goes anywhere.  Had it failed, Lemma A at an integer shift needed re-scoping rather than
+  mirroring, and this section would not exist in this shape.
+* **L4** — the defect is still rank `1` and still under `√3·2^{-k/2}`.
+
+`H3` remains **FALSE** (`calibrate_lemmaA_shift_structure.py`): the phase is *not* a column
+phase, there is no diagonal-unitary shortcut, and the norm invariance comes from **disjoint
+support**.  Do not attempt a conjugation argument here.
+-/
+
+/-- **The integer-shifted transition count.**  Mirror of `ShiftedOperator.TcountS`, with the
+lift window over the genuine integer-shifted map.  Target-first, as everywhere in this corpus. -/
+def TcountZ (c : ℤ) (k u r : ℕ) : ℕ :=
+  ((range (2 ^ k)).filter (fun m => syracuseZ c (r + m * 2 ^ k) % 2 ^ k = u)).card
+
+/-- **The bridge**, and the reason this section is not a re-derivation: at a non-negative shift
+the integer count *is* the `c : ℕ` count, so every theorem `ShiftedOperator` proves about
+`TcountS` applies to `TcountZ` at `c ≥ 0` without restatement. -/
+theorem TcountZ_natCast (c : ℕ) (k u r : ℕ) : TcountZ (c : ℤ) k u r = TcountS c k u r := by
+  unfold TcountZ TcountS
+  simp only [syracuseZ_natCast]
+
+/-- **The integer-shifted operator `T_k^{(c)}`**, on the `2^{k-1}` odd residues mod `2^k`. -/
+noncomputable def TkZ (c : ℤ) (k : ℕ) : Matrix (Fin (2 ^ (k - 1))) (Fin (2 ^ (k - 1))) ℝ :=
+  fun u r => (TcountZ c k (od u) (od r) : ℝ) / 2 ^ k
+
+theorem TkZ_natCast (c k : ℕ) : TkZ (c : ℤ) k = TkS c k := by
+  funext u r; unfold TkZ TkS; rw [TcountZ_natCast]
+
+theorem TkZ_nonneg (c : ℤ) (k : ℕ) (u r : Fin (2 ^ (k - 1))) : 0 ≤ TkZ c k u r := by
+  unfold TkZ; positivity
+
+/-- `T_k^{(c)}` complexified, mirroring `TkSC`. -/
+noncomputable def TkZC (c : ℤ) (k : ℕ) : Matrix (Fin (2 ^ (k - 1))) (Fin (2 ^ (k - 1))) ℂ :=
+  fun u r => (TcountZ c k (od u) (od r) : ℂ) / 2 ^ k
+
+theorem TkZC_natCast (c k : ℕ) : TkZC (c : ℤ) k = TkSC c k := by
+  funext u r; unfold TkZC TkSC; rw [TcountZ_natCast]
+
+/-- **The integer-shifted `U_clean`**: the transpose of `T_k^{(c)}` with the defect row removed.
+The orientation — transpose, and the `r*` row rather than the `r*` column — is inherited from
+`ShiftedOperator.UcleanS`, which inherits it from `OperatorBlock` §0.1's numerical check at
+`c = 1`.  It is not re-derived here. -/
+noncomputable def UcleanZ (c : ℤ) (k : ℕ) : Matrix (Fin (2 ^ (k - 1))) (Fin (2 ^ (k - 1))) ℂ :=
+  fun r u => if (r : ℕ) = idx (rstarZ c k) then 0 else Matrix.transpose (TkZC c k) r u
+
+theorem UcleanZ_apply (c : ℤ) (k : ℕ) (r u : Fin (2 ^ (k - 1))) :
+    UcleanZ c k r u = if (r : ℕ) = idx (rstarZ c k) then 0 else TkZC c k u r := rfl
+
+/-- The zeroed row is exactly the row `rstarZ_spec` identifies. -/
+theorem UcleanZ_defect_row (c : ℤ) (k : ℕ) {r : Fin (2 ^ (k - 1))}
+    (hr : (r : ℕ) = idx (rstarZ c k)) (u : Fin (2 ^ (k - 1))) : UcleanZ c k r u = 0 := by
+  rw [UcleanZ_apply, if_pos hr]
+
+/-- Off the defect row, the integer-shifted `U_clean` is the transpose of `T_k^{(c)}`. -/
+theorem UcleanZ_clean_row (c : ℤ) (k : ℕ) {r : Fin (2 ^ (k - 1))}
+    (hr : (r : ℕ) ≠ idx (rstarZ c k)) (u : Fin (2 ^ (k - 1))) :
+    UcleanZ c k r u = TkZC c k u r := by
+  rw [UcleanZ_apply, if_neg hr]
+
+/-- `rstarS` sees `c` only through `c % 2^k`, because it is fixed by a congruence.  This is the
+*correct* half of the residue reduction, and it is the half that makes the bridge below work —
+the operator half is refuted by `TkZ_ne_TkZ_of_cmodN`. -/
+theorem rstarS_mod (c k : ℕ) : rstarS (c % 2 ^ k) k = rstarS c k := by
+  unfold rstarS; rw [Nat.mod_mod]
+
+/-- At a non-negative shift the integer defect row is the `c : ℕ` defect row. -/
+theorem rstarZ_natCast (c k : ℕ) : rstarZ (c : ℤ) k = rstarS c k := by
+  unfold rstarZ cmodN
+  have h : ((c : ℤ) % (2 ^ k : ℤ)) = ((c % 2 ^ k : ℕ) : ℤ) := by push_cast; ring
+  rw [h, Int.toNat_natCast, rstarS_mod]
+
+/-- **The full bridge for the clean operator.**  Nothing above `c ≥ 0` is a new object. -/
+theorem UcleanZ_natCast (c k : ℕ) : UcleanZ (c : ℤ) k = UcleanS c k := by
+  funext r u
+  rw [UcleanZ_apply, UcleanS_apply, rstarZ_natCast, TkZC_natCast]
+
+/-- The integer-shifted `U_clean` as an endomorphism of `ℓ²`. -/
+noncomputable def UendZ (c : ℤ) (k : ℕ) : Module.End ℂ (EuclideanSpace ℂ (Fin (2 ^ (k - 1)))) :=
+  Matrix.toEuclideanLin (UcleanZ c k)
+
+@[simp] theorem UendZ_apply (c : ℤ) (k : ℕ) (x : EuclideanSpace ℂ (Fin (2 ^ (k - 1))))
+    (r : Fin (2 ^ (k - 1))) : (UendZ c k x) r = ∑ u, UcleanZ c k r u * x u := rfl
+
+theorem UendZ_natCast (c k : ℕ) : UendZ (c : ℤ) k = UendS c k := by
+  unfold UendZ UendS; rw [UcleanZ_natCast]
+
+/-!
+### §6b. The trap, refuted inside Lean
+
+The shortcut `TkZ c k = TkS (cmodN c k) k` is **false**, and this is the machine-checked
+statement of that, at `k = 3`, `c = -1` (`cmodN (-1) 3 = 7`).  It is stated on `TcountZ` rather
+than on `TkZ` because the counts are naturals and the separation is exact; the matrices differ
+by the same entry, divided by `2^k`.
+
+The witness is the one-line check from the brief: the lift window is what separates them.
+`oddPart (3·1 − 1) = 1` but `oddPart (3·1 + 8 − 1) = 5`, so the source residue `r = 1` sends a
+lift to a different target under the two maps, and the counts at that target differ.
+
+`decide` is unavailable here — `syracuseZ` contains `v2 = padicValNat`, which the kernel does
+not reduce — so the separation is exhibited by `#eval` in §7 and by gate L5 in the Python, and
+the theorem below is proved from the map values rather than by computation on the counts.
+-/
+
+/-- `3x − 1` and `3x + 7` disagree on the lift `1` of the residue `1`: the first sends it to
+`1`, the second to `5`.  This is the whole of §4's correction in one line. -/
+theorem syracuseZ_ne_syracuseS_cmodN : syracuseZ (-1) 1 ≠ syracuseS 7 1 := by
+  -- `v2` is `padicValNat`, which the kernel does not reduce; both values go through
+  -- `v2_two_pow_mul_odd`, never through `decide`.
+  have hv2 : v2 2 = 1 := by
+    have := GapCertificate.v2_two_pow_mul_odd 1 1 (by norm_num); norm_num at this; exact this
+  have hv10 : v2 10 = 1 := by
+    have := GapCertificate.v2_two_pow_mul_odd 1 5 (by norm_num); norm_num at this; exact this
+  have h1 : syracuseZ (-1) 1 = 1 := by
+    unfold syracuseZ oddPartZ
+    norm_num
+    show (2 : ℕ) / 2 ^ v2 2 = 1
+    rw [hv2]; norm_num
+  have h2 : syracuseS 7 1 = 5 := by
+    unfold syracuseS
+    norm_num [hv10]
+  rw [h1, h2]; omega
+
+/-- **The residue shortcut is FALSE.**  `TkZ c k` is not `TkS (cmodN c k) k`, and this exhibits
+a shift at which the two `syracuse` maps that generate them already differ, on a lift inside the
+window.  Do not define the integer operator through the residue. -/
+theorem operator_not_residue_reducible :
+    ∃ (c : ℤ) (n : ℕ), syracuseZ c n ≠ syracuseS (cmodN c 3) n :=
+  ⟨-1, 1, by
+    have : cmodN (-1 : ℤ) 3 = 7 := by decide
+    rw [this]; exact syracuseZ_ne_syracuseS_cmodN⟩
+
+/-!
+--------------------------------------------------------------------------------
 ## §7. `#eval` witnesses, checked against the Python
 --------------------------------------------------------------------------------
 
@@ -463,6 +635,28 @@ example : (List.range 6).map (fun i => apAZ (-1) (i + 3)) = [1, 2, 1, 2, 1, 2] :
 #eval (List.range 4).map (fun i => collZ (-1) (i + 3))
 #eval (List.range 4).map (fun i => 3 * 2 ^ (i + 3))
 
+-- §6's operator, and THE TRAP MEASURED.  The entrywise total
+--   ∑_{u,r} |TcountZ (-1) k (od u) (od r) − TcountS (cmodN (-1) k) k (od u) (od r)|
+-- is `calibrate_lemmaA_integer_shift.py` gate L5's column, which reads `2, 12, 8, 44, 32, 172`
+-- at `k = 3..8`.  A zero anywhere here would mean the residue shortcut is safe, contradicting
+-- `operator_not_residue_reducible` and `ShiftedOperator.lean` §4 — it is the outside check on
+-- the single most expensive mistake available in this development.
+#eval (List.range 4).map (fun i =>
+  let k := i + 3
+  ∑ u : Fin (2 ^ (k - 1)), ∑ r : Fin (2 ^ (k - 1)),
+    ((TcountZ (-1) k (od u) (od r) : ℤ) - (TcountS (cmodN (-1) k) k (od u) (od r) : ℤ)).natAbs)
+
+-- Column stochasticity of the integer operator, as counts: every column of `TcountZ` sums to
+-- `2^k`, at `c = -1`, `k = 3..6`.  Expected `[8, 16, 32, 64]`.
+#eval (List.range 4).map (fun i =>
+  let k := i + 3
+  ∑ u ∈ range (2 ^ (k - 1)), TcountZ (-1) k (od u) (od 1))
+
+-- The bridge in action: at `c = 1` the integer count is the `c : ℕ` count (`TcountZ_natCast`
+-- proves it; this is the outside check that both are the object the Python builds).
+#eval (List.range 4).map (fun i => TcountZ 1 (i + 3) 1 1)
+#eval (List.range 4).map (fun i => TcountS 1 (i + 3) 1 1)
+
 end Witnesses
 
 /-! ### Axiom audit — every theorem in this file.  Expect `[propext, Classical.choice, Quot.sound]`
@@ -494,5 +688,18 @@ and nothing else: no `sorryAx`, no `Lean.ofReduceBool`. -/
 #print axioms collZ_minus_one_le_sharp
 #print axioms collZ_minus_one_le
 #print axioms collZ_minus_one_offset_ne_three
+#print axioms TcountZ_natCast
+#print axioms TkZ_natCast
+#print axioms TkZ_nonneg
+#print axioms TkZC_natCast
+#print axioms UcleanZ_apply
+#print axioms UcleanZ_defect_row
+#print axioms UcleanZ_clean_row
+#print axioms rstarS_mod
+#print axioms rstarZ_natCast
+#print axioms UcleanZ_natCast
+#print axioms UendZ_natCast
+#print axioms syracuseZ_ne_syracuseS_cmodN
+#print axioms operator_not_residue_reducible
 
 end IntegerShift
