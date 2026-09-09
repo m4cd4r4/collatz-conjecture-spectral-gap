@@ -156,7 +156,7 @@ are useful to anyone formalising nearby material:
 | [`lean/GramIdentity.lean`](lean/GramIdentity.lean) | a Gram identity `B*B = 2^{-d} I`, proved without ever forming an adjoint |
 | [`lean/SignBlind.lean`](lean/SignBlind.lean) | `3x + c` valuation statistics are the same for every odd `c`, at every depth - the theorem behind item 1 |
 | [`lean/ShiftedOperator.lean`](lean/ShiftedOperator.lean) | the `3x+c` development: shifted operator, shells, entry theorem, clean blocks, defect split, and the certificate for every odd `c < 2^k` |
-| [`lean/IntegerShift.lean`](lean/IntegerShift.lean) | the shift moved to `c : Z` - the representation in which `3x-1` can be written down at all - with the link theorem, Lemma B, the operator and the shell layer |
+| [`lean/IntegerShift.lean`](lean/IntegerShift.lean) | the shift moved to `c : Z` - the representation in which `3x-1` can be written down at all - with the link theorem, Lemma B, the operator, the shell layer, and Lemma A's entry theorem (`upper_entry_eqZ`, `norm_upper_entryZ`, for odd `c >= -1`) |
 
 Formalising number theory is slow. A sorry-free block someone else already paid for is worth
 having.
@@ -235,7 +235,10 @@ The tempting substitute `c = 2^k - 1` is congruent to `-1` mod `2^k` but is a **
 `oddPart` does not factor through the residue, and the entrywise separation is measured at
 `2, 12, 8, 44, 32, 172` for `k = 3..8` (`operator_not_residue_reducible`, and gate L5 of
 `calibrate_lemmaA_integer_shift.py`). `IntegerShift.lean` moves the shift to `c : Z` so that `3x-1`
-is expressible; it does not certify it. No declaration counts are quoted in these rows - the Lean
+is expressible; it does not certify it. As of 2026-09-09 Lemma A's **entry theorem** is closed there
+(`upper_entry_eqZ`, `norm_upper_entryZ`), for odd `c >= -1` - a bound that comes from `oddPartZ`'s
+`Int.toNat` clamp, measured by gate L7, and not from the `A_c <= 0` degeneracy. The clean blocks and
+Gram identity (step 4c) and the assembly are still open, as is `hL2`/`hParseval`. No declaration counts are quoted in these rows - the Lean
 census in EXTREMAL_VALUES.md is still absent and four documents disagree on the number.*
 
 ## Contents

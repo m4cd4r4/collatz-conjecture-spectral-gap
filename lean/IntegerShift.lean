@@ -14,14 +14,21 @@ written down.
 ## SCOPE OF *THIS* FILE, STATED HONESTLY
 
 This is the **first slice** of that development: the map, the defect residue, the offset, the
-discharge of the offset hypothesis at `c = -1`, the link theorem, Lemma B, and — §6, added
-last — the integer-shifted **operator**.  It is **not** a certificate for `3x − 1`, and it does
-not claim one.
+discharge of the offset hypothesis at `c = -1`, the link theorem, Lemma B, the integer-shifted
+**operator** (§6), the **shell layer** (§6c) and — added last — Lemma A's **entry theorem**
+(§6d).  It is **not** a certificate for `3x − 1`, and it does not claim one.
 
-**What is still open, precisely:** Lemma A needs the entry theorem (`upper_entry_eqZ`,
-`norm_upper_entryZ`) and the clean blocks and Gram identity (`BentZ`, `gram_upperZ`,
-`cleanBlockCLMZ`, `norm_sq_clean_blockZ`).  §6 is step `4a` of those three, and the assembly is
-a separate task after all of them.  `hL2`/`hParseval` remains open here as it does at `c = 1`.
+**What is still open, precisely:** the clean blocks and the Gram identity (`BentZ`,
+`gram_upperZ`, `cleanBlockCLMZ`, `norm_sq_clean_blockZ`) — step `4c` — and then the assembly,
+which is a separate task after them.  `hL2`/`hParseval` remains open here as it does at `c = 1`.
+
+**What §6d closed, and at what scope.**  `upper_entry_eqZ` and `norm_upper_entryZ` are done,
+for odd `c ≥ -1`.  That bound is **not** the `A_c ≤ 0` exclusion of §3 wearing a new hat: it is
+narrower and weaker, and it comes from `oddPartZ`'s `Int.toNat` clamp rather than from any
+degeneracy — gate L7 measures the coset-uniformity step failing at every negative `3x + c`.
+Since an odd `c ≥ -1` is either `-1` or a non-negative shift the `c : ℕ` chain already covers,
+the new content of §6d is `3x − 1` itself, which is the map this file exists for.  A future
+`oddPartZ` defined on `ℤ` proper would lift the restriction; nothing else here would change.
 
 It resurrects **no cycle conclusion**.  A certificate holding across a family of shifts, several
 of which *have* cycles, makes "spectral gap ⟹ no cycles" false for *more* maps — if the integer
@@ -800,6 +807,501 @@ theorem shellZ_reindex {c : ℤ} (hc3 : ¬ (3 : ℤ) ∣ c) (hc : c % 2 = 1) {k 
 
 /-!
 --------------------------------------------------------------------------------
+## §6d. Lemma A's **entry theorem** at an integer shift  (step 4b, second half)
+--------------------------------------------------------------------------------
+
+§6c built the shell layer.  This section is the entry theorem standing on it:
+`upper_entry_eqZ` and `norm_upper_entryZ`, mirroring `ShiftedOperator` §7 and the first
+theorem of its §8.  With these, **Lemma A's entry theorem is closed at an integer shift.**
+The clean blocks and the Gram identity (`BentZ`, `gram_upperZ`, `cleanBlockCLMZ`,
+`norm_sq_clean_blockZ`) are step `4c` and are **not** here; the assembly is a separate task
+after them.  `hL2`/`hParseval` is untouched and remains open exactly as at `c = 1`.
+
+### THE ONE NEW HYPOTHESIS, AND IT WAS MEASURED BEFORE IT WAS WRITTEN
+
+Everything in §6c is sign-agnostic, because a valuation reads `natAbs` (`v2Z`).  The
+operator is not: `oddPartZ` is `m.toNat / 2 ^ v2 m.toNat`, and **`Int.toNat` clamps a
+non-positive argument to `0`**.  So the coset-uniformity step — `Syr_c(x + m2^K)` is affine
+in `m`, which is the whole engine of the Gauss collapse — is **false** wherever `3x + c < 0`,
+and the clamp makes it fail silently rather than loudly.
+
+Gate **L7** in `calibrate_lemmaA_integer_shift.py` measures exactly this, and its last column
+is the point:
+
+```
+   k | c    | 0<3x+c cases | A holds | B holds | B on the 3x+c<0 cases
+   6 | -1   | 31           | True    | True    | n/a
+   6 | -5   | 30           | True    | True    | False      <- the clamp
+   6 | -13  | 29           | True    | True    | False
+```
+
+The **valuation** is frozen under the lift at every shift tested (claim A, `v2Z_congr` does
+it here); the **affine step** holds on every positive `3x + c` and fails on every negative
+one.  So `cu_syracuse_affineZ` carries `0 < 3x + c`, in the packaged form `-1 ≤ c` — which
+is `three_add_pos`, already in §1, and which is satisfied by `3x − 1`.
+
+**This narrows the section's scope, and the narrowing is stated rather than hidden.**  At an
+odd `c ≥ -1` the shift is either `-1` or a non-negative one the `c : ℕ` chain already covers,
+so the new content of §6d is `3x − 1` itself.  That is the map this file exists for; it is
+not a general integer-shift entry theorem, and nothing below claims to be one.  The shifts
+`c ≤ -3` are out of scope here for a *different and weaker* reason than `A_c ≤ 0` is out of
+scope in §3 — this one is a clamp in a definition, not a degeneracy in the mathematics, and
+a future `oddPartZ` on `ℤ` proper would lift it.
+
+### CALIBRATION FIRST (ground rule 1) — gates L7, L8, L9, exit 0
+
+* **L7** — CU at an integer shift, above.
+* **L8** — the Gauss collapse holds at `c = -1`: the column sum against `w^{η·}` still
+  collapses to one phase gated by `2^v ∣ η`, to `1e-12` at `k = 4, 5`.  That is
+  `gauss_collapseZ`.
+* **L9** — the entry theorem itself, at `c = -1`, `k = 5, 6`: `cleanEntryZ` equals
+  `w^{ξuc} · Sodd(resJ …)` to `1e-12` over 40 `(a,b,η',ξ')` cases, and the modulus on the
+  27 sharp points is exactly `2^{k-d-1}`.  **The `Sodd` factor carries no `c`** — measured,
+  at a shift where `syracuseZ` is a genuinely different map from any `c : ℕ` one (L5).
+
+### MUTATION TABLE, continuing from S147
+
+| # | Target | Mutation | Failure, and why it is mathematical |
+|---|---|---|---|
+| S148 | `cu_syracuse_affineZ` | hypothesis `-1 ≤ c` **weakened** to `-5 ≤ c` | *Application type mismatch* at `three_add_pos`, twice — the positivity `oddPartZ_two_pow_mul` needs is exactly what `-1 ≤ c` supplies; and **false** by computation, gate L7's last column at `c = -5, k = 6` reads `False`, because the clamp sends a lift to `0` where the affine value is negative.  Weakened rather than dropped on purpose: dropping the binder would fail on `unknown identifier`, which proves nothing |
+| S149 | `cu_valuation_frozenZ` | hypothesis `v2Z (3x+c) < K` weakened to `≤ K` | `omega could not prove the goal` at the `j + 1 ≤ k` argument of `v2Z_congr`; and **false** — at `v = K` the lift moves the valuation.  Same content as S147 one level up |
+| S150 | `gauss_collapseZ` | gate `2 ^ v2Z (3r+c) ∣ η` weakened to `2 ∣ η` | three `rewrite failed` — `ratio_one_iff` produces the gate `2^v ∣ η` and no longer matches either branch; and **false**, since L8 measures the column at `2 ∣ η` with `2^v ∤ η` as `0`, not `2^k w^{ησ}` |
+| S151 | `upper_entry_eqZ` | phase `wz k (ξ*u*c)` → `wz k (ξ*u)` (the `c = 1` phase) | *Type mismatch* against what `shell_character_sumZ` returns; and **false** by computation — at `c = -1` the two phases are separated by up to `1.85` in modulus over the `k = 5, 6` cases, so they are not the same number |
+| S152 | `upper_entry_eqZ` | regime weakened `a < b` → `a ≤ b` | `omega` fails on `1 ≤ b - a`, and `shell_dvd_upper` / `shell_sum_vanishes` both mismatch — every one needs `a < b`.  At `a = b` the dead band is empty; that is the LOWER regime, a different theorem |
+| S153 | `norm_upper_entryZ` | modulus `2^{k-d-1}` → `2^{k-d}` | `unsolved goals` after `norm_Sodd_full`, which delivers the half; and **false** — L9's sharp-point column measures `2^{k-d-1}` to `8.5e-13` |
+
+All six were run under `lake build` on the real target and their error text read, per the note
+below the previous batch.  None failed on a stale import.
+-/
+
+section EntryInteger
+
+open LemmaA CharacterBasis BlockVanishing OperatorBlock CollisionBound GramIdentity
+
+/-- An **odd positive** integer is its own odd part — the base case `oddPartZ_two_pow_mul`
+strips down to.  Positivity is load-bearing: at `X ≤ 0` the `toNat` clamp makes this `0`. -/
+theorem oddPartZ_odd {X : ℤ} (hX : 0 < X) (hodd : X % 2 = 1) : oddPartZ X = X.toNat := by
+  unfold oddPartZ
+  rw [v2_odd_mod _ (by omega : X.toNat % 2 = 1)]
+  simp
+
+/-- **The `2`-adic split of a positive integer**, with the quotient odd *and positive*.  The
+`ℤ` analogue of `shellS_oddpart`'s content, stated on a bare positive integer so both the
+shell version and the lift-window version below can consume it. -/
+theorem v2Z_split {X : ℤ} (hX : 0 < X) :
+    X = 2 ^ v2Z X * (X / 2 ^ v2Z X) ∧ (X / 2 ^ v2Z X) % 2 = 1 ∧ 0 < X / 2 ^ v2Z X := by
+  obtain ⟨hdvd, hndvd⟩ := (v2Z_eq_iff_dvd (ne_of_gt hX)).1 rfl
+  -- abstract the exponent BEFORE rewriting `X`, or `rw [hq]` recurses into `v2Z X` itself
+  set v := v2Z X with hv
+  obtain ⟨q, hq⟩ := hdvd
+  have h2 : (0 : ℤ) < 2 ^ v := by positivity
+  have hqv : X / 2 ^ v = q := by
+    rw [hq, Int.mul_ediv_cancel_left _ (by positivity : (2 : ℤ) ^ v ≠ 0)]
+  have hqpos : 0 < q := by
+    by_contra hcon
+    push_neg at hcon
+    nlinarith
+  refine ⟨by rw [hqv]; exact hq, ?_, by rw [hqv]; exact hqpos⟩
+  rw [hqv]
+  rcases Int.even_or_odd q with he | ho
+  · exfalso
+    obtain ⟨t, ht⟩ := he
+    exact hndvd ⟨t, by rw [hq, ht, pow_succ]; ring⟩
+  · obtain ⟨t, ht⟩ := ho
+    omega
+
+/-- **The valuation is frozen under the lift**, at an integer shift.  This is `v2Z_congr` doing
+its job one level up: `3(x + m2^K) + c` differs from `3x + c` by `3m·2^K`, and a valuation
+strictly below `K` is congruence data mod `2^K`.
+
+Sign-agnostic, exactly as §6c is — no positivity is needed here, only non-vanishing. -/
+theorem cu_valuation_frozenZ {c : ℤ} (hc1 : -1 ≤ c) {x m K : ℕ} (hx : x % 2 = 1)
+    (hK : v2Z (3 * (x : ℤ) + c) < K) :
+    v2Z (3 * ((x + m * 2 ^ K : ℕ) : ℤ) + c) = v2Z (3 * (x : ℤ) + c) := by
+  have hXpos : 0 < 3 * (x : ℤ) + c := three_add_pos hc1 (by omega)
+  have hlift : 3 * ((x + m * 2 ^ K : ℕ) : ℤ) + c
+      = (3 * (x : ℤ) + c) + 3 * (m : ℤ) * 2 ^ K := by push_cast; ring
+  have hYpos : 0 < 3 * ((x + m * 2 ^ K : ℕ) : ℤ) + c := by
+    have : (0 : ℤ) ≤ 3 * (m : ℤ) * 2 ^ K := by positivity
+    rw [hlift]; linarith
+  -- `k := K` must be pinned: nothing else in the application determines it
+  refine v2Z_congr (k := K) (ne_of_gt hXpos) (ne_of_gt hYpos) (by omega) ?_ rfl
+  exact ⟨-(3 * (m : ℤ)), by rw [hlift]; ring⟩
+
+/-- **CU AT AN INTEGER SHIFT.**  For odd `x` with `v := v₂(3x + c) < K`,
+`Syr_c(x + m2^K) = (3x+c)/2^v + 3m·2^{K−v}`.
+
+This is `ShiftedOperator.cu_syracuse_affineS` at `c : ℤ`, and it is the only genuinely new
+mathematics in step `4b(ii)`.  The hypothesis `-1 ≤ c` is gate L7's measurement, not a
+defensive addition: at a negative `3x + c` the identity is **false**, because `oddPartZ`
+clamps. -/
+theorem cu_syracuse_affineZ {c : ℤ} (hc1 : -1 ≤ c) (x m K : ℕ) (hx : x % 2 = 1)
+    (hK : v2Z (3 * (x : ℤ) + c) < K) :
+    syracuseZ c (x + m * 2 ^ K)
+      = ((3 * (x : ℤ) + c) / 2 ^ v2Z (3 * (x : ℤ) + c)).toNat
+        + 3 * m * 2 ^ (K - v2Z (3 * (x : ℤ) + c)) := by
+  have hXpos : 0 < 3 * (x : ℤ) + c := three_add_pos hc1 (by omega)
+  obtain ⟨hsplit, hqodd, hqpos⟩ := v2Z_split hXpos
+  set v := v2Z (3 * (x : ℤ) + c) with hvdef
+  set q := (3 * (x : ℤ) + c) / 2 ^ v with hqdef
+  have hlift_odd : (x + m * 2 ^ K) % 2 = 1 := by
+    have h2 : (2 : ℕ) ∣ m * 2 ^ K := (dvd_pow_self 2 (by omega : K ≠ 0)).mul_left m
+    omega
+  have hpow : (2 : ℤ) ^ v * 2 ^ (K - v) = 2 ^ K := by
+    rw [← pow_add]; congr 1; omega
+  have hfac : 3 * ((x + m * 2 ^ K : ℕ) : ℤ) + c
+      = (2 : ℤ) ^ v * (q + 3 * (m : ℤ) * 2 ^ (K - v)) := by
+    push_cast
+    linear_combination hsplit - 3 * (m : ℤ) * hpow
+  have hmnn : (0 : ℤ) ≤ 3 * (m : ℤ) * 2 ^ (K - v) := by positivity
+  have hqm_pos : 0 < q + 3 * (m : ℤ) * 2 ^ (K - v) := by linarith
+  have hqm_odd : (q + 3 * (m : ℤ) * 2 ^ (K - v)) % 2 = 1 := by
+    have h2 : (2 : ℤ) ∣ 3 * (m : ℤ) * 2 ^ (K - v) :=
+      Dvd.dvd.mul_left (dvd_pow_self 2 (by omega : K - v ≠ 0)) _
+    omega
+  unfold syracuseZ
+  rw [if_neg (by omega : ¬ (x + m * 2 ^ K) % 2 = 0), hfac,
+    oddPartZ_two_pow_mul hqm_pos v, oddPartZ_odd hqm_pos hqm_odd]
+  have hcast : q + 3 * (m : ℤ) * 2 ^ (K - v)
+      = ((q.toNat + 3 * m * 2 ^ (K - v) : ℕ) : ℤ) := by
+    push_cast
+    rw [Int.toNat_of_nonneg hqpos.le]
+  rw [hcast, Int.toNat_natCast]
+
+/-- The integer-shifted map as an exact quotient, on any odd source.  Mirror of
+`ShiftedOperator.syracuseS_eq_quot`. -/
+theorem syracuseZ_eq_quotZ {c : ℤ} (hc1 : -1 ≤ c) {r : ℕ} (hr : r % 2 = 1) :
+    syracuseZ c r = ((3 * (r : ℤ) + c) / 2 ^ v2Z (3 * (r : ℤ) + c)).toNat := by
+  have hpos : 0 < 3 * (r : ℤ) + c := three_add_pos hc1 (by omega)
+  obtain ⟨hsplit, hqodd, hqpos⟩ := v2Z_split hpos
+  unfold syracuseZ
+  rw [if_neg (by omega : ¬ r % 2 = 0)]
+  conv_lhs => rw [hsplit]
+  rw [oddPartZ_two_pow_mul hqpos, oddPartZ_odd hqpos hqodd]
+
+/-- On a shell, `3r + c = 2^j q` with `q` odd and **positive**.  `ShiftedOperator`'s
+`shellS_oddpart` at `c : ℤ`; positivity is the extra conjunct the clamp forces. -/
+theorem shellZ_oddpart {c : ℤ} (hc1 : -1 ≤ c) {k j r : ℕ} (hr : r ∈ shellZ c k j) :
+    3 * (r : ℤ) + c = 2 ^ j * ((3 * (r : ℤ) + c) / 2 ^ j)
+      ∧ ((3 * (r : ℤ) + c) / 2 ^ j) % 2 = 1
+      ∧ 0 < (3 * (r : ℤ) + c) / 2 ^ j := by
+  unfold shellZ at hr
+  rw [mem_filter] at hr
+  have hpos : 0 < 3 * (r : ℤ) + c := three_add_pos hc1 (by omega : 1 ≤ r)
+  have hsp := v2Z_split hpos
+  rw [hr.2.2.2] at hsp
+  exact hsp
+
+/-- On a shell the integer-shifted map is the exact quotient `(3r + c)/2^j`. -/
+theorem syracuseZ_on_shellZ {c : ℤ} (hc1 : -1 ≤ c) {k j r : ℕ} (hr : r ∈ shellZ c k j) :
+    syracuseZ c r = ((3 * (r : ℤ) + c) / 2 ^ j).toNat := by
+  have hmem := hr
+  unfold shellZ at hmem
+  rw [mem_filter] at hmem
+  rw [syracuseZ_eq_quotZ hc1 hmem.2.2.1, hmem.2.2.2]
+
+/-- The character column of `TcountZ` **is** the lift-window sum.  `TcountZ`'s definition read
+backwards; no arithmetic and no shift is involved.  Mirror of `char_col_as_liftS`. -/
+theorem char_col_as_liftZ (c : ℤ) (k r η : ℕ) :
+    ∑ u ∈ range (2 ^ k), (TcountZ c k u r : ℂ) * w k ^ (η * u)
+      = ∑ m ∈ range (2 ^ k), w k ^ (η * syracuseZ c (r + m * 2 ^ k)) := by
+  have hmaps : ∀ m ∈ range (2 ^ k), syracuseZ c (r + m * 2 ^ k) % 2 ^ k ∈ range (2 ^ k) :=
+    fun m _ => mem_range.2 (Nat.mod_lt _ (Nat.two_pow_pos k))
+  have hfib := Finset.sum_fiberwise_of_maps_to hmaps
+    (fun m => w k ^ (η * (syracuseZ c (r + m * 2 ^ k) % 2 ^ k)))
+  have hstep : ∀ u ∈ range (2 ^ k),
+      (TcountZ c k u r : ℂ) * w k ^ (η * u)
+        = ∑ m ∈ (range (2 ^ k)).filter
+              (fun m => syracuseZ c (r + m * 2 ^ k) % 2 ^ k = u),
+            w k ^ (η * (syracuseZ c (r + m * 2 ^ k) % 2 ^ k)) := by
+    intro u _
+    have hcong : ∀ m ∈ (range (2 ^ k)).filter
+        (fun m => syracuseZ c (r + m * 2 ^ k) % 2 ^ k = u),
+        w k ^ (η * (syracuseZ c (r + m * 2 ^ k) % 2 ^ k)) = w k ^ (η * u) :=
+      fun m hm => by rw [(mem_filter.1 hm).2]
+    rw [Finset.sum_congr rfl hcong, Finset.sum_const, nsmul_eq_mul, TcountZ]
+  rw [Finset.sum_congr rfl hstep, hfib]
+  exact Finset.sum_congr rfl fun m _ => w_pow_mod k η _
+
+/-- **THE GAUSS COLLAPSE AT AN INTEGER SHIFT.**  For a clean source `r`
+(`v := v₂(3r + c) < k`), the integer-shifted operator's column sum against `w^{η·}` collapses
+to a single phase, gated by `2^v ∣ η`.
+
+Gate L8 measured it at `c = -1` before it was written.  `ratio_one_iff` is shift-free and is
+imported unchanged; the only shifted input is `cu_syracuse_affineZ`. -/
+theorem gauss_collapseZ {c : ℤ} (hc1 : -1 ≤ c) {k r : ℕ} (hr : r % 2 = 1)
+    (hK : v2Z (3 * (r : ℤ) + c) < k) (η : ℕ) :
+    ∑ u ∈ range (2 ^ k), (TcountZ c k u r : ℂ) * w k ^ (η * u)
+      = if 2 ^ v2Z (3 * (r : ℤ) + c) ∣ η then
+          ((2 ^ k : ℕ) : ℂ) * w k ^ (η * syracuseZ c r) else 0 := by
+  rw [char_col_as_liftZ c k r η]
+  have hstep : ∀ m ∈ range (2 ^ k),
+      w k ^ (η * syracuseZ c (r + m * 2 ^ k))
+        = w k ^ (η * syracuseZ c r)
+            * (w k ^ (η * 3 * 2 ^ (k - v2Z (3 * (r : ℤ) + c)))) ^ m := by
+    intro m _
+    rw [cu_syracuse_affineZ hc1 r m k hr hK, ← syracuseZ_eq_quotZ hc1 hr, Nat.mul_add,
+      show η * (3 * m * 2 ^ (k - v2Z (3 * (r : ℤ) + c)))
+          = (η * 3 * 2 ^ (k - v2Z (3 * (r : ℤ) + c))) * m by ring,
+      pow_add, pow_mul (w k) (η * 3 * 2 ^ (k - v2Z (3 * (r : ℤ) + c))) m]
+  rw [Finset.sum_congr rfl hstep, ← Finset.mul_sum]
+  by_cases hcase : 2 ^ v2Z (3 * (r : ℤ) + c) ∣ η
+  · rw [if_pos hcase, (ratio_one_iff (le_of_lt hK)).2 hcase]
+    simp [mul_comm]
+  · rw [if_neg hcase]
+    have hzero : ∑ m ∈ range (2 ^ k),
+        (w k ^ (η * 3 * 2 ^ (k - v2Z (3 * (r : ℤ) + c)))) ^ m = 0 := by
+      refine (geomSum_eq_zero_iff (by positivity : (2 : ℕ) ^ k ≠ 0)).2 ⟨?_, ?_⟩
+      · rw [← pow_mul, w_pow_eq_one_iff]
+        exact ⟨η * 3 * 2 ^ (k - v2Z (3 * (r : ℤ) + c)), by ring⟩
+      · exact fun hcon => hcase ((ratio_one_iff (le_of_lt hK)).1 hcon)
+    rw [hzero, mul_zero]
+
+/-- **The integer-shifted clean character entry.**  Mirror of `ShiftedOperator.cleanEntryS`,
+built from `TcountZ` and the integer shells. -/
+noncomputable def cleanEntryZ (c : ℤ) (k η : ℕ) (ξ : ℤ) : ℂ :=
+  ∑ r ∈ (Icc 1 (k - 1)).biUnion (shellZ c k),
+    (((2 : ℂ) ^ k)⁻¹ * ∑ u ∈ range (2 ^ k), (TcountZ c k u r : ℂ) * w k ^ (η * u))
+      * wz k (-(ξ * (r : ℤ)))
+
+/-- At a non-negative shift the integer clean entry is the `c : ℕ` one.  The bridge, so that
+nothing above `c ≥ 0` is a new object. -/
+theorem cleanEntryZ_natCast (c k η : ℕ) (ξ : ℤ) :
+    cleanEntryZ (c : ℤ) k η ξ = cleanEntryS c k η ξ := by
+  unfold cleanEntryZ cleanEntryS
+  refine Finset.sum_congr ?_ (fun r _ => by simp only [TcountZ_natCast])
+  refine Finset.biUnion_congr rfl (fun j _ => ?_)
+  exact shellZ_natCast c k j
+
+/-- The integer-shifted masked source set. -/
+def maskedOddsZ (c : ℤ) (k b : ℕ) : Finset ℕ := (Icc 1 b).biUnion (shellZ c k)
+
+/-- **The join, at an integer shift.**  The clean entry of `T_k^{(c)}` *is* the masked sum.
+The `[v(r) ≤ b]` mask is produced by `gauss_collapseZ`, not assumed; `gate_iff` is shift-free
+and is used unchanged.  Mirror of `cleanEntryS_eq_masked`. -/
+theorem cleanEntryZ_eq_masked {c : ℤ} (hc1 : -1 ≤ c) {k b η : ℕ} {η' : ℤ}
+    (hη : (η : ℤ) = 2 ^ b * η') (hη' : Odd η') (hbk : b + 1 ≤ k) (ξ : ℤ) :
+    cleanEntryZ c k η ξ
+      = ∑ r ∈ maskedOddsZ c k b, wz k ((η : ℤ) * ((syracuseZ c r : ℕ) : ℤ) - ξ * (r : ℤ)) := by
+  have hd1 : (↑(Icc 1 (k - 1)) : Set ℕ).PairwiseDisjoint (shellZ c k) := by
+    intro x _ y _ hxy; exact shellZ_disjoint hxy
+  have hd2 : (↑(Icc 1 b) : Set ℕ).PairwiseDisjoint (shellZ c k) := by
+    intro x _ y _ hxy; exact shellZ_disjoint hxy
+  rw [cleanEntryZ, Finset.sum_biUnion hd1, maskedOddsZ, Finset.sum_biUnion hd2]
+  have hpow : ((2 : ℂ) ^ k) ≠ 0 := pow_ne_zero k two_ne_zero
+  have hshell : ∀ j ∈ Icc 1 (k - 1),
+      (∑ r ∈ shellZ c k j,
+        (((2 : ℂ) ^ k)⁻¹ * ∑ u ∈ range (2 ^ k), (TcountZ c k u r : ℂ) * w k ^ (η * u))
+          * wz k (-(ξ * (r : ℤ))))
+        = if j ≤ b then
+            ∑ r ∈ shellZ c k j,
+              wz k ((η : ℤ) * ((syracuseZ c r : ℕ) : ℤ) - ξ * (r : ℤ)) else 0 := by
+    intro j hj
+    rw [mem_Icc] at hj
+    have hterm : ∀ r ∈ shellZ c k j,
+        (((2 : ℂ) ^ k)⁻¹ * ∑ u ∈ range (2 ^ k), (TcountZ c k u r : ℂ) * w k ^ (η * u))
+            * wz k (-(ξ * (r : ℤ)))
+          = if j ≤ b then
+              wz k ((η : ℤ) * ((syracuseZ c r : ℕ) : ℤ) - ξ * (r : ℤ)) else 0 := by
+      intro r hr
+      have hmem := hr
+      unfold shellZ at hmem
+      rw [mem_filter] at hmem
+      have hrodd : r % 2 = 1 := hmem.2.2.1
+      have hvj : v2Z (3 * (r : ℤ) + c) = j := hmem.2.2.2
+      have hclean : v2Z (3 * (r : ℤ) + c) < k := by omega
+      rw [gauss_collapseZ hc1 hrodd hclean η, hvj]
+      by_cases hcase : (2 : ℕ) ^ j ∣ η
+      · rw [if_pos hcase, if_pos ((gate_iff hη hη').1 hcase)]
+        rw [show (((2 ^ k : ℕ) : ℂ)) = (2 : ℂ) ^ k by push_cast; ring, ← mul_assoc,
+          inv_mul_cancel₀ hpow, one_mul, ← wz_natCast, ← wz_add,
+          show ((η * syracuseZ c r : ℕ) : ℤ) + -(ξ * (r : ℤ))
+              = (η : ℤ) * ((syracuseZ c r : ℕ) : ℤ) - ξ * (r : ℤ) by push_cast; ring]
+      · rw [if_neg hcase, if_neg (fun hcon => hcase ((gate_iff hη hη').2 hcon)), mul_zero,
+          zero_mul]
+    rw [Finset.sum_congr rfl hterm]
+    by_cases hcase : j ≤ b
+    · simp only [if_pos hcase]
+    · simp only [if_neg hcase, Finset.sum_const, smul_zero]
+  have hsub : Icc 1 b ⊆ Icc 1 (k - 1) := by
+    intro j hj; rw [mem_Icc] at hj ⊢; omega
+  rw [Finset.sum_congr rfl hshell,
+    ← Finset.sum_subset hsub (fun j hj hjn => by
+      rw [mem_Icc] at hj hjn; rw [if_neg (by omega)])]
+  exact Finset.sum_congr rfl (fun j hj => by rw [mem_Icc] at hj; rw [if_pos hj.2])
+
+/-- **S1 AT AN INTEGER SHIFT, ONE SHELL.**  The shell-`j` character sum is exactly
+`w^{ξuc} · Sodd(alpha_j, k−j)`.
+
+Compare `ShiftedOperator.shell_character_sumS`, which is this at `c : ℕ`.  **The `Sodd`
+factor and its argument are bit-for-bit identical** — `alphaJ` never mentions the shift — and
+the whole shift sits in the unimodular prefactor.  That is what makes §6e a substitution
+rather than a re-derivation, exactly as it was at `c : ℕ`. -/
+theorem shell_character_sumZ {c : ℤ} (hc3 : ¬ (3 : ℤ) ∣ c) (hc : c % 2 = 1) (hc1 : -1 ≤ c)
+    {k j : ℕ} (hj : 1 ≤ j) (hjk : j + 1 ≤ k)
+    {η ξ u : ℤ} (hu : (2 : ℤ) ^ k ∣ 3 * u - 1)
+    {α : ℕ} (hres : (2 : ℤ) ^ k ∣ (α : ℤ) - alphaJ η ξ u j)
+    (hvj : (2 : ℤ) ^ j ∣ alphaJ η ξ u j) :
+    ∑ r ∈ shellZ c k j, wz k (η * ((syracuseZ c r : ℕ) : ℤ) - ξ * (r : ℤ))
+      = wz k (ξ * u * c) * Sodd k α (k - j) := by
+  have hαj : (2 : ℤ) ^ j ∣ (α : ℤ) := by
+    obtain ⟨d, hd⟩ := hres
+    obtain ⟨e, he⟩ := hvj
+    exact ⟨e + 2 ^ (k - j) * d, by
+      have hsplit : (2 : ℤ) ^ k = 2 ^ j * 2 ^ (k - j) := by
+        rw [← pow_add]; congr 1; omega
+      have hα : (α : ℤ) = alphaJ η ξ u j + 2 ^ k * d := by linarith
+      rw [hα, he, hsplit]; ring⟩
+  have hterm : ∀ r ∈ shellZ c k j,
+      wz k (η * ((syracuseZ c r : ℕ) : ℤ) - ξ * (r : ℤ))
+        = wz k (ξ * u * c) * w k ^ (α * sbMapZ c k j r) := by
+    intro r hr
+    obtain ⟨hq, hqodd, hqpos⟩ := shellZ_oddpart hc1 hr
+    have hsyr : ((syracuseZ c r : ℕ) : ℤ) = (3 * (r : ℤ) + c) / 2 ^ j := by
+      rw [syracuseZ_on_shellZ hc1 hr, Int.toNat_of_nonneg hqpos.le]
+    have h1 : wz k (η * ((syracuseZ c r : ℕ) : ℤ) - ξ * (r : ℤ))
+        = wz k ((α : ℤ) * ((3 * (r : ℤ) + c) / 2 ^ j)) * wz k (ξ * u * c) := by
+      rw [hsyr, ← wz_add]
+      obtain ⟨d, hd⟩ := hres
+      obtain ⟨t, ht⟩ := hu
+      unfold alphaJ at hd
+      refine wz_congr ⟨ξ * (r : ℤ) * t - d * ((3 * (r : ℤ) + c) / 2 ^ j), ?_⟩
+      linear_combination (-((3 * (r : ℤ) + c) / 2 ^ j)) * hd + (-(ξ * u)) * hq
+        + (ξ * (r : ℤ)) * ht
+    have h2 : wz k ((α : ℤ) * ((3 * (r : ℤ) + c) / 2 ^ j))
+        = w k ^ (α * sbMapZ c k j r) := by
+      have hcast : ((((3 * (r : ℤ) + c) / 2 ^ j).toNat % 2 ^ (k - j) : ℕ) : ℤ)
+          = ((3 * (r : ℤ) + c) / 2 ^ j) % 2 ^ (k - j) := by
+        push_cast
+        rw [Int.toNat_of_nonneg hqpos.le]
+      have hsb : ((3 * (r : ℤ) + c) / 2 ^ j).toNat % 2 ^ (k - j) = sbMapZ c k j r := by
+        unfold sbMapZ
+        rw [← hcast, Int.toNat_natCast]
+      conv_lhs => rw [show ((3 * (r : ℤ) + c) / 2 ^ j)
+        = ((((3 * (r : ℤ) + c) / 2 ^ j).toNat : ℕ) : ℤ) from
+          (Int.toNat_of_nonneg hqpos.le).symm]
+      rw [wz_period (k := k) (j := j) (by omega) hαj (((3 * (r : ℤ) + c) / 2 ^ j).toNat), hsb,
+        show ((α : ℤ) * ((sbMapZ c k j r : ℕ) : ℤ)) = ((α * sbMapZ c k j r : ℕ) : ℤ) by
+          push_cast; ring,
+        wz_natCast]
+    rw [h1, h2, mul_comm]
+  rw [Finset.sum_congr rfl hterm, ← Finset.mul_sum, shellZ_reindex hc3 hc hj hjk]
+
+/-- **THE UPPER-REGIME ENTRY THEOREM AT AN INTEGER SHIFT.**  For `a < b` the integer-shifted
+clean entry collapses onto the single shell `j = d := b − a`:
+
+```
+    cleanEntryZ c k η ξ = w^{ξ·u·c} · Sodd(resJ k η ξ u d, k − d)
+```
+
+This is `ShiftedOperator.upper_entry_eqS` at `c : ℤ`, and gate L9 measured both sides at
+`c = -1` before it was written.  **The `Sodd` factor is the `c = 1` one** — same `resJ`, same
+`alphaJ`, same range — and the prefactor is unimodular.  Those are precisely the two
+properties the Gram argument consumes, which is why step `4c` is a substitution.
+
+Everything about the dead band — `shell_dvd_upper`, `shell_sum_vanishes` — is shift-free and
+is imported unchanged: both are statements about `alphaJ`, and `alphaJ` does not see the
+shift. -/
+theorem upper_entry_eqZ {c : ℤ} (hc3 : ¬ (3 : ℤ) ∣ c) (hc : c % 2 = 1) (hc1 : -1 ≤ c)
+    {k a b η : ℕ} {ξ η' ξ' u : ℤ}
+    (hη : (η : ℤ) = 2 ^ b * η') (hη' : Odd η') (hξ : ξ = 2 ^ a * ξ') (hξ' : Odd ξ')
+    (hu : Odd u) (huinv : (2 : ℤ) ^ k ∣ 3 * u - 1) (hab : a < b) (hbk : b + 2 ≤ k) :
+    cleanEntryZ c k η ξ
+      = wz k (ξ * u * c) * Sodd k (resJ k (η : ℤ) ξ u (b - a)) (k - (b - a)) := by
+  rw [cleanEntryZ_eq_masked hc1 hη hη' (by omega) ξ, maskedOddsZ,
+    Finset.sum_biUnion (fun x _ y _ hxy => shellZ_disjoint hxy)]
+  refine (Finset.sum_eq_single_of_mem (b - a) (mem_Icc.2 ⟨by omega, by omega⟩) ?_).trans ?_
+  · -- every shell other than `j = d` is inside the dead band
+    intro j hj hjd
+    rw [mem_Icc] at hj
+    rw [shell_character_sumZ hc3 hc hc1 hj.1 (by omega) huinv (resJ_spec k (η : ℤ) ξ u j)
+        (shell_dvd_upper hη hη' hξ hξ' hu hab hbk hj.1 hj.2),
+      shell_sum_vanishes hη hη' hξ hξ' hu hab hbk hj.1 hj.2 hjd
+        (resJ_spec k (η : ℤ) ξ u j),
+      mul_zero]
+  · -- the surviving shell
+    exact shell_character_sumZ hc3 hc hc1 (by omega) (by omega) huinv
+      (resJ_spec k (η : ℤ) ξ u (b - a))
+      (shell_dvd_upper (j := b - a) hη hη' hξ hξ' hu hab hbk (by omega) (by omega))
+
+/-- **The integer-shifted prefactor is unimodular** — the only property of it the Gram
+argument uses, and therefore the precise sense in which the shift is invisible above §6d. -/
+theorem norm_shift_phaseZ (k : ℕ) (ξ u c : ℤ) : ‖wz k (ξ * u * c)‖ = 1 := norm_wz k _
+
+/-- **Off the support the integer-shifted entry is exactly `0`.**  Immediate from
+`upper_entry_eqZ`: the vanishing lives entirely in the `Sodd` factor, which is the unshifted
+one, so `GramIdentity.upper_entry_eq_zero`'s argument transfers verbatim. -/
+theorem upper_entry_eqZ_zero {c : ℤ} (hc3 : ¬ (3 : ℤ) ∣ c) (hc : c % 2 = 1) (hc1 : -1 ≤ c)
+    {k a b η : ℕ} {ξ η' ξ' u : ℤ}
+    (hη : (η : ℤ) = 2 ^ b * η') (hη' : Odd η') (hξ : ξ = 2 ^ a * ξ') (hξ' : Odd ξ')
+    (hu : Odd u) (huinv : (2 : ℤ) ^ k ∣ 3 * u - 1) (hab : a < b) (hbk : b + 2 ≤ k)
+    (hno : ¬ (2 : ℤ) ^ (k - 1) ∣ alphaJ (η : ℤ) ξ u (b - a)) :
+    cleanEntryZ c k η ξ = 0 := by
+  have hz : Sodd k (resJ k (η : ℤ) ξ u (b - a)) (k - (b - a)) = 0 := by
+    have h1 : cleanEntry k η ξ
+        = wz k (ξ * u) * Sodd k (resJ k (η : ℤ) ξ u (b - a)) (k - (b - a)) :=
+      upper_entry_eq hη hη' hξ hξ' hu huinv hab hbk
+    have h2 : cleanEntry k η ξ = 0 :=
+      upper_entry_eq_zero hη hη' hξ hξ' hu huinv hab hbk hno
+    have h3 : wz k (ξ * u) * Sodd k (resJ k (η : ℤ) ξ u (b - a)) (k - (b - a)) = 0 := by
+      rw [← h1, h2]
+    have hne : wz k (ξ * u) ≠ 0 := by
+      intro hcon
+      have := norm_wz k (ξ * u)
+      rw [hcon, norm_zero] at this
+      exact absurd this (by norm_num)
+    exact (mul_eq_zero.1 h3).resolve_left hne
+  rw [upper_entry_eqZ hc3 hc hc1 hη hη' hξ hξ' hu huinv hab hbk, hz, mul_zero]
+
+/-- **ON THE SHARP POINTS THE INTEGER-SHIFTED ENTRY HAS MODULUS EXACTLY `2^{k−d−1}`.**
+
+The shift drops out at the first step (`‖wz k (ξ·u·c)‖ = 1`), and what is left is S4's FULL
+branch applied to the **unshifted** `Sodd`.  Gate L9's sharp-point column measured this to
+`8.5e-13` at `c = -1`, `k = 5, 6`, over 27 sharp cases.
+
+With this and `upper_entry_eqZ`, **Lemma A's entry theorem is closed at an integer shift.**
+The clean blocks and the Gram identity are step `4c` and are not here. -/
+theorem norm_upper_entryZ {c : ℤ} (hc3 : ¬ (3 : ℤ) ∣ c) (hc : c % 2 = 1) (hc1 : -1 ≤ c)
+    {k a b η : ℕ} {ξ η' ξ' u : ℤ}
+    (hη : (η : ℤ) = 2 ^ b * η') (hη' : Odd η') (hξ : ξ = 2 ^ a * ξ') (hξ' : Odd ξ')
+    (hu : Odd u) (huinv : (2 : ℤ) ^ k ∣ 3 * u - 1) (hab : a < b) (hbk : b + 2 ≤ k)
+    (how : (2 : ℤ) ^ (k - 1) ∣ alphaJ (η : ℤ) ξ u (b - a)) :
+    ‖cleanEntryZ c k η ξ‖ = (2 : ℝ) ^ (k - (b - a) - 1) := by
+  rw [upper_entry_eqZ hc3 hc hc1 hη hη' hξ hξ' hu huinv hab hbk, norm_mul, norm_wz, one_mul,
+    norm_Sodd_full k _ _ (by omega) ((resJ_dvd_iff (by omega) _ _ _ _).2 how)]
+  push_cast
+  ring
+
+/-!
+### The entry theorem for `3x − 1`, with the shift hypotheses discharged
+
+`c = -1` satisfies all three side conditions by `decide`, so the two theorems below carry
+only the hypotheses the `c = 1` originals carry.  These are the first statements in the
+corpus about the **`3x − 1` clean operator's entries** that are proved rather than measured.
+
+They are **not** Lemma A for `3x − 1`, and still less a certificate: the clean-block norm
+bound needs `BentZ` / `gram_upperZ` / `cleanBlockCLMZ` (step `4c`), and the certificate needs
+those plus the defect half and the assembly.  `hL2`/`hParseval` remains open throughout.
+-/
+
+theorem upper_entry_eq_minus_one {k a b η : ℕ} {ξ η' ξ' u : ℤ}
+    (hη : (η : ℤ) = 2 ^ b * η') (hη' : Odd η') (hξ : ξ = 2 ^ a * ξ') (hξ' : Odd ξ')
+    (hu : Odd u) (huinv : (2 : ℤ) ^ k ∣ 3 * u - 1) (hab : a < b) (hbk : b + 2 ≤ k) :
+    cleanEntryZ (-1) k η ξ
+      = wz k (ξ * u * (-1)) * Sodd k (resJ k (η : ℤ) ξ u (b - a)) (k - (b - a)) :=
+  upper_entry_eqZ (by decide) (by decide) (by decide) hη hη' hξ hξ' hu huinv hab hbk
+
+theorem norm_upper_entry_minus_one {k a b η : ℕ} {ξ η' ξ' u : ℤ}
+    (hη : (η : ℤ) = 2 ^ b * η') (hη' : Odd η') (hξ : ξ = 2 ^ a * ξ') (hξ' : Odd ξ')
+    (hu : Odd u) (huinv : (2 : ℤ) ^ k ∣ 3 * u - 1) (hab : a < b) (hbk : b + 2 ≤ k)
+    (how : (2 : ℤ) ^ (k - 1) ∣ alphaJ (η : ℤ) ξ u (b - a)) :
+    ‖cleanEntryZ (-1) k η ξ‖ = (2 : ℝ) ^ (k - (b - a) - 1) :=
+  norm_upper_entryZ (by decide) (by decide) (by decide) hη hη' hξ hξ' hu huinv hab hbk how
+
+end EntryInteger
+
+/-!
+--------------------------------------------------------------------------------
 ## §7. `#eval` witnesses, checked against the Python
 --------------------------------------------------------------------------------
 
@@ -880,6 +1382,26 @@ example : (List.range 6).map (fun i => apAZ (-1) (i + 3)) = [1, 2, 1, 2, 1, 2] :
 #eval (shellZ (-1) 6 2).image (fun r => (sbMapZ (-1) 6 2 r, sbMapS (cmodN (-1) 6) 6 2 r))
 #eval (shellZ (-1) 6 2).image (fun r => (syracuseZ (-1) r, syracuseS (cmodN (-1) 6) r))
 
+-- §6d, CU at an integer shift.  `cu_syracuse_affineZ` proves these two lists agree at
+-- c = -1; this is the outside check that they agree with gate L7's claim B, and that the
+-- object being lifted is the real map.  x = 1, K = 4, m = 0..5.
+-- Both read [1, 25, 49, 73, 97, 121].
+#eval (List.range 6).map (fun m => syracuseZ (-1) (1 + m * 2 ^ 4))
+#eval (List.range 6).map (fun m =>
+  ((3 * (1 : ℤ) + (-1)) / 2 ^ v2Z (3 * (1 : ℤ) + (-1))).toNat
+    + 3 * m * 2 ^ (4 - v2Z (3 * (1 : ℤ) + (-1))))
+
+-- AND THE BOUNDARY, which is the more useful witness: at c = -5 the same two lists
+-- DISAGREE, because 3*1 + (-5) < 0 and `oddPartZ` clamps.  This is gate L7's last column
+-- inside Lean, and it is why `cu_syracuse_affineZ` carries `-1 ≤ c`.  A session that
+-- weakens that hypothesis should look here first (mutation S148).
+-- The map reads [0, 23, 47, 71, 95, 119]; the affine formula reads [0, 24, 48, 72, 96, 120].
+-- Off by exactly 1 at every lift, because 3*1 - 5 = -2 gives q = -1, and `q.toNat` is 0.
+#eval (List.range 6).map (fun m => syracuseZ (-5) (1 + m * 2 ^ 4))
+#eval (List.range 6).map (fun m =>
+  ((3 * (1 : ℤ) + (-5)) / 2 ^ v2Z (3 * (1 : ℤ) + (-5))).toNat
+    + 3 * m * 2 ^ (4 - v2Z (3 * (1 : ℤ) + (-5))))
+
 end Witnesses
 
 /-! ### Axiom audit — every theorem in this file.  Expect `[propext, Classical.choice, Quot.sound]`
@@ -936,5 +1458,23 @@ and nothing else: no `sorryAx`, no `Lean.ofReduceBool`. -/
 #print axioms shellZ_card
 #print axioms shellZ_disjoint
 #print axioms shellZ_reindex
+#print axioms oddPartZ_odd
+#print axioms v2Z_split
+#print axioms cu_valuation_frozenZ
+#print axioms cu_syracuse_affineZ
+#print axioms syracuseZ_eq_quotZ
+#print axioms shellZ_oddpart
+#print axioms syracuseZ_on_shellZ
+#print axioms char_col_as_liftZ
+#print axioms gauss_collapseZ
+#print axioms cleanEntryZ_natCast
+#print axioms cleanEntryZ_eq_masked
+#print axioms shell_character_sumZ
+#print axioms upper_entry_eqZ
+#print axioms norm_shift_phaseZ
+#print axioms upper_entry_eqZ_zero
+#print axioms norm_upper_entryZ
+#print axioms upper_entry_eq_minus_one
+#print axioms norm_upper_entry_minus_one
 
 end IntegerShift

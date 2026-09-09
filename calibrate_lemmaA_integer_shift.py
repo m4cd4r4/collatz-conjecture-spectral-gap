@@ -291,6 +291,202 @@ def run_l6():
         print()
 
 
+# --------------------------------------------------------------------------- L7-L9
+#
+# The three gates below calibrate the ENTRY THEOREM at an integer shift - the next Lean
+# statements (`cu_syracuse_affineZ`, `gauss_collapseZ`, `upper_entry_eqZ`,
+# `norm_upper_entryZ`).  Nothing above them measures the lift window at an integer shift;
+# L5 only measured that the residue shortcut is false, not what the true object is.
+#
+# The MODEL BELOW IS LEAN'S, NOT THE MATHEMATICIAN'S.  `syr_c` above keeps the sign of the
+# odd core, because sign-agnosticism was the right model for the shell layer.  `oddPartZ` in
+# Lean is `m.toNat / 2 ^ v2 m.toNat`, which CLAMPS a non-positive argument to 0.  L7 exists
+# to find where that clamp bites, so the Lean hypothesis is measured rather than assumed.
+
+def oddpartZ_lean(m):
+    """Lean's `IntegerShift.oddPartZ` exactly, clamp included: 0 at every m <= 0."""
+    t = max(int(m), 0)
+    if t == 0:
+        return 0
+    while t % 2 == 0:
+        t //= 2
+    return t
+
+
+def syracuseZ_lean(c, n):
+    """Lean's `IntegerShift.syracuseZ`."""
+    return n if n % 2 == 0 else oddpartZ_lean(3 * n + c)
+
+
+def v2Z(m):
+    """Lean's `IntegerShift.v2Z` = v2 |m|."""
+    return v2(m)
+
+
+def tcountZ(c, k, u, r):
+    """Lean's `IntegerShift.TcountZ`."""
+    mod = 1 << k
+    return sum(1 for m in range(mod) if syracuseZ_lean(c, r + m * mod) % mod == u)
+
+
+def run_l7():
+    print("L7  CU AT AN INTEGER SHIFT - is the Syracuse step still affine in the lift, and")
+    print("    WHERE does Lean's toNat clamp break it?  This decides the hypothesis on")
+    print("    `cu_syracuse_affineZ`, which is the only genuinely new mathematics in step 4b.")
+    print("    Claim A: v2Z(3(x + m*2^K) + c) = v2Z(3x + c)          (valuation frozen)")
+    print("    Claim B: syracuseZ(c, x + m*2^K) = q0 + 3m*2^(K-v)    (affine)")
+    print()
+    print("   k | c    | 0<3x+c cases | A holds | B holds | B on the 3x+c<0 cases")
+    for k in (4, 5, 6):
+        mod = 1 << k
+        for c in NEG_SHIFTS + [1, 5]:
+            pos_n = 0
+            a_ok = b_ok = True
+            b_neg_all_ok = True
+            saw_neg = False
+            for x in range(1, mod, 2):
+                val = 3 * x + c
+                if val == 0:
+                    continue
+                v = v2Z(val)
+                if v >= k:
+                    continue
+                q0 = val // (1 << v)          # exact; keeps the sign
+                positive = val > 0
+                if positive:
+                    pos_n += 1
+                else:
+                    saw_neg = True
+                for m in range(mod):
+                    lifted = 3 * (x + m * mod) + c
+                    if lifted == 0 or v2Z(lifted) != v:
+                        a_ok = False
+                    rhs = q0 + 3 * m * (1 << (k - v))
+                    lhs = syracuseZ_lean(c, x + m * mod)
+                    if lhs != rhs:
+                        if positive:
+                            b_ok = False
+                        else:
+                            b_neg_all_ok = False
+            if not a_ok:
+                FAIL.append("L7 valuation NOT frozen at k=%d c=%d - CU is false, stop" % (k, c))
+            if not b_ok:
+                FAIL.append("L7 affine step fails on a POSITIVE 3x+c at k=%d c=%d - the "
+                            "positivity hypothesis is not sufficient; re-scope" % (k, c))
+            print("   %d | %-4d | %-12d | %-7s | %-7s | %s"
+                  % (k, c, pos_n, str(a_ok), str(b_ok),
+                     ("n/a" if not saw_neg else str(b_neg_all_ok))))
+        print()
+    print("   READ THE LAST COLUMN.  `False` there is the POINT, not a failure: it is the")
+    print("   clamp biting, and it is why `cu_syracuse_affineZ` carries `0 < 3x + c`.")
+    print("   A `True` there at every shift would mean the hypothesis is unnecessary.")
+    print()
+
+
+def run_l8():
+    print("L8  THE GAUSS COLLAPSE AT AN INTEGER SHIFT (`gauss_collapseZ`).  For odd r with")
+    print("    v = v2Z(3r + c) < k:   sum_u TcountZ(c,k,u,r) w^(eta u)")
+    print("      = 2^k w^(eta * syracuseZ c r)   if 2^v | eta,   else 0.")
+    print("   k | c    | rows tested | max |LHS - RHS|")
+    for k in (4, 5):
+        mod = 1 << k
+        w = np.exp(2j * np.pi / mod)
+        for c in (-1, 1, 5):
+            worst = 0.0
+            rows = 0
+            for r in range(1, mod, 2):
+                val = 3 * r + c
+                if val <= 0:
+                    continue                      # positivity hypothesis, per L7
+                v = v2Z(val)
+                if v >= k:
+                    continue
+                counts = [tcountZ(c, k, u, r) for u in range(mod)]
+                for eta in range(mod):
+                    lhs = sum(counts[u] * w ** (eta * u) for u in range(mod))
+                    if eta % (1 << v) == 0:
+                        rhs = mod * w ** (eta * syracuseZ_lean(c, r))
+                    else:
+                        rhs = 0.0
+                    worst = max(worst, abs(lhs - rhs))
+                rows += 1
+            if worst > 1e-6:
+                FAIL.append("L8 Gauss collapse fails at k=%d c=%d, dev %.3e" % (k, c, worst))
+            print("   %d | %-4d | %-11d | %.3e" % (k, c, rows, worst))
+        print()
+
+
+def alphaJ(eta, xi, u, j):
+    return eta - xi * (1 << j) * u
+
+
+def resJ(k, eta, xi, u, j):
+    return alphaJ(eta, xi, u, j) % (1 << k)
+
+
+def Sodd(k, alpha, m):
+    w = np.exp(2j * np.pi / (1 << k))
+    return sum(w ** (alpha * q) for q in range(1, 1 << m, 2))
+
+
+def clean_entryZ(k, c, eta, xi):
+    """Lean's `cleanEntryZ`: the shell-indexed clean character entry, built from TcountZ."""
+    mod = 1 << k
+    w = np.exp(2j * np.pi / mod)
+    total = 0.0 + 0.0j
+    for j in range(1, k):
+        for r in shell_int(k, c, j):
+            col = sum(tcountZ(c, k, u, r) * w ** (eta * u) for u in range(mod))
+            total += (col / mod) * w ** (-(xi * r))
+    return total
+
+
+def run_l9():
+    print("L9  THE ENTRY THEOREM AT AN INTEGER SHIFT (`upper_entry_eqZ`, `norm_upper_entryZ`).")
+    print("    eta = 2^b eta', xi = 2^a xi', eta'/xi' odd, a < b, b + 2 <= k, 2^k | 3u - 1:")
+    print("      cleanEntryZ c k eta xi = w^(xi u c) * Sodd(resJ k eta xi u d, k - d),  d = b-a")
+    print("    and on the sharp points ||cleanEntryZ|| = 2^(k-d-1).")
+    print("   k | c    | (a,b) cases | max |LHS-RHS| | sharp pts | max ||.|| err")
+    for k in (5, 6):
+        mod = 1 << k
+        u = pow(3, -1, mod)                       # odd, and 2^k | 3u - 1
+        for c in (-1, 1, 5):
+            worst = 0.0
+            worst_norm = 0.0
+            cases = 0
+            sharp = 0
+            for b in range(1, k - 1):
+                for a in range(0, b):
+                    for etap in (1, 3):
+                        for xip in (1, 3):
+                            eta = (1 << b) * etap
+                            xi = (1 << a) * xip
+                            if eta >= mod:
+                                continue
+                            d = b - a
+                            lhs = clean_entryZ(k, c, eta, xi)
+                            rhs = (np.exp(2j * np.pi / mod) ** (xi * u * c)
+                                   * Sodd(k, resJ(k, eta, xi, u, d), k - d))
+                            worst = max(worst, abs(lhs - rhs))
+                            cases += 1
+                            if alphaJ(eta, xi, u, d) % (1 << (k - 1)) == 0:
+                                sharp += 1
+                                worst_norm = max(worst_norm,
+                                                 abs(abs(lhs) - 2.0 ** (k - d - 1)))
+            if worst > 1e-6:
+                FAIL.append("L9 entry theorem fails at k=%d c=%d, dev %.3e" % (k, c, worst))
+            if sharp and worst_norm > 1e-6:
+                FAIL.append("L9 sharp-point modulus fails at k=%d c=%d, dev %.3e"
+                            % (k, c, worst_norm))
+            print("   %d | %-4d | %-11d | %-13.3e | %-9d | %.3e"
+                  % (k, c, cases, worst, sharp, worst_norm))
+        print()
+    print("   The Sodd factor carries NO c.  That is the claim `upper_entry_eqZ` will make,")
+    print("   and it is the same claim `upper_entry_eqS` makes at c : Nat - measured here at")
+    print("   c = -1, where syracuseZ is a genuinely different map (L5).")
+    print()
+
+
 def run():
     run_l1()
     run_l2()
@@ -298,6 +494,9 @@ def run():
     run_l4()
     run_l5()
     run_l6()
+    run_l7()
+    run_l8()
+    run_l9()
     if FAIL:
         print("FAILURES (%d):" % len(FAIL))
         for f in FAIL[:20]:
@@ -312,6 +511,15 @@ def run():
     print("  L4  the defect is still rank 1 and still under sqrt3 * 2^{-k/2}.")
     print("  L5  and the residue shortcut TkZ c k = TkS (c mod 2^k) k stays FALSE at every k")
     print("      tested - do not define the integer operator that way.")
+    print("  L7  CU survives at an integer shift: the valuation is frozen under the lift at")
+    print("      EVERY shift tested, and the affine step holds on every 3x + c > 0.  It")
+    print("      FAILS on 3x + c < 0, where Lean's toNat clamps - so `cu_syracuse_affineZ`")
+    print("      carries `0 < 3x + c`, which is a MEASURED hypothesis, not a defensive one.")
+    print("  L8  the Gauss collapse holds at c = -1, so the column sum still reduces to one")
+    print("      phase gated by 2^v | eta - `gauss_collapseZ` is the right statement.")
+    print("  L9  the ENTRY THEOREM holds at c = -1: cleanEntryZ = (unimodular) * Sodd(...),")
+    print("      the Sodd factor carrying NO c, and modulus exactly 2^(k-d-1) on the sharp")
+    print("      points.  That is `upper_entry_eqZ` / `norm_upper_entryZ` before they exist.")
     print("CAVEAT: none of this is a proof, and none of it is a certificate for 3x - 1.  It is")
     print("the measurement that says the Lean mirror (TkZ / upper_entry_eqZ / cleanBlockCLMZ)")
     print("is the right shape before it is written.  c = -3t stays out of scope.")
