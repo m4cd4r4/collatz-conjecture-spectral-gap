@@ -238,8 +238,12 @@ The tempting substitute `c = 2^k - 1` is congruent to `-1` mod `2^k` but is a **
 is expressible; it does not certify it. As of 2026-09-09 Lemma A's **entry theorem** is closed there
 (`upper_entry_eqZ`, `norm_upper_entryZ`), for odd `c >= -1` - a bound that comes from `oddPartZ`'s
 `Int.toNat` clamp, measured by gate L7, and not from the `A_c <= 0` degeneracy. The clean blocks and
-Gram identity (step 4c) and the assembly are still open, as is `hL2`/`hParseval`. No declaration counts are quoted in these rows - the Lean
-census in EXTREMAL_VALUES.md is still absent and four documents disagree on the number.*
+Gram identity (step 4c) and the assembly are still open, as is `hL2`/`hParseval`. No declaration counts are quoted in these rows. ~~The Lean
+census in EXTREMAL_VALUES.md is still absent and four documents disagree on the number.~~
+**Census added 2026-11-19:** [EXTREMAL_VALUES.md, Lean census](EXTREMAL_VALUES.md#lean-census) -
+20 files, 730 theorem declarations at `6cb322b`, on Lean `v4.27.0` with a toolchain caveat stated
+there. The "18 files, 449" printed elsewhere in this README predates it and is flagged there
+(flag 7), not yet corrected.*
 
 ## Contents
 

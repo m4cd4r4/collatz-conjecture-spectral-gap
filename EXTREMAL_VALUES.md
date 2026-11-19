@@ -265,6 +265,87 @@ existing; the `3x-1` operator has an even smaller bound and real cycles. **The s
 number is not evidence of anything.** It is included because the same instantiation appears
 in the private status documents framed as though smallness were progress.
 
+## Lean census
+
+**Counted 2026-11-19 at commit `6cb322b`** (branch `fix/h0-repo-reconciliation`). This section
+is the single source of truth for the file, line and declaration counts of `lean/`. A document
+that quotes a count should copy it from here together with the commit.
+
+| Quantity | Value | Label |
+|---|---|---|
+| `.lean` files in `lean/`, not counting `lakefile.lean` | **20** | measured |
+| lines (`wc -l`) | **18,215** | measured |
+| `theorem` declarations | **730** | measured |
+| `lemma` declarations | **0** | measured |
+| `def` / `abbrev` / `instance` / `structure` / `inductive` | **193** | measured |
+| `sorry` tokens in code | **0** | measured |
+| `axiom` declarations | **0** | measured |
+| `native_decide` in code | **0** | measured |
+| toolchain pin | `leanprover/lean4:v4.27.0`, Mathlib `v4.27.0` | read from `lean/lean-toolchain`, `lean/lakefile.lean` |
+
+| file | lines | theorem | lemma | defs | sorry | axiom | native_decide |
+|---|---|---|---|---|---|---|---|
+| Assembly.lean | 883 | 35 | 0 | 15 | 0 | 0 | 0 |
+| BlockVanishing.lean | 712 | 24 | 0 | 5 | 0 | 0 | 0 |
+| CharacterBasis.lean | 607 | 30 | 0 | 8 | 0 | 0 | 0 |
+| CleanBlock.lean | 453 | 9 | 0 | 2 | 0 | 0 | 0 |
+| CollisionBound.lean | 1098 | 45 | 0 | 15 | 0 | 0 | 0 |
+| CountingLemmas.lean | 871 | 31 | 0 | 8 | 0 | 0 | 0 |
+| DefectSplit.lean | 531 | 26 | 0 | 9 | 0 | 0 | 0 |
+| GapCertificate.lean | 585 | 25 | 0 | 3 | 0 | 0 | 0 |
+| GramIdentity.lean | 746 | 28 | 0 | 2 | 0 | 0 | 0 |
+| IntegerShift.lean | 1480 | 70 | 0 | 18 | 0 | 0 | 0 |
+| LemmaA.lean | 563 | 24 | 0 | 5 | 0 | 0 | 0 |
+| LevelMajorisation.lean | 911 | 35 | 0 | 7 | 0 | 0 | 0 |
+| ManifestInstance.lean | 867 | 47 | 0 | 15 | 0 | 0 | 0 |
+| OperatorBlock.lean | 606 | 24 | 0 | 2 | 0 | 0 | 0 |
+| OperatorChain.lean | 398 | 14 | 0 | 1 | 0 | 0 | 0 |
+| OwnerCount.lean | 411 | 6 | 0 | 3 | 0 | 0 | 0 |
+| OwnerPartition.lean | 500 | 12 | 0 | 10 | 0 | 0 | 0 |
+| ShiftedOperator.lean | 4631 | 192 | 0 | 49 | 0 | 0 | 0 |
+| SignBlind.lean | 659 | 24 | 0 | 3 | 0 | 0 | 0 |
+| TransferOperator.lean | 703 | 29 | 0 | 13 | 0 | 0 | 0 |
+| **total (20 files)** | **18215** | **730** | **0** | **193** | **0** | **0** | **0** |
+
+**What this is, and what it is not.** A source-level token count. Comments (line comments and
+nested block comments) and string literals are stripped before counting, so prose that mentions
+`sorry` or `theorem` is not counted: the string `sorry` occurs 10 times in the raw files and
+none survives stripping. A declaration is counted when, after stripping, a line starts with
+optional attributes, optional modifiers and then `theorem` or `lemma`. It is **not** a build,
+and it is **not** a `#print axioms` audit: "0 `axiom` declarations" says that no file declares
+an axiom. It says nothing about which axioms the kernel reports for each theorem. The word
+`axiom` occurs in code only inside 643 `#print axioms` commands, whose output exists at build
+time and was not re-read for this census.
+
+**Toolchain caveat.** `lean/` is pinned to Lean `v4.27.0` and has not been rebuilt on a later
+toolchain. Lean kernel soundness bug `leanprover/lean4#14576` (CVE-2026-72844, in the handling
+of nested inductive declarations) affects every Lean 4 release up to and including `v4.31.0`;
+the advisory gives `v4.32.2` as the fixed release (see [Sources](#sources)). So every
+"machine-checked" in this repository means checked by the `v4.27.0` kernel. A rebuild on
+`v4.32.2` or later is owed. It has not been started, and no file here has been audited against
+that bug.
+
+**Reproduction.**
+
+```
+python lean_census.py --selftest     # must print PASS
+python lean_census.py lean
+```
+
+The self-test plants one real `sorry`, one real `axiom` and one real `native_decide` among decoys
+in a line comment, a nested block comment and a string, and requires the counts 3 theorems,
+1 lemma, 1 `sorry`, 1 `axiom`, 1 `native_decide`. Second method, as a cross-check: counting
+declaration lines on the raw text gives 745. The 15 extra lines all lie inside comments, and no
+`theorem` or `lemma` keyword that survives stripping goes uncounted.
+
+**Why the earlier figure disagrees.** "18 files, 449 theorem/lemma declarations" was written at
+commit `1dea2db` (2026-08-04). At that commit `lean_census.py` counts 18 files and **468**
+declarations. The 449 is what one gets by counting only lines that begin with `theorem` or
+`private theorem`: it leaves out the 19 declarations written with an attribute on the same line
+(`@[simp] theorem ...`). The script prints both figures (468 and 449 at `1dea2db`; 730 and 702
+here). Two files have been added since: `ShiftedOperator.lean` and `IntegerShift.lean`. The
+places that still print the old figure are listed in flag 7.
+
 ## Reproduction
 
 `extremal_values_check.py` (committed with this document). It rebuilds `T_k` from the
@@ -332,6 +413,14 @@ Every constant is computed twice by different means:
    spectral gap is "provably blind to the `+1` vs `-1` sign".** False for the operator: `cert`
    and the spectrum are sign-sensitive (see the `3x-1` companion, point 2). Blindness holds
    for the `v2`-statistics only.
+7. **Added 2026-11-19. Five places print "18 files, 449 theorem/lemma declarations":**
+   `README.md` lines 214, 348 and 421, `THEOREM.md` line 224 and
+   `paper/syracuse_spectral_gap.tex` line 514. At the commit that wrote the figure the count was
+   468, and the tree is now 20 files and 730 ([Lean census](#lean-census)). **OPEN:** correct
+   each in place, keeping the old figure visible. Also stale: the last bullet of the RESOLVED
+   block near the top of this file ("the Lean tree covers the envelope/assembly core only ...
+   **not** machine-checked") predates the 2026-08-03 Lean work; `README.md` lines 223-230 record
+   what replaced it. It is left as written here and flagged, not edited.
 
 Flags 1, 2 and 6 are corrections to be applied in place in their own documents (ES Technique
 7e, withdraw visibly), not here. Flag 3 is the root cause of flags 1-2 and should be fixed
@@ -351,6 +440,11 @@ Public repo, cited by line: [THEOREM.md](THEOREM.md) 21, 25, 34-45, 56-91, 95-99
 111-133, 138-144, 146-152, 154-160; [LEMMA_C_PROOF.md](LEMMA_C_PROOF.md) 16-17, 25, 28, 119,
 155, 159, 164-165, 177-182, 184-188; [UFULL_ASSEMBLY_PROOF.md](UFULL_ASSEMBLY_PROOF.md) 53-56,
 79, 101-118, 137-144, 152-157; [CYCLE_CLAIM_REFUTED.md](CYCLE_CLAIM_REFUTED.md) 35-41.
+
+For the toolchain caveat in the Lean census: the oss-security advisories on
+`leanprover/lean4#14576`, <https://openwall.com/lists/oss-security/2026/08/02/1> (affected
+versions) and <https://openwall.com/lists/oss-security/2026/10/26/2> (CVE id, fixed release).
+Read 2026-11-19. The Lean release notes themselves were not read.
 
 Private working directory (not in this repo), cited for the two findings reproduced above:
 `RETRO_LABELS_2026-08-02.md` (referee corrections 1-3, 5) and
